@@ -1,0 +1,22 @@
+<package>
+  <description brief="Robot Self Filtering">
+    Utilities for filtering the robot out of sensor data
+  </description>
+  <author>Rosen Diankov (rdiankov@cs.cmu.edu)</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://pr.willowgarage.com/wiki/robot_self_filter</url>
+  <export>
+    <openrave pluginpath="${prefix}/lib"/>
+  </export>
+  <depend package="roscpp"/>
+  <depend package="tf"/>
+  <depend package="filters"/>
+  <depend package="sensor_msgs"/>
+  <depend package="resource_retriever"/>
+  <depend package="openrave"/>
+  <rosdep name="qhull"/>
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>

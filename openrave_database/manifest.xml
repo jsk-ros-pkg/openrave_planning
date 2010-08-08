@@ -1,0 +1,15 @@
+<package>
+  <description brief="OpenRAVE Robot/Object Database Generation">
+    Uses ROS to parallelize the database generation processes inside OpenRAVE.
+  </description>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
+  <license>Apache License, Version 2.0</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://openrave.programmingvision.com</url>
+  <depend package="openrave"/>
+  <depend package="rospy"/>
+  <depend package="roslaunch"/>
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>

@@ -1,0 +1,9 @@
+<launch>
+  <node type="openrave.py" pkg="openrave" name="$(anon openrave)" args="$(find openrave_sensors)/test/wamscene.env.xml">
+    <env name="PYTHONPATH" value="$(optenv PYTHONPATH):$(find openrave)/share/openrave"/>
+    <env name="OPENRAVE_PLUGINS" value="$(optenv OPENRAVE_PLUGINS):$(find openrave_sensors)/lib"/>
+  </node>
+  <node type="image_view" pkg="image_view" name="$(anon image_view)">
+    <remap from="image" to="/wam/camera/image"/>
+  </node>
+</launch>

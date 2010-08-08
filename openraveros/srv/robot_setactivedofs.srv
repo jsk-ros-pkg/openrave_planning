@@ -1,0 +1,5 @@
+# sets the active degrees of freedom of the robot (used by planners to get configuration space)
+
+int32 bodyid
+ActiveDOFs active
+---

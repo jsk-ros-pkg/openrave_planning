@@ -1,0 +1,9 @@
+# creates a kinematics body and returns its id
+
+# the name to give the body (should be unique!)
+string name
+
+# the (XML) file to load the body geometry from
+string file
+---
+int32 bodyid

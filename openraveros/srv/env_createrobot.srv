@@ -1,0 +1,12 @@
+# Creates a robot of the given type. If type is not specified, creates a generic robot
+
+# the name to give the body (should be unique!)
+string name
+
+# the (XML) file to load the body geometry from
+string file
+
+# the robot type 
+string type
+---
+int32 bodyid

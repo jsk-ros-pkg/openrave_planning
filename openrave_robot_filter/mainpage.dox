@@ -1,0 +1,11 @@
+/**
+\mainpage
+This package is designed to provide utilities for filtering the robot out of sensor data
+
+\subsection robotlinks_filter Robot Links Pruning Filter
+
+RobotLinksFilter removes all nodes that lie on the robot. Each robot link is approximated by a convex hull that is dynamically generated based on the mesh of the robot.
+
+ \todo
+
+*/

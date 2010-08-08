@@ -1,0 +1,9 @@
+# gets information about the bodies in the scene
+
+# if bodyid != 0, will get the information only about a particular body, otherwise will get for all bodies
+int32 bodyid
+
+# optional mask field for bodies (see BodyInfo::Req_X)
+uint16 options
+---
+BodyInfo[] bodies

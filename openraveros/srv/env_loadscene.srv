@@ -1,0 +1,8 @@
+# loads a scene
+
+# absolute path of scene recommended
+string filename
+
+# if 1, resets the entire scene
+uint8 resetscene
+---

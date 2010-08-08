@@ -1,0 +1,24 @@
+<package>
+  <description brief="OpenRAVE">
+    Check out the CMU Tech Report: "OpenRAVE: A Planning Architecture For Autonomous Robotics" for a brief description.
+
+    For successful compilation, remove Qt3 development tools (qt3-dev-tools,libqt3-headers) to prevent conflict with Qt4.
+  </description>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
+  <license>Lesser GPL and Apache License, Version 2.0</license>
+  <review status="3rdparty" notes=""/>
+  <export>
+    <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave-config --libs`" cflags="`${prefix}/bin/openrave-config --cflags`"/>
+    <python path="${prefix}/share/openrave"/>
+  </export>
+  <depend package="soqt"/>
+  <depend package="opende"/>
+  <depend package="std_msgs"/>
+<!--   <depend package="colladadom"/> -->
+  <versioncontrol type="svn" url="https://openrave.svn.sourceforge.net/svnroot/openrave/trunk"/>
+  <url>http://openrave.programmingvision.com</url>
+  <rosdep name="libxml2"/>
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>

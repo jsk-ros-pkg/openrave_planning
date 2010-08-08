@@ -1,0 +1,3 @@
+# Destroys a body of id bodyid. bodyid can also be a robot.
+int32 bodyid
+---

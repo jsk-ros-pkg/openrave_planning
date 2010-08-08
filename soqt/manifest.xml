@@ -1,0 +1,23 @@
+<package>
+  <description brief="SoQt">
+    This package contains a Coin3D/Qt GUI interface.
+  </description>
+  <author>See web page for a full credits llist.</author>
+  <license url="http://www.coin3d.org/licensing/index_html#free-edition-gpl">GPL</license>
+  <review status="3rdparty" notes=""/>
+  <url>http://www.coin3d.org/</url>
+  <export>
+    <cpp lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lSoQt" cflags="-I${prefix}/include"/>
+    <!-- use soqt-config instead of exporting the flags! -->
+    <doxymaker external="http://developer.nvidia.com/page/documentation.html"/>
+  </export> 
+
+
+  <rosdep name="qt4"/>
+  <rosdep name="qt4gl"/>
+  <rosdep name="coin"/>
+  <rosdep name="autoconf"/>
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>

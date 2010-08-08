@@ -1,0 +1,10 @@
+# gets all the robots in the scene
+
+# if bodyid != 0, will get the information only about a particular robot, otherwise will get for all robots
+int32 bodyid
+
+# optional mask field for robots (see BodyInfo::Req_X and (see RobotInfo::Req_X))
+uint16 options
+
+---
+RobotInfo[] robots

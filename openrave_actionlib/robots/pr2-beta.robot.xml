@@ -1,0 +1,5 @@
+<robot file="robots/pr2-beta-sim.robot.xml">
+  <controller type="rosactionlib" args="jointstate /joint_states state /midbody_controller/state action /midbody_controller/joint_trajectory_action">
+<!--   <controller type="rosactionlib" args="jointstate /joint_states state /l_arm_controller/state action /l_arm_controller/joint_trajectory_action"> -->
+  </controller>
+</robot>

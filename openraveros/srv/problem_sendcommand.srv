@@ -1,0 +1,10 @@
+# Sends a command to the problem. The function doesn't return until
+# the string command to send the problem
+
+# id of problem to send command to. if problemid is 0, then command is sent to all problems
+uint32 problemid
+string cmd
+
+---
+# the concatenated output of all the problems that the command is sent to
+string output

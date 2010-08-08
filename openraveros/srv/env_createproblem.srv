@@ -1,0 +1,10 @@
+# creates a problem instance
+string problemtype
+
+# a string of arguments to send to the problem's main function
+string args
+
+# if true, will destroy any problems with similar types (default is 1)
+uint8 destroyduplicates
+---
+uint32 problemid

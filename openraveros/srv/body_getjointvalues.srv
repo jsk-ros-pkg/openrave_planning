@@ -1,0 +1,7 @@
+# gets the active dof values of the robot
+int32 bodyid
+
+# specifies indices to get. if empty, returns all joint values
+uint8[] indices
+---
+float32[] values

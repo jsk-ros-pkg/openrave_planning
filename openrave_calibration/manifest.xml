@@ -1,0 +1,16 @@
+<package>
+  <description brief="Sensor calibration routines using OpenRAVE's planning features">
+    Package uses openrave planning and the robot_calibration stacks to calibrate a robot's sensors. The calibration only depends on the openrave/collada descriptions, therefore it is meant to be a relatively simple way of calibrating new robots with one-click.
+  </description>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
+  <license>Apache License, Version 2.0</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://openrave.programmingvision.com/index.php/ROS:openrave_calibration</url>
+  <depend package="rospy"/>
+  <depend package="openrave"/>
+  <depend package="tf"/>
+  <depend package="sensor_msgs"/>
+  <depend package="resource_retriever"/>
+  <depend package="posedetection_msgs"/>
+  <depend package="roslaunch"/>
+</package>

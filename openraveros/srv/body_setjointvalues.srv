@@ -1,0 +1,7 @@
+# Set the raw joint values of a body. If bodyid is a robot, sets the robot's
+# joints ignoring its current active degrees of freedom.
+int32 bodyid
+float32[] jointvalues
+# optional array specifying the indices to set
+uint8[] indices
+---

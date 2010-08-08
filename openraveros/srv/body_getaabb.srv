@@ -1,0 +1,6 @@
+# returns an axis-aligned boudning box of the body in world coordinates
+# aabb is a 3x2 vector where the first column is the position of the box
+# and the second is the extents
+int32 bodyid
+---
+AABB box

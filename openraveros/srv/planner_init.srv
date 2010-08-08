@@ -1,0 +1,6 @@
+# Initialize a planner to plan for a robot and give some parameters
+
+uint32 plannerid
+uint32 robotid
+PlannerParameters params
+---

@@ -1,0 +1,5 @@
+# Set the affine transformation of the body. The transformation actually describes the first
+# link of the body. The rest of the links are determined from the joint angles.
+int32 bodyid
+AffineTransformMatrix transform
+---

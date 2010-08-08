@@ -1,0 +1,5 @@
+# Enables or disables the body. If a body is disabled, collision detection
+# and physics will will be turned off for it.
+int32 bodyid
+uint8 enable
+---

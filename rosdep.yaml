@@ -1,0 +1,32 @@
+coin:
+  ubuntu: libcoin40-dev
+  debian: libcoin40-dev
+  arch: coin
+  macports: coin
+  gentoo: coin
+glew:
+  ubuntu: libglew1.5-dev
+  debian: libglew1.5-dev
+  arch: glew
+  macports: glew
+  gentoo: glew
+jam:
+  ubuntu: jam
+  debian: jam
+  arch: ftjam
+  macports: jam
+  gentoo: ftjam
+qhull:
+  ubuntu: libqhull-dev
+  debian: libqhull-dev
+  arch: qhull
+  macports: qhull
+  gentoo: qhull
+qt4gl:
+  ubuntu: 
+    '10.04': libqt4-opengl-dev
+    '9.10': libqt4-opengl-dev
+    '9.04': libqt4-opengl-dev
+    '8.10': libqt4-opengl-dev
+  debian: libqt4-opengl-dev
+  gentoo: ">=x11-libs/qt-opengl-4"

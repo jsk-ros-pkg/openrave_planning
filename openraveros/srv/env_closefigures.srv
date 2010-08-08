@@ -1,0 +1,6 @@
+# closes the figures and plots
+
+# array of ids returned from orEnvPlot or other plotting functions
+# if empty, delete all
+uint64[] figureids
+---

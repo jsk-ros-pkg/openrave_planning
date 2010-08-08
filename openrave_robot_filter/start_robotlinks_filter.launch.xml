@@ -1,0 +1,16 @@
+<launch>
+   <node name="robotlinks_filter_node" pkg="or_robot_self_filter" type="robotlinks_filter_node" respawn="true" output="screen" args="--robotfile $(find hrp2roscontroller)/robots/hrp2jsk.robot.xml">
+     <!-- The topic for the input cloud -->
+     <remap from="cloud_in" to="tilt_scan_cloud" />
+     <!-- The topic for the output cloud -->
+     <remap from="cloud_out" to="tilt_scan_cloud_raytest" />
+     <!-- The frame of the sensor used to obtain the data to be
+          filtered; This parameter is optional. If it is not specified,
+          shadow points will be considered outside -->
+     <param name="sensor_frame" type="string" value="laser_tilt_link" />
+     <!-- Minimum distance to sensor (for point not to be considered inside) -->
+     <param name="min_sensor_dist" type="double" value="0.01" />
+     <!-- The padding to be added for the body parts the robot can see -->
+     <param name="self_see_default_padding" type="double" value="0.01" />
+   </node>
+</launch>

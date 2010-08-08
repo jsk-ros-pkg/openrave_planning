@@ -1,0 +1,19 @@
+<package>
+  <description brief="openrave_actionlib">
+    Bindings between openrave's controller interface and ROS's action lib interface for controlling robots.
+  </description>
+  <author>rdiankov</author>
+  <license>Apache License, Version 2.0</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/openrave_actionlib</url>
+  <export>
+    <openrave pluginpath="${prefix}/lib" datapath="${prefix}"/>
+  </export>
+  <depend package="actionlib"/>
+  <depend package="sensor_msgs"/>
+  <depend package="pr2_controllers_msgs"/>
+  <depend package="openrave"/>
+  <depend package="rosparam"/>
+  <depend package="rospy" />
+  <depend package="pr2_controller_manager"/>
+</package>

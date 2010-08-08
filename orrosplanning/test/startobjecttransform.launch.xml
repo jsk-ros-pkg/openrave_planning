@@ -1,0 +1,12 @@
+<launch>
+  <node name="pr2sim" pkg="openrave_robot_control" type="simulationserver" respawn="false" output="screen" args="--robotfile robots/pr2-beta-sim.robot.xml --maxvelmult 1.0 --jointname torso_lift_joint --jointname l_shoulder_pan_joint    --jointname l_shoulder_lift_joint    --jointname l_upper_arm_roll_joint    --jointname l_elbow_flex_joint    --jointname l_forearm_roll_joint    --jointname l_wrist_flex_joint    --jointname l_wrist_roll_joint    --jointname r_shoulder_pan_joint    --jointname r_shoulder_lift_joint    --jointname r_upper_arm_roll_joint    --jointname r_elbow_flex_joint    --jointname r_forearm_roll_joint    --jointname r_wrist_flex_joint    --jointname r_wrist_roll_joint">
+  </node>
+  <node name="objectpublisher" pkg="orrosplanning" type="publishobjects.py" respawn="false">
+    <env name="PYTHONPATH" value="$(optenv PYTHONPATH):$(find openrave)/share/openrave"/>
+    <env name="OPENRAVE_PLUGINS" value="$(optenv OPENRAVE_PLUGINS):$(find openrave)/share/openrave/plugins:$(find openrave_robot_control)/lib"/>
+  </node>
+  <node name="openrave_viewer" pkg="openrave" type="openrave.py" respawn="false" args="$(find orrosplanning)/test/testobjecttransform.env.xml">
+    <env name="OPENRAVE_PLUGINS" value="$(optenv OPENRAVE_PLUGINS):$(find openrave)/share/openrave/plugins:$(find openrave_robot_control)/lib:$(find orrosplanning)/lib"/>
+    <env name="PYTHONPATH" value="$(optenv PYTHONPATH):$(find openrave)/share/openrave"/>
+  </node>
+</launch>

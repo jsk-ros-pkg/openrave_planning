@@ -1,0 +1,16 @@
+<package>
+  <description brief="Connects ROS sensor messages to OpenRAVE">
+    Contains openrave plugins that connect send and recieve ROS messages allowing OpenRAVE to communicate with the ROS world better.
+  </description>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
+  <license>Apache License, Version 2.0</license>
+  <export>
+    <openrave pluginpath="${prefix}/lib"/>
+  </export>
+  <depend package="roscpp"/>
+  <depend package="openrave"/>
+  <depend package="sensor_msgs"/>
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>

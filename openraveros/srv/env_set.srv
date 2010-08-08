@@ -1,0 +1,26 @@
+# Set various options of the environment
+
+uint32 setmask
+uint32 Set_Simulation=1
+uint32 Set_PhysicsEngine=2
+uint32 Set_CollisionChecker=4
+uint32 Set_Gravity=8
+uint32 Set_DebugLevel=32
+uint32 Set_Viewer=64
+uint32 Set_ViewerDims=128
+
+# validity depending on setmask
+uint8 sim_action
+uint8 SimAction_Start=1
+uint8 SimAction_Stop=2
+uint8 SimAction_Timestep=3
+float32 sim_timestep
+
+string physicsengine
+string collisionchecker
+string viewer
+int32 viewerwidth
+int32 viewerheight
+float32[3] gravity
+string debuglevel # one of fatal,error,warn,info,debug. If numeric, sets the level directly
+---

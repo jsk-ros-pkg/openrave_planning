@@ -1,0 +1,8 @@
+# sends a command to the current controller the robot is connected to.
+# OpenRAVE sends directly to ControllerBase::SendCmd,
+# ControllerBase::SupportsCmd is also used to check for support.
+
+int32 bodyid
+string cmd
+---
+string output

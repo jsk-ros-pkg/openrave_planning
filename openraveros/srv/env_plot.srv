@@ -1,0 +1,24 @@
+# plots various primitives in the viewer
+
+# 3xN values for N points
+float32[] points
+
+# 3xN values for N points
+float32[] colors
+
+# size of the points/lines/spheres (does not apply to triangles)
+float32 size
+
+# [0,1] transparency of object (0 is opaque)
+float32 transparency
+
+# one of Draw_X types
+uint8 drawtype
+
+uint8 Draw_Point=0 # default
+uint8 Draw_LineStrip=1
+uint8 Draw_LineList=2
+uint8 Draw_TriList=3
+uint8 Draw_Sphere=4
+---
+int32 figureid

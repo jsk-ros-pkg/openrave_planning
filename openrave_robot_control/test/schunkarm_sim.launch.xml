@@ -1,0 +1,6 @@
+<launch>
+  <node name="schunk_simulation" pkg="openrave_robot_control" type="simulationserver" args="--robotfile robots/schunk-lwa3.robot.xml --jointname j0 --jointname j1 --jointname j2 --jointname j3 --jointname j4 --jointname j5 --jointname j6" output="screen">
+    <!-- it is possible to add more robots by setting the OPENRAVE_DATA path here -->
+    <env name="OPENRAVE_DATA" value="$(optenv OPENRAVE_DATA):$(find openrave)/share/openrave"/>
+  </node>
+</launch>

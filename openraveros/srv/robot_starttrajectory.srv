@@ -1,0 +1,17 @@
+# Starts a trajectory on the robot
+int32 bodyid
+
+# mask of Traj_X options
+uint8 options
+
+Trajectory trajectory
+
+# uses the transforms specified in the trajectory (affine dofs overwrite whatever is active)
+uint8 Traj_UseTransforms = 1
+
+# uses the timestamps of the trajectories (otherwise recomputes from max accel/velocities)
+uint8 Traj_UseTimestamps = 2
+
+# uses the torques of the trajectories
+uint8 Traj_UseTorques = 4
+---

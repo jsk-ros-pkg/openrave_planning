@@ -1,0 +1,4 @@
+# returns the number of joints of the body
+int32 bodyid
+---
+int32 dof

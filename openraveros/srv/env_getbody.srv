@@ -1,0 +1,4 @@
+# returns the bodyid given its name
+string name
+---
+int32 bodyid

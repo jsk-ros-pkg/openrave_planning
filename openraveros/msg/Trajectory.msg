@@ -1,0 +1,2 @@
+TrajectoryPoint[] points
+ActiveDOFs active

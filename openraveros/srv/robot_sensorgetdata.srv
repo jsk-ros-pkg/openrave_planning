@@ -1,0 +1,23 @@
+# Gets the sensor data. The format returned is dependent on the type of sensor. 
+
+int32 bodyid
+uint32 sensorindex
+---
+
+# data.type - contains the id of the data type (see SensorBase::SensorType)
+string type
+
+## laser
+
+#  data.laserrange - 3xN array where each column is the direction * distance
+float32[] laserrange
+
+#  data.laserpos - 3xN array where each column is the corresponding origin of each range measurement
+float32[] laserpos
+
+#  data.laserint - 1xN optional laser intensity array
+float32[] laserint
+
+## camera
+sensor_msgs/CameraInfo caminfo # camera calibration parameters and where camera is
+sensor_msgs/Image camimage # camera image

@@ -1,0 +1,18 @@
+# performs ray collision checks and returns the contact points of the collisions
+
+Ray[] rays
+
+# if bodyid != 0, only checks collisions with that body
+int32 bodyid
+
+# if 1 will also return the contacts points of each of the rays (default is 0)
+uint8 request_contacts
+
+# if 1 will also return bodies hit by the rays (default is 0)
+uint8 request_bodies
+
+---
+# collision - N dim vector that is 1 for colliding rays and 0 otherwise
+uint8[] collision
+Contact[] contacts
+int32[] hitbodies

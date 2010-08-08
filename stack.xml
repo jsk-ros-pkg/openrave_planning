@@ -1,0 +1,20 @@
+<stack name="openrave_planning" version="0.1">
+  <description brief="openrave packages from cmu-ros-pkg">
+    These are OpenRAVE-related packages.
+  </description>
+  <author>Rosen Diankov rdiankov@cs.cmu.edu</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://pr.willowgarage.com/wiki/openrave</url>
+  
+  <depend stack="motion_planning_common"/> <!-- mapping_msgs, manipulation_msgs --> 
+  <depend stack="geometry"/> <!-- tf, bullet --> 
+  <depend stack="physics_ode"/> <!-- opende --> 
+  <depend stack="ros_experimental"/> <!-- rosoct, roscpp_sessions --> 
+  <depend stack="visual_feature_detectors"/> <!-- checkerboard_detector --> 
+  <depend stack="calibration_experimental"/> <!-- mocap_msgs --> 
+  <depend stack="ros"/> <!-- std_msgs, roscpp --> 
+  <depend stack="common_msgs"/> <!-- sensor_msgs -->
+  <depend stack="robot_model"/> <!-- colladadom, collada_urdf -->
+  <depend stack="robot_calibration"/> <!-- calibration stuff -->
+</stack>

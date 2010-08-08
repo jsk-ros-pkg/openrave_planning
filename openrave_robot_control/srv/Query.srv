@@ -1,0 +1,20 @@
+## queries the robot's state
+
+# if 0, returns the timestamp of the current command
+# and done is filled whenever all the trajectories have been finished
+uint32 commandid
+---
+uint8 State_Idle=0 # can accept commands and robot in gravity compensation mode
+uint8 State_Moving=1 # robot is executing a command
+uint8 State_Ready=2 # robot has no queued commands and is holding its current position
+uint8 State_Stalled=3 # robot cannot proceed further with current command
+
+uint8 state # one of State_ defines
+uint8 braked # a brake can be applied by the user to temporarily halt execution
+
+uint8 commanddone # 1 if the command requested has finished
+uint32 commandid # current command executing if queried command is 0 or doesn't exist, otherwise the command requested
+float32 commandtime # the current timestamp of the command is at. If the command is finished, specifies the total time of the command
+
+string[] jointnames # names of the joints that the controller uses
+float32[] jointpositions # joint values
