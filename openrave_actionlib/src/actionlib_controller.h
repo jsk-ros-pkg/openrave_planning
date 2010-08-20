@@ -766,6 +766,9 @@ protected:
             return;
         EnvironmentMutex::scoped_lock lockenv(GetEnv()->GetMutex());
         _probot->GetDOFValues(_vlastjointvalues);
+        //resize the vel and torque vectors if necessary:
+        _vlastjointvel.resize(_vlastjointvalues.size(),0.0f);
+        _vlastjointtorque.resize(_vlastjointvalues.size(),0.0f);
         for(size_t i = 0; i < jstate->name.size(); ++i) {
             KinBody::JointPtr pjoint = _probot->GetJoint(jstate->name[i]);
             if( !pjoint ) {
