@@ -11,32 +11,30 @@ include $(shell rospack find mk)/svn_checkout.mk
 .PHONY: openrave
 
 BOOST_INCLUDE_DIRS=$(shell rosboost-cfg --include_dirs)
-BOOST_LIBRARY_DIRS=$(shell rosboost-cfg --lib_dirs)
+BOOST_LIBRARY_DIRS=$(shell rosboost-cfg --root)/lib
 
-#BULLET_DIR=$(shell rospack find bullet)
-#BULLET_INCLUDE_DIR=$(shell rospack find bullet)/build/include
-#BULLET_LIB_DIR=$(shell rospack find bullet)/lib
-#BULLET_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags bullet)
-#BULLET_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags bullet)
+BULLET_DIR=$(shell rospack find bullet)
+BULLET_INCLUDE_DIR=$(shell rospack find bullet)/build/include
+BULLET_LIB_DIR=$(shell rospack find bullet)/lib
+BULLET_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags bullet)
+BULLET_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags bullet)
 
-BUILDDIR=$(shell if [ $(DEBUG) ]; then echo builddebug; else echo build; fi)
 BUILDDIR=$(shell if [ $(DEBUG) ]; then echo builddebug; else echo build; fi)
 CMAKE_BUILD_TYPE=$(shell if [ $(DEBUG) ]; then echo Debug; else echo RelWithDebInfo; fi)
 
 COLLADA_DIR=$(shell rospack find colladadom)
-#	echo "prefix=${BULLET_DIR}\n\
-#libdir=${BULLET_INCLUDE_DIR}\n\
-#includedir=${BULLET_LIB_DIR}\n\
-#\n\
-#Name: Bullet\n\
-#Description: Bullet as built by ROS\n\
-#Version: 2.74\n\
-#Libs: ${BULLET_LFLAGS}\n\
-#CFlags: ${BULLET_CFLAGS}" > bullet.pc
-#export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" &&
-# create
+
 installed: $(SVN_DIR) patched
-	cd $(INSTALL_DIR) && cd $(SVN_DIR) && export PATH="$(shell rospack find soqt)/bin:$(shell rospack find opende)/opende/bin:$(PATH)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 .. && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
+	echo "prefix=${BULLET_DIR}\n\
+libdir=${BULLET_INCLUDE_DIR}\n\
+includedir=${BULLET_LIB_DIR}\n\
+\n\
+Name: Bullet\n\
+Description: Bullet as built by ROS\n\
+Version: 2.74\n\
+Libs: ${BULLET_LFLAGS}\n\
+CFlags: ${BULLET_CFLAGS}" > bullet.pc
+	cd $(INSTALL_DIR) && cd $(SVN_DIR) && export PATH="$(shell rospack find soqt)/bin:$(shell rospack find opende)/opende/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 .. && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
 	touch installed
 
 clean:

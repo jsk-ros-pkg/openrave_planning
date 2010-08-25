@@ -13,6 +13,7 @@
   </export>
   <depend package="soqt"/>
   <depend package="opende"/>
+  <depend package="bullet"/>
   <depend package="std_msgs"/>
 <!--   <depend package="colladadom"/> -->
   <versioncontrol type="svn" url="https://openrave.svn.sourceforge.net/svnroot/openrave/trunk"/>
