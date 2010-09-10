@@ -18,6 +18,10 @@
 #include "plugindefs.h"
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/LaserScan.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/PointField.h>
+#include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
 
 class ROSSensorPublisher : public ProblemInstance
@@ -145,14 +149,20 @@ protected:
                     continue;
                 }
                 ros::Time stamp(pdata->__stamp/1000000,(uint32_t)(1000*(pdata->__stamp%1000000)));
-                pair<ros::MessagePtr, vector<ros::Publisher> > msg;
+                vector< pair<ros::MessagePtr, ros::Publisher> > msg;
                 bool bCheckStamp=true;
                 if( _publishers.find(*itsensor) == _publishers.end() ) {
                     switch(pdata->GetType()) {
                     case SensorBase::ST_Camera:
-                        msg.first.reset(new sensor_msgs::Image());
-                        msg.second.push_back(_node->advertise<sensor_msgs::CameraInfo>(_rosnamespace+(*itsensor)->GetName()+"/camera_info",5));
-                        msg.second.push_back(_node->advertise<sensor_msgs::Image>(_rosnamespace+(*itsensor)->GetName()+"/image",5));
+                        msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::Image()), _node->advertise<sensor_msgs::CameraInfo>(_rosnamespace+(*itsensor)->GetName()+"/camera_info",5)));
+                        msg.push_back(make_pair(new sensor_msgs::CameraInfo(), _node->advertise<sensor_msgs::Image>(_rosnamespace+(*itsensor)->GetName()+"/image",5)));
+                        break;
+                    case SensorBase::ST_Laser:
+                        msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::LaserScan()), _node->advertise<sensor_msgs::LaserScan>(_rosnamespace+(*itsensor)->GetName()+"/scan",5)));
+                        msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::PointCloud2()), _node->advertise<sensor_msgs::PointCloud2>(_rosnamespace+(*itsensor)->GetName()+"/pointcloud",5)));
+                        break;
+                    case SensorBase::ST_IMU:
+                        msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::Imu()), _node->advertise<sensor_msgs::LaserScan>(_rosnamespace+(*itsensor)->GetName()+"/imu",5)));
                         break;
                     default:
                         RAVELOG_WARN("unsupported sensor type\n");
@@ -165,38 +175,104 @@ protected:
                     msg = _publishers[*itsensor];
                 }
 
+                roslib::Header header;
+                header.stamp = stamp;
+                header.frame_id = (*itsensor)->GetName();
+
                 switch(pdata->GetType()) {
                 case SensorBase::ST_Camera: {
-                    sensor_msgs::ImagePtr imagemsg = boost::dynamic_pointer_cast<sensor_msgs::Image>(msg.first);
+                    sensor_msgs::ImagePtr imagemsg = boost::dynamic_pointer_cast<sensor_msgs::Image>(msg.at(0).first);
                     if( bCheckStamp && imagemsg->header.stamp == stamp ) {
                         break;
                     }
-
                     boost::shared_ptr<SensorBase::CameraGeomData> pcamerageom = boost::static_pointer_cast<SensorBase::CameraGeomData>((*itsensor)->GetSensor()->GetSensorGeometry());
                     boost::shared_ptr<SensorBase::CameraSensorData> pcameradata = boost::static_pointer_cast<SensorBase::CameraSensorData>(pdata);
-
-                    sensor_msgs::CameraInfo cinfo;
-                    cinfo.header.stamp = stamp;
-                    cinfo.header.frame_id = (*itsensor)->GetName();
-                    cinfo.width = pcamerageom->width;
-                    cinfo.height = pcamerageom->height;
-                    cinfo.K[0] = pcamerageom->KK.fx; cinfo.K[1] = 0; cinfo.K[2] = pcamerageom->KK.cx;
-                    cinfo.K[3] = 0; cinfo.K[4] = pcamerageom->KK.fy; cinfo.K[5] = pcamerageom->KK.cy;
-                    cinfo.K[6] = 0; cinfo.K[7] = 0; cinfo.K[8] = 1;
-                    cinfo.R[0] = 1; cinfo.R[1] = 0; cinfo.R[2] = 0;
-                    cinfo.R[3] = 0; cinfo.R[4] = 1; cinfo.R[5] = 0;
-                    cinfo.R[6] = 0; cinfo.R[7] = 0; cinfo.R[8] = 1;
-                    cinfo.P[0] = pcamerageom->KK.fx; cinfo.P[1] = 0; cinfo.P[2] = pcamerageom->KK.cx; cinfo.P[3] = 0;
-                    cinfo.P[4] = 0; cinfo.P[5] = pcamerageom->KK.fy; cinfo.P[6] = pcamerageom->KK.cy; cinfo.P[7] = 0;
-                    cinfo.P[8] = 0; cinfo.P[9] = 0; cinfo.P[10] = 1; cinfo.P[11] = 0;
-                    msg.second.at(0).publish(cinfo);
-                    imagemsg->header = cinfo.header;
+                    sensor_msgs::CameraInfoPtr infomsg = boost::dynamic_pointer_cast<sensor_msgs::CameraInfo>(msg.at(1).first);
+                    infomsg->header = header;
+                    infomsg->width = pcamerageom->width;
+                    infomsg->height = pcamerageom->height;
+                    infomsg->K[0] = pcamerageom->KK.fx; infomsg->K[1] = 0; infomsg->K[2] = pcamerageom->KK.cx;
+                    infomsg->K[3] = 0; infomsg->K[4] = pcamerageom->KK.fy; infomsg->K[5] = pcamerageom->KK.cy;
+                    infomsg->K[6] = 0; infomsg->K[7] = 0; infomsg->K[8] = 1;
+                    infomsg->R[0] = 1; infomsg->R[1] = 0; infomsg->R[2] = 0;
+                    infomsg->R[3] = 0; infomsg->R[4] = 1; infomsg->R[5] = 0;
+                    infomsg->R[6] = 0; infomsg->R[7] = 0; infomsg->R[8] = 1;
+                    infomsg->P[0] = pcamerageom->KK.fx; infomsg->P[1] = 0; infomsg->P[2] = pcamerageom->KK.cx; infomsg->P[3] = 0;
+                    infomsg->P[4] = 0; infomsg->P[5] = pcamerageom->KK.fy; infomsg->P[6] = pcamerageom->KK.cy; infomsg->P[7] = 0;
+                    infomsg->P[8] = 0; infomsg->P[9] = 0; infomsg->P[10] = 1; infomsg->P[11] = 0;
+                    msg.at(0).second.publish(*infomsg);
+                    imagemsg->header = header;
                     imagemsg->width = pcamerageom->width;
                     imagemsg->height = pcamerageom->height;
                     imagemsg->encoding = "rgb8";
                     imagemsg->step = pcamerageom->width*3;
                     imagemsg->data = pcameradata->vimagedata;
-                    msg.second.at(1).publish(*imagemsg);
+                    msg.at(1).second.publish(*imagemsg);
+                    break;
+                }
+                case SensorBase::ST_Laser: {
+                    sensor_msgs::LaserScanPtr laserscanmsg = boost::dynamic_pointer_cast<sensor_msgs::LaserScan>(msg.at(0).first);
+                    if( bCheckStamp && laserscanmsg->header.stamp == stamp ) {
+                        break;
+                    }
+                    boost::shared_ptr<SensorBase::LaserGeomData> plasergeom = boost::static_pointer_cast<SensorBase::LaserGeomData>((*itsensor)->GetSensor()->GetSensorGeometry());
+                    boost::shared_ptr<SensorBase::LaserSensorData> plaserdata = boost::static_pointer_cast<SensorBase::LaserSensorData>(pdata);
+                    laserscanmsg->header = header;
+                    laserscanmsg->angle_min = plasergeom->min_angle[0];
+                    laserscanmsg->angle_max = plasergeom->max_angle[0];
+                    laserscanmsg->angle_increment = plasergeom->resolution[0];
+                    laserscanmsg->time_increment = plasergeom->time_increment;
+                    laserscanmsg->scan_time = plasergeom->time_scan;
+                    laserscanmsg->range_min = plasergeom->min_range;
+                    laserscanmsg->range_max = plasergeom->max_range;
+                    // data
+                    laserscanmsg->ranges.resize(plaserdata->ranges.size());
+                    for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
+                        laserscanmsg->ranges[i] = RaveSqrt(plaserdata->ranges[i].lengthsqr3());
+                    }
+                    laserscanmsg->intensities.resize(plaserdata->intensity.size());
+                    std::copy(plaserdata->intensity.begin(),plaserdata->intensity.end(),laserscanmsg->intensities.begin());
+                    msg.at(0).second.publish(laserscanmsg);
+
+                    sensor_msgs::PointCloud2Ptr pointcloud2 = boost::dynamic_pointer_cast<sensor_msgs::PointCloud2>(msg.at(1).first);
+                    pointcloud2->header = header;
+                    pointcloud2->height = 1;
+                    pointcloud2->width = plaserdata->ranges.size();
+                    uint8_t drealtype = 0;
+                    switch(sizeof(dReal)) {
+                    case 4: drealtype = sensor_msgs::PointField::FLOAT32; break;
+                    case 8: drealtype = sensor_msgs::PointField::FLOAT64; break;
+                    default:
+                        RAVELOG_WARN("bad type\n");
+                        return;
+                    }
+
+                    pointcloud2->point_step = 0;
+                    pointcloud2->fields.resize(1 + (plaserdata->intensity.size()==plaserdata->ranges.size()));
+                    pointcloud2->fields[0].name = "position";
+                    pointcloud2->fields[0].offset = pointcloud2->point_step;
+                    pointcloud2->fields[0].datatype = drealtype;
+                    pointcloud2->fields[0].count = 3;
+                    pointcloud2->point_step += 3*sizeof(dReal);
+                    if( plaserdata->intensity.size()==plaserdata->ranges.size() ) {
+                        pointcloud2->fields[1].name = "intensity";
+                        pointcloud2->fields[1].offset = pointcloud2->point_step;
+                        pointcloud2->fields[1].datatype = drealtype;
+                        pointcloud2->fields[1].count = 1;
+                        pointcloud2->point_step += sizeof(dReal);
+                    }
+                    pointcloud2->is_bigendian = false;
+                    pointcloud2->row_step = plaserdata->ranges.size()*pointcloud2->point_step;
+                    pointcloud2->data.resize(pointcloud2->row_step);
+                    for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
+                        dReal* p = (dReal*)(&pointcloud2->data.at(i*pointcloud2->point_step));
+                        p[0] = plaserdata->ranges[i].x;
+                        p[1] = plaserdata->ranges[i].y;
+                        p[2] = plaserdata->ranges[i].z;
+                        p[3] = plaserdata->intensity[i];
+                    }
+                    pointcloud2->is_dense = true;
+                    msg.at(1).second.publish(*pointcloud2);
                     break;
                 }
                 default:
@@ -209,7 +285,7 @@ protected:
         RobotBasePtr _robot;
         string _rosnamespace;
         boost::shared_ptr<ros::NodeHandle> _node;
-        map<RobotBase::AttachedSensorPtr, pair<ros::MessagePtr, vector<ros::Publisher> > > _publishers;
+        map<RobotBase::AttachedSensorPtr, vector< pair<ros::MessagePtr, ros::Publisher> > > _publishers;
         sensor_msgs::JointState _jointstate;
         ros::Publisher _pubjointstate;
         ros::WallTimer _timer;

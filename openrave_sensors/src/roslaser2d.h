@@ -258,9 +258,9 @@ public:
 
         Transform t = _trans;
         _pdata->t = t;
-        _pdata->positions.resize(msg->get_ranges_size());
-        _pdata->ranges.resize(msg->get_ranges_size());
-        _pdata->intensity.resize(msg->get_intensities_size());
+        _pdata->positions.resize(msg->ranges.size());
+        _pdata->ranges.resize(msg->ranges.size());
+        _pdata->intensity.resize(msg->intensities.size());
     
         float ang = msg->angle_min;
         for(size_t i = 0; i < msg->ranges.size(); ++i, ang += msg->angle_increment) {
@@ -273,7 +273,7 @@ public:
         for(int i = 0; i < (int)_pdata->intensity.size(); ++i)
             _pdata->intensity[i] = msg->intensities[i];
 
-        if( _bRender && msg->get_ranges_size() > 0 ) {
+        if( _bRender && msg->ranges.size() > 0 ) {
 
             // If can render, check if some time passed before last update
             list<EnvironmentBase::GraphHandlePtr> listhandles;

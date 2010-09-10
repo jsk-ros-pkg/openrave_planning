@@ -59,7 +59,7 @@ private:
         {
             boost::mutex::scoped_lock lock(_mutex);
 
-            for (unsigned int i=0; i<topicmsg->get_bodies_size(); i++) {
+            for (unsigned int i=0; i<topicmsg->bodies.size(); i++) {
                 const mocap_msgs::MocapBody& psbody = topicmsg->bodies[i];
 
                 boost::shared_ptr<BodyData> b;
