@@ -212,7 +212,7 @@ public:
         _tfbroadcaster.reset();
 
         if( !!_probot && !!_penv )
-            _penv->RemoveKinBody(_probot);
+            _penv->Remove(_probot);
         _probot.reset();
         if( !!_penv )
             _penv->Destroy();
@@ -786,7 +786,7 @@ protected:
         catch(controller_exception& err) {
             ROS_ERROR("failed to open OpenRAVE robot file %s: %s", robotfile.c_str(),err.what());
             if( !!_probot && !!_penv )
-                _penv->RemoveKinBody(_probot);
+                _penv->Remove(_probot);
             _probot.reset();
             if( !!_penv )
                 _penv->Destroy();

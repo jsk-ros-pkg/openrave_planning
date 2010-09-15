@@ -218,7 +218,7 @@ private:
                         pdummydata->sid = itobj->first;
                         b = boost::static_pointer_cast<BodyData>(AddKinBody(pbody, pdummydata));
                         if( !b ) {
-                            GetEnv()->RemoveKinBody(pbody);
+                            GetEnv()->Remove(pbody);
                             continue;
                         }
                     }

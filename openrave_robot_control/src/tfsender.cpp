@@ -137,7 +137,7 @@ public:
     virtual ~RobotFramePublisher()
     {
         if( !!_probot && !!_penv )
-            _penv->RemoveKinBody(_probot);
+            _penv->Remove(_probot);
         _probot.reset();
         if( !!_penv )
             _penv->Destroy();

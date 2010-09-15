@@ -209,11 +209,11 @@ private:
             totalpoints += itpoint->inside==0;
 
         _pointcloudout.header = _pointcloudin->header;
-        _pointcloudout.set_points_size(totalpoints);
-        _pointcloudout.set_channels_size(_pointcloudin->channels.size());
+        _pointcloudout.points.resize(totalpoints);
+        _pointcloudout.channels.resize(_pointcloudin->channels.size());
         for(int ichan = 0; ichan < (int)_pointcloudin->channels.size(); ++ichan) {
             _pointcloudout.channels[ichan].name = _pointcloudin->channels[ichan].name;
-            _pointcloudout.channels[ichan].set_values_size(totalpoints);
+            _pointcloudout.channels[ichan].values.resize(totalpoints);
         }
 
         for(int oldindex = 0, newindex = 0; oldindex < (int)_vlaserpoints.size(); ++oldindex) {
@@ -290,7 +290,7 @@ private:
             LASERPOINT& laserpoint = vlaserpoints[i];
             FOREACH(ithull, _vLinkHulls) {
                 Transform tinv, tinvstart = ithull->tstart.inverse(), tinvend = ithull->tend.inverse();
-                tinv.rot = dQSlerp(tinvstart.rot,tinvend.rot,laserpoint.time);
+                tinv.rot = quatSlerp(tinvstart.rot,tinvend.rot,laserpoint.time);
                 tinv.trans = tinvstart.trans*(1-laserpoint.time) + tinvend.trans*laserpoint.time;
 
                 bool bInside = true;

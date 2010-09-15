@@ -73,7 +73,7 @@ public:
             {
                 boost::mutex::scoped_lock lock(_mutexProblems);
                 FOREACH(itprob, _mapproblems)
-                    itprob->second->GetEnv()->RemoveProblem(itprob->second);
+                    itprob->second->GetEnv()->Remove(itprob->second);
                 _mapproblems.clear();
             }
         }
@@ -237,7 +237,7 @@ public:
             return false;
 
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
-        return GetEnv()->RemoveKinBody(pbody);
+        return GetEnv()->Remove(pbody);
     }
 
     bool body_enable_srv(body_enable::Request& req, body_enable::Response& res)
@@ -532,7 +532,7 @@ public:
             while(itprob != _mapproblems.end()) {
                 if( itprob->second->GetXMLId() == req.problemtype ) {
                     RAVELOG_INFOA(str(boost::format("deleting duplicate problem %s\n")%req.problemtype));
-                    if( !GetEnv()->RemoveProblem(itprob->second) )
+                    if( !GetEnv()->Remove(itprob->second) )
                         RAVELOG_WARNA(str(boost::format("failed to remove problem %s\n")%itprob->second->GetXMLId()));
                     
                     _mapproblems.erase(itprob++);
@@ -586,7 +586,7 @@ public:
         ProblemInstancePtr prob = itprob->second;
         _mapproblems.erase(itprob);
 
-        if( !GetEnv()->RemoveProblem(itprob->second) ) {
+        if( !GetEnv()->Remove(itprob->second) ) {
             RAVELOG_WARNA("failed to remove problem\n");
             return false;
         }

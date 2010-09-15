@@ -199,7 +199,7 @@ private:
             }
 
             if( !!_pbodytestbox ) {
-                GetEnv()->RemoveKinBody(_pbodytestbox);
+                GetEnv()->Remove(_pbodytestbox);
                 _pbodytestbox.reset();
             }
 
@@ -228,7 +228,7 @@ private:
             while(itbody != _mapbodies.end()) {
                 if( !itbody->second->IsLocked() ) {
                     KinBody::LinkPtr plink = itbody->second->GetOffsetLink();
-                    GetEnv()->RemoveKinBody(plink->GetParent());
+                    GetEnv()->Remove(plink->GetParent());
                     _mapbodies.erase(itbody++);
                 }
                 else
@@ -241,7 +241,7 @@ private:
         boost::shared_ptr<BodyData> b = boost::static_pointer_cast<BodyData>(AddKinBody(pbody, pdata));
         if( !b ) {
             RAVELOG_ERRORA("removing/destroying kinbody\n");
-            GetEnv()->RemoveKinBody(pbody);
+            GetEnv()->Remove(pbody);
         }
     }
 

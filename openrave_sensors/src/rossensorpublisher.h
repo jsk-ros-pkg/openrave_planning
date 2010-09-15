@@ -162,7 +162,7 @@ protected:
                         msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::PointCloud2()), _node->advertise<sensor_msgs::PointCloud2>(_rosnamespace+(*itsensor)->GetName()+"/pointcloud",5)));
                         break;
                     case SensorBase::ST_IMU:
-                        msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::Imu()), _node->advertise<sensor_msgs::LaserScan>(_rosnamespace+(*itsensor)->GetName()+"/imu",5)));
+                        msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::Imu()), _node->advertise<sensor_msgs::Imu>(_rosnamespace+(*itsensor)->GetName()+"/imu",5)));
                         break;
                     default:
                         RAVELOG_WARN("unsupported sensor type\n");
@@ -273,6 +273,30 @@ protected:
                     }
                     pointcloud2->is_dense = true;
                     msg.at(1).second.publish(*pointcloud2);
+                    break;
+                }
+                case SensorBase::ST_IMU: {
+                    sensor_msgs::ImuPtr imumsg = boost::dynamic_pointer_cast<sensor_msgs::Imu>(msg.at(0).first);
+                    if( bCheckStamp && imumsg->header.stamp == stamp ) {
+                        break;
+                    }
+                    boost::shared_ptr<SensorBase::IMUGeomData> pimugeom = boost::static_pointer_cast<SensorBase::IMUGeomData>((*itsensor)->GetSensor()->GetSensorGeometry());
+                    boost::shared_ptr<SensorBase::IMUSensorData> pimudata = boost::static_pointer_cast<SensorBase::IMUSensorData>(pdata);
+                    imumsg->header = header;
+                    imumsg->orientation.x = pimudata->rotation.y;
+                    imumsg->orientation.y = pimudata->rotation.z;
+                    imumsg->orientation.z = pimudata->rotation.w;
+                    imumsg->orientation.w = pimudata->rotation.x;
+                    std::copy(pimugeom->rotation_covariance.begin(),pimugeom->rotation_covariance.end(),imumsg->orientation_covariance.begin());
+                    imumsg->angular_velocity.x = pimudata->angular_velocity.x;
+                    imumsg->angular_velocity.y = pimudata->angular_velocity.y;
+                    imumsg->angular_velocity.z = pimudata->angular_velocity.z;
+                    std::copy(pimugeom->angular_velocity_covariance.begin(), pimugeom->angular_velocity_covariance.end(), imumsg->angular_velocity_covariance.begin());
+                    imumsg->linear_acceleration.x = pimudata->linear_acceleration.x;
+                    imumsg->linear_acceleration.y = pimudata->linear_acceleration.y;
+                    imumsg->linear_acceleration.z = pimudata->linear_acceleration.z;
+                    std::copy(pimugeom->linear_acceleration_covariance.begin(), pimugeom->linear_acceleration_covariance.end(), imumsg->linear_acceleration_covariance.begin());
+                    msg.at(0).second.publish(*imumsg);
                     break;
                 }
                 default:
