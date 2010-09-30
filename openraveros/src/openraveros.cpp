@@ -42,7 +42,7 @@ void printhelp()
 void printinterfaces(EnvironmentBasePtr penv)
 {
     std::map<InterfaceType, std::vector<std::string> > interfacenames;
-    penv->GetLoadedInterfaces(interfacenames);
+    RaveGetLoadedInterfaces(interfacenames);
 
     stringstream ss;
             
@@ -63,7 +63,8 @@ int main(int argc, char ** argv)
     ros::init(argc,argv,"openraveserver", ros::init_options::NoSigintHandler);    
     if( !ros::master::check() )
         return 1;
-    
+
+    RaveInitialize(true);
     s_sessionserver.reset(new SessionServer());
     if( !s_sessionserver->Init() )
         return 2;

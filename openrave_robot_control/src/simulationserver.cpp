@@ -151,7 +151,7 @@ private:
         if( bDifferent ) {
             // have to add the current angles in the beginning, create a new trajectory
             EnvironmentMutex::scoped_lock lock(_penv->GetMutex());
-            TrajectoryBasePtr ptesttraj = _penv->CreateTrajectory(GetDOF());
+            TrajectoryBasePtr ptesttraj = RaveCreateTrajectory(_penv,GetDOF());
             ptesttraj->AddPoint(Trajectory::TPOINT(vcurrentangles, 0));
             ptesttraj->AddPoint(Trajectory::TPOINT(vstartangles, 0));
             ptesttraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), true, true, _fMaxVelMult);
@@ -247,7 +247,7 @@ boost::shared_ptr<SimulationController> s_pcontroller;
 
 void SetViewer(EnvironmentBasePtr penv, const string& viewername)
 {
-    ViewerBasePtr viewer = penv->CreateViewer(viewername);
+    ViewerBasePtr viewer = RaveCreateViewer(penv,viewername);
     if( !viewer )
         return;
 
@@ -309,6 +309,7 @@ int main(int argc, char ** argv)
     if( !ros::master::check() )
         return 1;
     
+    RaveInitialize(true);
     s_pcontroller.reset(new SimulationController(robotname, manipname, vjointnames, fMaxVelMult));
     s_pcontroller->init();
 

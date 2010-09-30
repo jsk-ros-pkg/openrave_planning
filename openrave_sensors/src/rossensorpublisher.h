@@ -300,8 +300,11 @@ protected:
                     break;
                 }
                 default:
-                    RAVELOG_WARN(str(boost::format("failed to output sensor type %d\n")%pdata->GetType()));
-                    break;
+                    if( _setUnpublishedSensors.find((*itsensor)->GetName()) == _setUnpublishedSensors.end() ) {
+                        RAVELOG_WARN(str(boost::format("failed to public sensor type %d\n")%pdata->GetType()));
+                        _setUnpublishedSensors.insert((*itsensor)->GetName());
+                        break;
+                    }
                 }
             }
         }
@@ -310,6 +313,7 @@ protected:
         string _rosnamespace;
         boost::shared_ptr<ros::NodeHandle> _node;
         map<RobotBase::AttachedSensorPtr, vector< pair<ros::MessagePtr, ros::Publisher> > > _publishers;
+        std::set<std::string> _setUnpublishedSensors;
         sensor_msgs::JointState _jointstate;
         ros::Publisher _pubjointstate;
         ros::WallTimer _timer;

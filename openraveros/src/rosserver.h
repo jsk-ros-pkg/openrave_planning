@@ -160,7 +160,7 @@ public:
     {
         {
             boost::mutex::scoped_lock lock(_mutexViewer);
-            _pviewer = GetEnv()->CreateViewer(strviewer);
+            _pviewer = RaveCreateViewer(GetEnv(),strviewer);
             if( !!_pviewer ) {
                 GetEnv()->AttachViewer(_pviewer);
                 _pviewer->ViewerSetSize(1024,768);
@@ -178,7 +178,7 @@ public:
 
     bool SetPhysicsEngine(const string& physicsengine)
     {
-        PhysicsEngineBasePtr p = GetEnv()->CreatePhysicsEngine(physicsengine);
+        PhysicsEngineBasePtr p = RaveCreatePhysicsEngine(GetEnv(),physicsengine);
         if( !p )
             return false;
 
@@ -188,7 +188,7 @@ public:
 
     bool SetCollisionChecker(const string& collisionchecker)
     {
-        CollisionCheckerBasePtr p = GetEnv()->CreateCollisionChecker(collisionchecker);
+        CollisionCheckerBasePtr p = RaveCreateCollisionChecker(GetEnv(),collisionchecker);
         if( !p )
             return false;
 
@@ -487,7 +487,7 @@ public:
     bool env_createbody_srv(env_createbody::Request& req, env_createbody::Response& res)
     {
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
-        KinBodyPtr pbody = GetEnv()->CreateKinBody();
+        KinBodyPtr pbody = RaveCreateKinBody(GetEnv());
 
         if( req.file.size() > 0 ) {
             if( !pbody->InitFromFile(req.file, std::list<std::pair<std::string,std::string> >()) )
@@ -505,7 +505,7 @@ public:
 
     bool env_createplanner_srv(env_createplanner::Request& req, env_createplanner::Response& res)
     {
-        PlannerBasePtr pplanner = GetEnv()->CreatePlanner(req.plannertype);
+        PlannerBasePtr pplanner = RaveCreatePlanner(GetEnv(),req.plannertype);
         if( !pplanner )
             return false;
 
@@ -521,7 +521,7 @@ public:
 
     bool env_createproblem_srv(env_createproblem::Request& req, env_createproblem::Response& res)
     {
-        ProblemInstancePtr pproblem = GetEnv()->CreateProblem(req.problemtype);
+        ProblemInstancePtr pproblem = RaveCreateProblem(GetEnv(),req.problemtype);
         if( !pproblem )
             return false;
 
@@ -557,7 +557,7 @@ public:
 
     bool env_createrobot_srv(env_createrobot::Request& req, env_createrobot::Response& res)
     {
-        RobotBasePtr probot = GetEnv()->CreateRobot(req.type);
+        RobotBasePtr probot = RaveCreateRobot(GetEnv(),req.type);
         if( !probot )
             return false;
 
@@ -786,7 +786,7 @@ public:
     bool env_loadplugin_srv(env_loadplugin::Request& req, env_loadplugin::Response& res)
     {
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
-        return GetEnv()->LoadPlugin(req.filename);
+        return RaveLoadPlugin(req.filename);
     }
 
     bool env_loadscene_srv(env_loadscene::Request& req, env_loadscene::Response& res)
@@ -1069,7 +1069,7 @@ public:
 
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
 
-        TrajectoryBasePtr traj = GetEnv()->CreateTrajectory(itplanner->second->GetParameters()->GetDOF());
+        TrajectoryBasePtr traj = RaveCreateTrajectory(GetEnv(),itplanner->second->GetParameters()->GetDOF());
         
         RAVELOG_INFOA("starting to plan");
         if( !itplanner->second->PlanPath(traj) ) {
@@ -1145,7 +1145,7 @@ public:
             return false;
         RobotBasePtr probot = boost::static_pointer_cast<RobotBase>(pbody);
 
-        ControllerBasePtr pcontroller = GetEnv()->CreateController(req.controllername);
+        ControllerBasePtr pcontroller = RaveCreateController(GetEnv(),req.controllername);
         if( !pcontroller )
             return false;
         
@@ -1407,8 +1407,8 @@ public:
         
         probot->SetActiveDOFs(vjointindices, active.affine, Vector(active.rotationaxis[0], active.rotationaxis[1], active.rotationaxis[2]));
 
-        TrajectoryBasePtr pfulltraj = GetEnv()->CreateTrajectory(probot->GetDOF());
-        TrajectoryBasePtr ptraj = GetEnv()->CreateTrajectory(probot->GetActiveDOF());
+        TrajectoryBasePtr pfulltraj = RaveCreateTrajectory(GetEnv(),probot->GetDOF());
+        TrajectoryBasePtr ptraj = RaveCreateTrajectory(GetEnv(),probot->GetActiveDOF());
         
         TrajectoryBase::TPOINT pt; pt.q.resize(probot->GetActiveDOF());
         pt.trans = probot->GetTransform();

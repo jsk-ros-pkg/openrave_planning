@@ -74,12 +74,12 @@ class OpenRAVEClientController : public ControllerBase
 
             Query::Request req;
             Query::Response res;
-            if( !_session->call("Query",req,res) )
+            if( !_session->call("Query",req,res) ) {
                 throw controller_exception(str(boost::format("failed to query controller of session %s")%_strTrajectorySession));
-            
-            if( res.jointnames.size() == 0 )
+            }
+            if( res.jointnames.size() == 0 ) {
                 throw controller_exception(str(boost::format("no joint names controller of session %s")%_strTrajectorySession));
-
+            }
             vector<string> vrobotjoints(_probot->GetJoints().size());
             for(size_t i = 0; i < _probot->GetJoints().size(); ++i)
                 vrobotjoints[i] = _probot->GetJoints().at(i)->GetName();

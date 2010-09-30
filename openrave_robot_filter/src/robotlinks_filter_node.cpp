@@ -137,10 +137,10 @@ public:
         RAVELOG_INFO("opening OpenRAVE robot file %s\n", robotname.c_str());
         
         // create the main environment
-        EnvironmentBasePtr penv = CreateEnvironment();
-        if( !penv )
+        EnvironmentBasePtr penv = RaveCreateEnvironment();
+        if( !penv ) {
             return false;
-
+        }
         // load the scene
         if( !penv->Load(robotname) ) {
             RAVELOG_ERROR("RobotLinksFilter failed create robot %s\n", robotname.c_str());
@@ -455,10 +455,10 @@ int main(int argc, char ** argv)
     }
 
     ros::init(argc,argv,"robotlinks_filter");
-
-    if( !ros::master::check() )
+    if( !ros::master::check() ) {
         return 1;
-    
+    }
+    RaveInitialize(true);
     boost::shared_ptr<RobotLinksFilter> plinksfilter(new RobotLinksFilter(robotname));
     ros::spin();
     plinksfilter.reset();

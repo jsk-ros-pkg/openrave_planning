@@ -436,7 +436,7 @@ public:
             return false;
         }
 
-        TrajectoryBasePtr ptraj = _penv->CreateTrajectory(GetDOF());
+        TrajectoryBasePtr ptraj = RaveCreateTrajectory(_penv,GetDOF());
 
         vector<dReal> vpoints(GetDOF());
         FOREACH(it, req.traj.points) {
@@ -604,9 +604,10 @@ protected:
     
     virtual void _InitEnvironment()
     {
-        _penv = CreateEnvironment(true);
-        if( !_penv )
+        _penv = RaveCreateEnvironment();
+        if( !_penv ) {
             throw controller_exception("failed to initialize environment");
+        }
     }
 
     virtual bool _InitRobot(const string& robotfile, const string& manipname)
@@ -910,10 +911,10 @@ protected:
     //@}
 };
 
-BOOST_STATIC_ASSERT(Trajectory::NONE==openrave_robot_control::StartTrajectory::Request::Interp_None);
-BOOST_STATIC_ASSERT(Trajectory::LINEAR==openrave_robot_control::StartTrajectory::Request::Interp_Linear);
-BOOST_STATIC_ASSERT(Trajectory::LINEAR_BLEND==openrave_robot_control::StartTrajectory::Request::Interp_LinearBlend);
-BOOST_STATIC_ASSERT(Trajectory::CUBIC==openrave_robot_control::StartTrajectory::Request::Interp_Cubic);
-BOOST_STATIC_ASSERT(Trajectory::QUINTIC==openrave_robot_control::StartTrajectory::Request::Interp_Quintic);
+BOOST_STATIC_ASSERT((int)Trajectory::NONE==openrave_robot_control::StartTrajectory::Request::Interp_None);
+BOOST_STATIC_ASSERT((int)Trajectory::LINEAR==openrave_robot_control::StartTrajectory::Request::Interp_Linear);
+BOOST_STATIC_ASSERT((int)Trajectory::LINEAR_BLEND==openrave_robot_control::StartTrajectory::Request::Interp_LinearBlend);
+BOOST_STATIC_ASSERT((int)Trajectory::CUBIC==openrave_robot_control::StartTrajectory::Request::Interp_Cubic);
+BOOST_STATIC_ASSERT((int)Trajectory::QUINTIC==openrave_robot_control::StartTrajectory::Request::Interp_Quintic);
 
 } // end namespace openrave_robot_control

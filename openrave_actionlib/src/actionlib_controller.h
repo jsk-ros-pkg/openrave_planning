@@ -656,7 +656,7 @@ ROSActionLibController(EnvironmentBasePtr penv) : ControllerBase(penv) {
         TrajectoryBasePtr ptraj;
         {
             EnvironmentMutex::scoped_lock lockenv(GetEnv()->GetMutex());
-            ptraj = GetEnv()->CreateTrajectory(_probot->GetDOF());
+            ptraj = RaveCreateTrajectory(GetEnv(),_probot->GetDOF());
             vector<dReal> vcurrentvalues;
             _probot->GetDOFValues(vcurrentvalues);
             ptraj->AddPoint(TrajectoryBase::TPOINT(vcurrentvalues,0));

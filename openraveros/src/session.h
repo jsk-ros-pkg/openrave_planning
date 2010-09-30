@@ -70,7 +70,7 @@ class SessionServer : public boost::enable_shared_from_this<SessionServer>
     string _sessionname;
 public:
     SessionServer() : _ok(true) {
-        _pParentEnvironment = CreateEnvironment();
+        _pParentEnvironment = RaveCreateEnvironment();
     }
     virtual ~SessionServer() {
         Destroy();
@@ -198,7 +198,7 @@ protected:
                     continue;
                 }
 
-                _pviewer = _penvViewer->CreateViewer(_strviewer);
+                _pviewer = RaveCreateViewer(_penvViewer,_strviewer);
                 if( !!_pviewer ) {
                     _penvViewer->AttachViewer(_pviewer);
                     _pviewer->ViewerSetSize(1024,768);

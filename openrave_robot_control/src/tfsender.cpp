@@ -41,7 +41,7 @@ public:
             throw runtime_error("bad robot file");
 
         // create the main environment
-        _penv = OpenRAVE::CreateEnvironment(true);
+        _penv = OpenRAVE::RaveCreateEnvironment();
         if( !_penv )
             throw runtime_error("failed to create openrave environment");
         _probot = _penv->ReadRobotXMLFile(RobotBasePtr(), robotfile, std::list<std::pair<std::string,std::string> >());
@@ -257,9 +257,10 @@ int main(int argc, char ** argv)
     }
 
     ros::init(argc,argv,"openrave_tfsender");
-    if( !ros::master::check() )
+    if( !ros::master::check() ) {
         return 1;
-    
+    }
+    RaveInitialize(true);    
     boost::shared_ptr<RobotFramePublisher> ppublisher(new RobotFramePublisher(robotname));
     ros::spin();
     
