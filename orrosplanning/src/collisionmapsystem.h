@@ -176,7 +176,7 @@ private:
                         GetEnv()->AddKinBody(_pbodytestbox);
                     }
                     Transform t;
-                    t.rot = quatFromAxisAngle(Vector(itmsgab->axis.x,itmsgab->axis.y,itmsgab->axis.z),itmsgab->angle);
+                    t.rot = quatFromAxisAngle(Vector(itmsgab->axis.x,itmsgab->axis.y,itmsgab->axis.z),(dReal)itmsgab->angle);
                     t.trans = Vector(itmsgab->center.x, itmsgab->center.y, itmsgab->center.z);
                     _pbodytestbox->SetTransform(t);
                     bool bPrune=false;
@@ -191,7 +191,7 @@ private:
                 }
                 itobb->pos = Vector(itmsgab->center.x, itmsgab->center.y, itmsgab->center.z);
                 itobb->extents = Vector(itmsgab->extents.x, itmsgab->extents.y, itmsgab->extents.z);
-                tm = matrixFromAxisAngle(Vector(itmsgab->axis.x,itmsgab->axis.y,itmsgab->axis.z),itmsgab->angle);
+                tm = matrixFromAxisAngle(Vector(itmsgab->axis.x,itmsgab->axis.y,itmsgab->axis.z),(dReal)itmsgab->angle);
                 itobb->right = Vector(tm.m[0],tm.m[4],tm.m[8]);
                 itobb->up = Vector(tm.m[1],tm.m[5],tm.m[9]);
                 itobb->dir = Vector(tm.m[2],tm.m[6],tm.m[10]);

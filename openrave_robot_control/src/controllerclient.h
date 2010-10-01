@@ -605,7 +605,7 @@ public:
         return bSuccess;
     }
 
-    virtual bool SimulationStep(float fTimeElapsed)
+    virtual bool SimulationStep(dReal fTimeElapsed)
     {
         if( !!_probot ) {
             vector<dReal> values;
