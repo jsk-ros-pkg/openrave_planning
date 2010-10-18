@@ -160,7 +160,7 @@ private:
                 }
             }
 
-            pbody = GetEnv()->CreateKinBody();
+            pbody = RaveCreateKinBody(GetEnv());
 
             _vobbs.resize(0); _vobbs.resize(topicmsg->boxes.size());
             vector<OBB>::iterator itobb = _vobbs.begin();
@@ -170,7 +170,7 @@ private:
                     if( !_pbodytestbox ) {
                         vector<AABB> vabs(1);
                         vabs[0].extents = Vector(itmsgab->extents.x+_fPrunePadding, itmsgab->extents.y+_fPrunePadding, itmsgab->extents.z+_fPrunePadding);
-                        _pbodytestbox = GetEnv()->CreateKinBody();
+                        _pbodytestbox = RaveCreateKinBody(GetEnv());
                         _pbodytestbox->InitFromBoxes(vabs,false);
                         _pbodytestbox->SetName(str(boost::format("testbox%d")%RaveRandomInt()));
                         GetEnv()->AddKinBody(_pbodytestbox);
