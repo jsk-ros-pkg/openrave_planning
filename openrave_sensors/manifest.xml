@@ -9,7 +9,9 @@
   </export>
   <depend package="roscpp"/>
   <depend package="openrave"/>
+  <depend package="geometry_msgs"/>
   <depend package="sensor_msgs"/>
+  <depend package="nav_msgs"/>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>

@@ -23,6 +23,10 @@
 #include <sensor_msgs/PointField.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
+#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/WrenchStamped.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Vector3.h>
 
 class ROSSensorPublisher : public ProblemInstance
 {
@@ -94,6 +98,28 @@ protected:
         }
     }
 
+    static geometry_msgs::Pose rosPose(const Transform& t)
+    {
+        geometry_msgs::Pose p;
+        p.position.x = t.trans.x;
+        p.position.y = t.trans.y;
+        p.position.z = t.trans.z;
+        p.orientation.x = t.rot.y;
+        p.orientation.y = t.rot.z;
+        p.orientation.z = t.rot.w;
+        p.orientation.w = t.rot.x;
+        return p;
+    }
+
+    static geometry_msgs::Vector3 rosVector3(const Vector& v)
+    {
+        geometry_msgs::Vector3 r;
+        r.x = v.x;
+        r.y = v.y;
+        r.z = v.z;
+        return r;
+    }
+
     class SensorPublisher
     {
     public:
@@ -163,6 +189,12 @@ protected:
                         break;
                     case SensorBase::ST_IMU:
                         msg.push_back(make_pair(ros::MessagePtr(new sensor_msgs::Imu()), _node->advertise<sensor_msgs::Imu>(_rosnamespace+(*itsensor)->GetName()+"/imu",5)));
+                        break;
+                    case SensorBase::ST_Force6D:
+                        msg.push_back(make_pair(ros::MessagePtr(new geometry_msgs::WrenchStamped()), _node->advertise<geometry_msgs::WrenchStamped>(_rosnamespace+(*itsensor)->GetName()+"/force",5)));
+                        break;
+                    case SensorBase::ST_Odometry:
+                        msg.push_back(make_pair(ros::MessagePtr(new nav_msgs::Odometry()), _node->advertise<nav_msgs::Odometry>(_rosnamespace+(*itsensor)->GetName()+"/odometry",5)));
                         break;
                     default:
                         RAVELOG_WARN("unsupported sensor type\n");
@@ -275,6 +307,18 @@ protected:
                     msg.at(1).second.publish(*pointcloud2);
                     break;
                 }
+                case SensorBase::ST_Force6D: {
+                    geometry_msgs::WrenchStampedPtr wrenchmsg = boost::dynamic_pointer_cast<geometry_msgs::WrenchStamped>(msg.at(0).first);
+                    if( bCheckStamp && wrenchmsg->header.stamp == stamp ) {
+                        break;
+                    }
+                    boost::shared_ptr<SensorBase::Force6DGeomData> pforcegeom = boost::static_pointer_cast<SensorBase::Force6DGeomData>((*itsensor)->GetSensor()->GetSensorGeometry());
+                    boost::shared_ptr<SensorBase::Force6DSensorData> pforcedata = boost::static_pointer_cast<SensorBase::Force6DSensorData>(pdata);
+                    wrenchmsg->header = header;
+                    wrenchmsg->wrench.force = rosVector3(pforcedata->force);
+                    wrenchmsg->wrench.torque = rosVector3(pforcedata->torque);
+                    break;
+                }
                 case SensorBase::ST_IMU: {
                     sensor_msgs::ImuPtr imumsg = boost::dynamic_pointer_cast<sensor_msgs::Imu>(msg.at(0).first);
                     if( bCheckStamp && imumsg->header.stamp == stamp ) {
@@ -287,16 +331,31 @@ protected:
                     imumsg->orientation.y = pimudata->rotation.z;
                     imumsg->orientation.z = pimudata->rotation.w;
                     imumsg->orientation.w = pimudata->rotation.x;
-                    std::copy(pimugeom->rotation_covariance.begin(),pimugeom->rotation_covariance.end(),imumsg->orientation_covariance.begin());
+                    std::copy(pimudata->rotation_covariance.begin(),pimudata->rotation_covariance.end(),imumsg->orientation_covariance.begin());
                     imumsg->angular_velocity.x = pimudata->angular_velocity.x;
                     imumsg->angular_velocity.y = pimudata->angular_velocity.y;
                     imumsg->angular_velocity.z = pimudata->angular_velocity.z;
-                    std::copy(pimugeom->angular_velocity_covariance.begin(), pimugeom->angular_velocity_covariance.end(), imumsg->angular_velocity_covariance.begin());
+                    std::copy(pimudata->angular_velocity_covariance.begin(), pimudata->angular_velocity_covariance.end(), imumsg->angular_velocity_covariance.begin());
                     imumsg->linear_acceleration.x = pimudata->linear_acceleration.x;
                     imumsg->linear_acceleration.y = pimudata->linear_acceleration.y;
                     imumsg->linear_acceleration.z = pimudata->linear_acceleration.z;
-                    std::copy(pimugeom->linear_acceleration_covariance.begin(), pimugeom->linear_acceleration_covariance.end(), imumsg->linear_acceleration_covariance.begin());
+                    std::copy(pimudata->linear_acceleration_covariance.begin(), pimudata->linear_acceleration_covariance.end(), imumsg->linear_acceleration_covariance.begin());
                     msg.at(0).second.publish(*imumsg);
+                    break;
+                }
+                case SensorBase::ST_Odometry: {
+                    nav_msgs::OdometryPtr odometrymsg = boost::dynamic_pointer_cast<nav_msgs::Odometry>(msg.at(0).first);
+                    if( bCheckStamp && odometrymsg->header.stamp == stamp ) {
+                        break;
+                    }
+                    boost::shared_ptr<SensorBase::OdometryGeomData> podometrygeom = boost::static_pointer_cast<SensorBase::OdometryGeomData>((*itsensor)->GetSensor()->GetSensorGeometry());
+                    boost::shared_ptr<SensorBase::OdometrySensorData> podometrydata = boost::static_pointer_cast<SensorBase::OdometrySensorData>(pdata);
+                    odometrymsg->header = header;
+                    odometrymsg->pose.pose = rosPose(podometrydata->pose);
+                    std::copy(podometrydata->pose_covariance.begin(),podometrydata->pose_covariance.end(),odometrymsg->pose.covariance.begin());
+                    odometrymsg->twist.twist.linear = rosVector3(podometrydata->linear_velocity);
+                    odometrymsg->twist.twist.angular = rosVector3(podometrydata->angular_velocity);
+                    std::copy(podometrydata->velocity_covariance.begin(),podometrydata->velocity_covariance.end(),odometrymsg->twist.covariance.begin());
                     break;
                 }
                 default:
