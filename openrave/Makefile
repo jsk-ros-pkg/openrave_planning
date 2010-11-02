@@ -19,6 +19,9 @@ BULLET_LIB_DIR=$(shell rospack find bullet)/lib
 BULLET_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags bullet)
 BULLET_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags bullet)
 
+ODE_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags opende)
+ODE_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags opende)
+
 BUILDDIR=$(shell if [ $(DEBUG) ]; then echo builddebug; else echo build; fi)
 CMAKE_BUILD_TYPE=$(shell if [ $(DEBUG) ]; then echo Debug; else echo RelWithDebInfo; fi)
 
@@ -34,7 +37,7 @@ Description: Bullet as built by ROS\n\
 Version: 2.74\n\
 Libs: ${BULLET_LFLAGS}\n\
 CFlags: ${BULLET_CFLAGS}" > bullet.pc
-	cd $(INSTALL_DIR) && cd $(SVN_DIR) && export PATH="$(shell rospack find soqt)/bin:$(shell rospack find opende)/opende/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 .. && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
+	cd $(INSTALL_DIR) && cd $(SVN_DIR) && export PATH="$(shell rospack find soqt)/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" .. && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
 	touch installed
 
 clean:
