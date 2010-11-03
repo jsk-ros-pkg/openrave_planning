@@ -317,6 +317,7 @@ protected:
                     wrenchmsg->header = header;
                     wrenchmsg->wrench.force = rosVector3(pforcedata->force);
                     wrenchmsg->wrench.torque = rosVector3(pforcedata->torque);
+                    msg.at(0).second.publish(*wrenchmsg);
                     break;
                 }
                 case SensorBase::ST_IMU: {
@@ -351,11 +352,13 @@ protected:
                     boost::shared_ptr<SensorBase::OdometryGeomData> podometrygeom = boost::static_pointer_cast<SensorBase::OdometryGeomData>((*itsensor)->GetSensor()->GetSensorGeometry());
                     boost::shared_ptr<SensorBase::OdometrySensorData> podometrydata = boost::static_pointer_cast<SensorBase::OdometrySensorData>(pdata);
                     odometrymsg->header = header;
+                    odometrymsg->child_frame_id = pgeom->targetid;
                     odometrymsg->pose.pose = rosPose(podometrydata->pose);
                     std::copy(podometrydata->pose_covariance.begin(),podometrydata->pose_covariance.end(),odometrymsg->pose.covariance.begin());
                     odometrymsg->twist.twist.linear = rosVector3(podometrydata->linear_velocity);
                     odometrymsg->twist.twist.angular = rosVector3(podometrydata->angular_velocity);
                     std::copy(podometrydata->velocity_covariance.begin(),podometrydata->velocity_covariance.end(),odometrymsg->twist.covariance.begin());
+                    msg.at(0).second.publish(*odometrymsg);
                     break;
                 }
                 default:
