@@ -352,7 +352,7 @@ protected:
                     boost::shared_ptr<SensorBase::OdometryGeomData> podometrygeom = boost::static_pointer_cast<SensorBase::OdometryGeomData>((*itsensor)->GetSensor()->GetSensorGeometry());
                     boost::shared_ptr<SensorBase::OdometrySensorData> podometrydata = boost::static_pointer_cast<SensorBase::OdometrySensorData>(pdata);
                     odometrymsg->header = header;
-                    odometrymsg->child_frame_id = pgeom->targetid;
+                    odometrymsg->child_frame_id = podometrygeom->targetid;
                     odometrymsg->pose.pose = rosPose(podometrydata->pose);
                     std::copy(podometrydata->pose_covariance.begin(),podometrydata->pose_covariance.end(),odometrymsg->pose.covariance.begin());
                     odometrymsg->twist.twist.linear = rosVector3(podometrydata->linear_velocity);
