@@ -196,7 +196,7 @@ class GraspingModelROS(grasping.GraspingModel):
         controlargs = args
         for i,serviceaddr in enumerate(serviceaddrs):
             nodes += """<machine name="m%d" address="%s" default="false" %s/>\n"""%(i,serviceaddr[0],serviceaddr[1])
-            nodes += """<node machine="m%d" name="g%d" pkg="%s" type="grasping_ros.py" args="--server %s" output="log" cwd="node">\n  <remap from="ComputeGraspingService" to="g%d"/>\n</node>"""%(i,i,PKG,args,i)
+            nodes += """<node machine="m%d" name="g%d" pkg="%s" type="grasping_ros.py" args="--startserver %s" output="log" cwd="node">\n  <remap from="ComputeGraspingService" to="g%d"/>\n</node>"""%(i,i,PKG,args,i)
             controlargs += '--service=g%d '%i
         if options.boxdelta is not None:
             controlargs += '--boxdelta=%f '%options.boxdelta
@@ -266,7 +266,7 @@ if __name__=='__main__':
     parser = grasping.GraspingModel.CreateOptionParser()
     parser.add_option('--service', action='append', type='string', dest='servicenames',default=[],
                       help='The services used to evaluate grasping')
-    parser.add_option('--server', action='store_true', dest='server',default=False,
+    parser.add_option('--startserver', action='store_true', dest='server',default=False,
                       help='If set, will start a service on the ROS network offering to evaluate grasping')
     parser.add_option('--launchservice', action='append', dest='launchservices',default=[],
                       help="""If specified, will roslaunch the services and setup the correct bindings for parallel processing (recommended). Usage: "python grasping_ros.py --launchservice='4*localhost' --robot=robots/barrettsegway.robot.xml --manipname=arm" """)

@@ -98,6 +98,8 @@ class ReachabilityModelROS(kinematicreachability.ReachabilityModel):
             self.reachabilitystats += result[1]
 
     def generate(self,maxradius=None,translationonly=False,xyzdelta=0.04,quatdelta=0.5,usefreespace=True,useconvex=False):
+        if not self.ikmodel.load():
+            self.ikmodel.autogenerate()
         self.usefreespace = usefreespace
         with self.env:
             self.robot.SetTransform(eye(4)) # have to transform robot to identify
@@ -231,7 +233,7 @@ class ReachabilityModelROS(kinematicreachability.ReachabilityModel):
         controlargs = args
         for i,serviceaddr in enumerate(serviceaddrs):
             nodes += """<machine name="m%d" address="%s" default="false" %s/>\n"""%(i,serviceaddr[0],serviceaddr[1])
-            nodes += """<node machine="m%d" name="kr%d" pkg="%s" type="kinematicreachability_ros.py" args="--server %s" output="log" cwd="node">\n  <remap from="ComputeReachabilityService" to="kr%d"/>\n</node>"""%(i,i,PKG,args,i)
+            nodes += """<node machine="m%d" name="kr%d" pkg="%s" type="kinematicreachability_ros.py" args="--startserver %s" output="log" cwd="node">\n  <remap from="ComputeReachabilityService" to="kr%d"/>\n</node>"""%(i,i,PKG,args,i)
             controlargs += '--service=kr%d '%i
         if xyzdelta is not None:
             controlargs += '--xyzdelta=%f '%xyzdelta
@@ -262,7 +264,7 @@ if __name__=='__main__':
     parser = kinematicreachability.ReachabilityModel.CreateOptionParser()
     parser.add_option('--service', action='append', type='string', dest='servicenames',default=[],
                       help='The services used to evaluate kinematics')
-    parser.add_option('--server', action='store_true', dest='server',default=False,
+    parser.add_option('--startserver', action='store_true', dest='server',default=False,
                       help='If set, will start a service on the ROS network offering to evaluate kinematics equations')
     parser.add_option('--launchservice', action='append', dest='launchservices',default=[],
                       help="""If specified, will roslaunch the services and setup the correct bindings for parallel processing (recommended). Usage: "python kinematicreachability_ros.py --launchservice='4*localhost' --robot=robots/barrettsegway.robot.xml --manipname=arm" """)
