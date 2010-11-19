@@ -584,30 +584,11 @@ SimpleClientGoalState MyActionClient<ActionSpec>::sendGoalAndWait(const Goal& go
 class ROSActionLibController : public ControllerBase
 {
 public:
-ROSActionLibController(EnvironmentBasePtr penv) : ControllerBase(penv) {
+ ROSActionLibController(EnvironmentBasePtr penv, std::istream& ss) : ControllerBase(penv) {
         __description = ":Interface Author: Rosen Diankov\nAllows OpenRAVE to control a robot through the ROS actionlib interface.";
         _bDestroyThread = true;
-    }
-    virtual ~ROSActionLibController() {
-        _Destroy();
-    }
-    
-    virtual bool Init(RobotBasePtr robot, const std::string& args)
-    {
-        _Destroy();
-        _probot = robot;
-        stringstream ss(args);
-
-        int argc=0;
-        ros::init(argc,NULL,"openrave", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
-        if( !ros::master::check() )
-            return false;
-        
-        _node.reset(new ros::NodeHandle());
-        _bDestroyThread = false;
-        _threadros = boost::thread(boost::bind(&ROSActionLibController::_threadrosfn, this));
-        
-        string jointstatetopic="/joint_states", controllerstatetopic;
+        _nControlTransformation = 0;
+        _jointstatetopic="/joint_states";
         string cmd;
         while(!ss.eof()) {
             ss >> cmd;
@@ -616,18 +597,39 @@ ROSActionLibController(EnvironmentBasePtr penv) : ControllerBase(penv) {
             }
 
             if( cmd == "jointstate") 
-                ss >> jointstatetopic;
+                ss >> _jointstatetopic;
             else if( cmd == "state")
-                ss >> controllerstatetopic;
+                ss >> _controllerstatetopic;
             else if( cmd == "action" )
                 ss >> _actiontopic;
             else
                 break;
         }
+    }
+    virtual ~ROSActionLibController() {
+        _Destroy();
+    }
+    
+    virtual bool Init(RobotBasePtr robot, const std::vector<int>& dofindices, int nControlTransformation)
+    {
+        _Destroy();
+        _probot = robot;
+        _dofindices = dofindices;
+        _nControlTransformation = nControlTransformation;
 
-        _subjointstate = _node->subscribe(jointstatetopic, 10, &ROSActionLibController::_jointstatecb, this);
-        if( controllerstatetopic.size() > 0 )
-            _subcontrollerstate = _node->subscribe(controllerstatetopic,1,&ROSActionLibController::_controllerstatecb, this);
+        int argc=0;
+        ros::init(argc,NULL,"openrave", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
+        if( !ros::master::check() ) {
+            return false;
+        }
+        
+        _node.reset(new ros::NodeHandle());
+        _bDestroyThread = false;
+        _threadros = boost::thread(boost::bind(&ROSActionLibController::_threadrosfn, this));
+
+        _subjointstate = _node->subscribe(_jointstatetopic, 10, &ROSActionLibController::_jointstatecb, this);
+        if( _controllerstatetopic.size() > 0 )
+            _subcontrollerstate = _node->subscribe(_controllerstatetopic,1,&ROSActionLibController::_controllerstatecb, this);
         else {
             RAVELOG_WARN("no controller state topic, filling map joints with default\n");
             FOREACHC(itjoint,_probot->GetJoints()) {
@@ -643,6 +645,9 @@ ROSActionLibController(EnvironmentBasePtr penv) : ControllerBase(penv) {
         return true;
     }
 
+    virtual const std::vector<int>& GetControlDOFIndices() const { return _dofindices; }
+    virtual int IsControlTransformation() const { return _nControlTransformation; }
+
     virtual void Reset(int options)
     {
         if( !!_ac ) {
@@ -651,7 +656,7 @@ ROSActionLibController(EnvironmentBasePtr penv) : ControllerBase(penv) {
         }
     }
 
-    virtual bool SetDesired(const std::vector<dReal>& values)
+    virtual bool SetDesired(const std::vector<dReal>& values, TransformConstPtr trans)
     {
         TrajectoryBasePtr ptraj;
         {
@@ -706,9 +711,8 @@ ROSActionLibController(EnvironmentBasePtr penv) : ControllerBase(penv) {
         return true;
     }
 
-    virtual bool SimulationStep(dReal fTimeElapsed)
+    virtual void SimulationStep(dReal fTimeElapsed)
     {
-        return IsDone();
     }
 
     virtual bool IsDone()
@@ -738,8 +742,6 @@ ROSActionLibController(EnvironmentBasePtr penv) : ControllerBase(penv) {
     }
     
     virtual RobotBasePtr GetRobot() const { return _probot; }
-
-    virtual ActuatorState GetActuatorState(int index) const {return AS_Undefined;}
 
 protected:
     virtual void _Destroy()
@@ -835,6 +837,9 @@ protected:
     vector< pair<string,int> > _vjointnames;
     mutable boost::mutex _mutex;
     bool _bHasGoal;
+    std::vector<int> _dofindices;
+    int _nControlTransformation;
+    string _jointstatetopic, _controllerstatetopic;
 };
 
 #endif

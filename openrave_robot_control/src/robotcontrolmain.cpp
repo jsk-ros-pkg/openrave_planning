@@ -19,8 +19,9 @@ InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string&
 {
     switch(type) {
     case PT_Controller:
-        if( interfacename == "rosopenrave")
-            return InterfaceBasePtr(new OpenRAVEClientController(penv));
+        if( interfacename == "rosopenrave") {
+            return InterfaceBasePtr(new OpenRAVEClientController(penv,sinput));
+        }
         break;
     default:
         break;

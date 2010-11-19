@@ -214,11 +214,78 @@ class OpenRAVEClientController : public ControllerBase
     };
 
 public:
-    OpenRAVEClientController(EnvironmentBasePtr penv) : ControllerBase(penv),
+ OpenRAVEClientController(EnvironmentBasePtr penv, std::istream& ss) : ControllerBase(penv),
         _fCommandTime(0), _bIsDone(false), _bSendTimestamps(false), _bDestroyThread(false) {
         __description = ":Interface Author: Rosen Diankov\nA simple controller interface using ROS. See openrave_robot_control ROS package.";
         _iController = -1;
         _bSyncControllers = true;
+        
+        string cmd;
+        while(!ss.eof()) {
+            ss >> cmd;
+            if( !ss ) {
+                break;
+            }
+            if( cmd == "joints" ) {
+                string jointname;
+                while(1) {
+                    ss >> jointname;
+                    if( !ss ) {
+                        break;
+                    }
+                    // look for the correct index
+                    int index = -1;
+                    for(int i = 0; i < (int)_probot->GetJoints().size(); ++i) {
+                        if( jointname == _probot->GetJoints().at(i)->GetName() ) {
+                            index = i;
+                            break;
+                        }
+                    }
+
+                    if( index >= 0 ) {
+                        _setEnabledJoints.insert(pair<string, int>(jointname,index));
+                    }
+                    else {
+                        RAVELOG_WARN("failed to find joint %s\n", jointname.c_str());
+                    }
+                }
+
+                break;
+            }
+            else if( cmd == "trajectoryservice") {
+                string servicedir;
+                ss >> servicedir;
+                _listControllers.push_back(boost::shared_ptr<TrajectoryController>(new TrajectoryController(_probot, servicedir)));
+            }
+            else if( cmd == "sendtiming") {
+                ss >> _bSendTiming;
+            }
+            else {
+                break;
+            }
+            if( !ss ) {
+                throw openrave_exception("failed controller initialization\n");
+            }
+        }
+
+        if( _setEnabledJoints.size() == 0 ) {
+            RAVELOG_DEBUG("controlling using all joints of the robot\n");
+
+            FOREACH(it,_dofindices) {
+                KinBody::JointPtr pjoint = _probot->GetJointFromDOFIndex(*it);
+                _setEnabledJoints.insert(pair<string,int>(pjoint->GetName(), pjoint->GetJointIndex()));
+            }
+        }
+
+        string trajfilename = RaveGetHomeDirectory() + string("/") + _probot->GetName() + string(".ros.traj");
+        flog.open(trajfilename.c_str());
+        if( !flog ) {
+            RAVELOG_WARN(str(boost::format("failed to open %s\n")%trajfilename));
+        }
+        else {
+            flog << GetXMLId() << " " << _probot->GetName() << endl << endl;
+        }
+
         _threadTrajectories = boost::thread(boost::bind(&OpenRAVEClientController::_TrajectoryThread,this));
     }
 
@@ -232,16 +299,20 @@ public:
     /// args format: host port [proxytype index]
     /// where proxytype is actarray, pos2d, or ...
     /// the order specified is the order the degrees of freedom will be arranged
-    virtual bool Init(RobotBasePtr robot, const std::string& args)
+    virtual bool Init(RobotBasePtr robot, const std::vector<int>& dofindices, int nControlTransformation)
     {
         Destroy();
         _iController = -1;
         _bSyncControllers = true;
         _bSendTiming = true;
         _probot = robot;
-        if( !_probot )
+        if( !_probot ) {
             return false;
-
+        }
+        _dofindices = dofindices;
+        if( nControlTransformation ) {
+            RAVELOG_WARN("ros controller does not support transformation control\n");
+        }
         int argc=0;
         ros::init(argc,NULL,"openrave", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
 
@@ -251,68 +322,6 @@ public:
         }
 
         WriteLock lock(_mutexControllers);
-        stringstream ss(args);
-
-        string cmd;
-        while(!ss.eof()) {
-            ss >> cmd;
-            if( !ss )
-                break;
-
-            if( cmd == "joints" ) {
-                string jointname;
-                while(1) {
-                    ss >> jointname;
-                    if( !ss )
-                        break;
-
-                    // look for the correct index
-                    int index = -1;
-                    for(int i = 0; i < (int)_probot->GetJoints().size(); ++i) {
-                        if( jointname == _probot->GetJoints().at(i)->GetName() ) {
-                            index = i;
-                            break;
-                        }
-                    }
-
-                    if( index >= 0 )
-                        _setEnabledJoints.insert(pair<string, int>(jointname,index));
-                    else
-                        RAVELOG_WARN("failed to find joint %s\n", jointname.c_str());
-                }
-
-                break;
-            }
-            else if( cmd == "trajectoryservice") {
-                string servicedir;
-                ss >> servicedir;
-                _listControllers.push_back(boost::shared_ptr<TrajectoryController>(new TrajectoryController(_probot, servicedir)));
-            }
-            else if( cmd == "sendtiming") {
-                ss >> _bSendTiming;
-            }
-            else break;
-
-            if( !ss ) {
-                RAVELOG_ERROR("failed\n");
-                return false;
-            }
-        }
-
-        if( _setEnabledJoints.size() == 0 ) {
-            RAVELOG_DEBUG("controlling using all joints of the robot\n");
-
-            for(int i = 0; i < _probot->GetDOF(); ++i)
-                _setEnabledJoints.insert(pair<string,int>(_probot->GetJoints().at(i)->GetName(), i));
-        }
-
-        string trajfilename = GetEnv()->GetHomeDirectory() + string("/") + _probot->GetName() + string(".ros.traj");
-        flog.open(trajfilename.c_str());
-        if( !flog )
-            RAVELOG_WARN(str(boost::format("failed to open %s\n")%trajfilename));
-        else
-            flog << GetXMLId() << " " << _probot->GetName() << endl << endl;
-
         FOREACH(it, _listControllers) {
             try {
                 (*it)->Init();
@@ -335,8 +344,9 @@ public:
         _probot.reset();
         _bIsDone = false;
         _setEnabledJoints.clear();
-        if( flog.is_open() )
+        if( flog.is_open() ) {
             flog.close();
+        }
     }
 
     virtual void Reset(int options)
@@ -347,7 +357,7 @@ public:
             (*itcontroller)->Init();
     }
 
-    virtual bool SetDesired(const std::vector<dReal>& values)
+    virtual bool SetDesired(const std::vector<dReal>& values, TransformConstPtr trans)
     {
         ReadLock lockc(_mutexControllers);
         boost::mutex::scoped_lock lock(_mutexTrajectories);
@@ -361,8 +371,8 @@ public:
         
         {
             RobotBase::RobotStateSaver saver(_probot);
-            _probot->SetJointValues(values,true);
-            _probot->GetDOFValues(vnewvalues);
+            _SetDOFValues(values);
+            _GetDOFValues(vnewvalues);
         }
 
         // check if values are sufficiently different
@@ -605,18 +615,18 @@ public:
         return bSuccess;
     }
 
-    virtual bool SimulationStep(dReal fTimeElapsed)
+    virtual void SimulationStep(dReal fTimeElapsed)
     {
         if( !!_probot ) {
             vector<dReal> values;
-            _probot->GetDOFValues(values);
+            _GetDOFValues(values);
             ReadLock lock(_mutexControllers);
-            FOREACHC(it,_listControllers)
+            FOREACHC(it,_listControllers) {
                 (*it)->GetJointPosition(values);
+            }
             _vcurvalues = values;
-            _probot->SetJointValues(values, true);
+            _SetDOFValues(values);
         }
-        return IsDone();
     }
 
     virtual bool SendCommand(std::ostream& os, std::istream& is)
@@ -631,13 +641,13 @@ public:
             return Cancel(commandid);
         }
         else if( cmd == "settorque" ) {
-            vector<dReal> vtorques(_probot->GetDOF(),0);
+            vector<dReal> vtorques(_dofindices.size(),0);
             while(!is.eof()) {
                 int index=-1;
                 is >> index;
                 if( !is )
                     break;
-                if( index < 0 || index >= _probot->GetDOF() ) {
+                if( index < 0 || index >= (int)_dofindices.size() ) {
                     RAVELOG_WARN("bad index on settorque command");
                     return false;
                 }
@@ -651,13 +661,13 @@ public:
             return SetTorque(vtorques);
         }
         else if( cmd == "setvelocity" ) {
-            vector<dReal> vvelocities(_probot->GetDOF(),0);
+            vector<dReal> vvelocities(_dofindices.size(),0);
             while(!is.eof()) {
                 int index=-1;
                 is >> index;
                 if( !is )
                     break;
-                if( index < 0 || index >= _probot->GetDOF() ) {
+                if( index < 0 || index >= (int)_dofindices.size() ) {
                     RAVELOG_WARN("bad index on settorque command");
                     return false;
                 }
@@ -694,11 +704,6 @@ public:
 
     virtual bool IsDone() { return _bIsDone; }
 
-    virtual ActuatorState GetActuatorState(int index)
-    {
-        return AS_Idle;
-    }
-
     virtual dReal GetTime() const
     {
         return _fCommandTime;
@@ -708,18 +713,33 @@ public:
     virtual void GetVelocity(std::vector<dReal>& vel) const
     {
         ReadLock lock(_mutexControllers);
-        vel.resize(_probot->GetDOF());
-        FOREACH(it, _listControllers)
-            (*it)->GetJointVelocity(vel);
+        vector<dReal> vall(_probot->GetDOF());
+        FOREACH(it, _listControllers) {
+            (*it)->GetJointVelocity(vall);
+        }
+        vel.resize(_dofindices.size());
+        int i = 0;
+        FOREACHC(it,_dofindices) {
+            vel[i++] = vall.at(*it);
+        }
     }
     
     virtual void GetTorque(std::vector<dReal>& torque) const
     {
         ReadLock lock(_mutexControllers);
-        torque.resize(_probot->GetDOF());
-        FOREACH(it, _listControllers)
-            (*it)->GetJointTorque(torque);
+        vector<dReal> vall(_probot->GetDOF());
+        FOREACH(it, _listControllers) {
+            (*it)->GetJointTorque(vall);
+        }
+        torque.resize(_dofindices.size());
+        int i = 0;
+        FOREACHC(it,_dofindices) {
+            torque[i++] = vall.at(*it);
+        }
     }
+
+    virtual const std::vector<int>& GetControlDOFIndices() const { return _dofindices; }
+    virtual int IsControlTransformation() const { return 0; }
 
 private:
     void _TrajectoryThread()
@@ -821,6 +841,28 @@ private:
         _bIsDone = bIsDone;
     }
 
+    virtual void _SetDOFValues(const std::vector<dReal>& values)
+    {
+        vector<dReal> curvalues;
+        _probot->GetDOFValues(curvalues);
+        int i = 0;
+        FOREACH(it,_dofindices) {
+            curvalues.at(*it) = values.at(i++);
+        }
+        _probot->SetJointValues(curvalues,true);
+    }
+
+    virtual void _GetDOFValues(std::vector<dReal>& values)
+    {
+        vector<dReal> curvalues;
+        _probot->GetDOFValues(curvalues);
+        values.resize(_dofindices.size());
+        int i = 0;
+        FOREACH(it,_dofindices) {
+            values[i++] = curvalues.at(*it);
+        }
+    }
+
     RobotBasePtr _probot;           ///< robot owning this controller
 
     vector<dReal> _vecdesired;
@@ -836,6 +878,9 @@ private:
     mutable boost::mutex _mutexTrajectories;
     mutable boost::shared_mutex _mutexControllers;
     boost::thread _threadTrajectories;
+
+    std::string _args;
+    std::vector<int> _dofindices;
 
     int _iController; ///< if < 0, send incoming commands to all controllers, otherwise send only to specified controller
 

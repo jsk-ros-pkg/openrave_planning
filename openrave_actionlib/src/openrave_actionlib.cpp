@@ -24,7 +24,7 @@ InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string&
     switch(type) {
     case PT_Controller:
         if( interfacename == "rosactionlib")
-            return InterfaceBasePtr(new ROSActionLibController(penv));
+            return InterfaceBasePtr(new ROSActionLibController(penv,sinput));
         break;
     default:
         break;
