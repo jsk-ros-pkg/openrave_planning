@@ -27,7 +27,8 @@ class ColladaJointPublisher():
         self.robot=self.env.ReadRobotXMLData(description)
         self.env.AddRobot(self.robot)
         self.env.SetViewer('qtcoin')
-        self.robot.SetJointValues([1,1,1,1],[0,1,2,3])
+        # can use to set random values
+        #self.robot.SetJointValues([1,1,1,1],[0,1,2,3])
         self.pub = rospy.Publisher('joint_states', sensor_msgs.msg.JointState)
         self.pub_tf = rospy.Publisher("/tf", tf.msg.tfMessage)
 
