@@ -5,6 +5,7 @@ rosbuild_init()
 add_definitions(-Wall)
 
 rosbuild_add_boost_directories()
+rosbuild_gensrv()
 
 rosbuild_add_library(orrosplanning src/orrosplanningmain.cpp)
 rosbuild_link_boost(orrosplanning thread)

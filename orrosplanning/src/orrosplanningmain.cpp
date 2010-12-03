@@ -52,14 +52,14 @@ InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string&
         }
         else if( interfacename == "objecttransform" ) {
             boost::shared_ptr<ObjectTransformSystem> psys(new ObjectTransformSystem(penv));
-            if( psys->Init(sinput) ) {
+            if( !psys->Init(sinput) ) {
                 RAVELOG_WARN(str(boost::format("failed to init %s\n")%interfacename));
             }
             return psys;
         }
         else if( interfacename == "collisionmap" ) {
             boost::shared_ptr<CollisionMapSystem> psys(new CollisionMapSystem(penv));
-            if( psys->Init(sinput) ) {
+            if( !psys->Init(sinput) ) {
                 RAVELOG_WARN(str(boost::format("failed to init %s\n")%interfacename));
             }
             return psys;

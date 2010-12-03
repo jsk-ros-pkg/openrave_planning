@@ -50,10 +50,10 @@ public:
         string cmd;
         while(!sinput.eof()) {
             sinput >> cmd;
-            if( !sinput )
+            if( !sinput ) {
                 break;
+            }
             std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
-
             if( cmd == "topic" ) {
                 string topic;
                 sinput >> topic;
@@ -78,7 +78,7 @@ public:
                 break;
             
             if( !sinput ) {
-                RAVELOG_ERRORA("failed\n");
+                RAVELOG_ERROR("failed\n");
                 return false;
             }
         }
@@ -92,9 +92,9 @@ public:
 private:
     virtual bool startsubscriptions()
     {
-        if( !ROSSensorSystem<mapping_msgs::CollisionMap>::startsubscriptions() )
+        if( !ROSSensorSystem<mapping_msgs::CollisionMap>::startsubscriptions() ) {
             return false;
-
+        }
         _tflistener.reset(new tf::TransformListener(*_ros));
         return true;
     }

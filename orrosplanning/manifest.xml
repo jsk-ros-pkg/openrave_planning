@@ -6,7 +6,6 @@
   <license>BSD</license>
   <export>
     <openrave pluginpath="${prefix}/lib"/>
-    <python path="${prefix}/scripts"/>
   </export>
   <depend package="roscpp"/>
   <depend package="openrave"/>
@@ -16,6 +15,7 @@
   <depend package="mapping_msgs"/>
   <depend package="geometry_msgs"/>
   <depend package="sensor_msgs"/>
+  <depend package="trajectory_msgs"/>
   <depend package="resource_retriever"/>
   <depend package="actionlib"/>
   <depend package="move_base_msgs"/>

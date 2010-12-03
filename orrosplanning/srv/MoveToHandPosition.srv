@@ -1,0 +1,11 @@
+# tf frame id of the hand, used to set the local coordinate system of the hand (ie can be a finger)
+string hand_frame_id
+
+# goal of the hand, the tf frame id in the header can be any valid frame
+geometry_msgs/PoseStamped hand_goal
+
+# name of manipulator that specifies joints to move, if empty the first valid manipulator with an end effector of hand_frame_id will be chosen. The hand_frame_id link is assumed to be fixed to the manipulator end effecto
+string manip_name 
+
+---
+trajectory_msgs/JointTrajectory traj
