@@ -27,8 +27,10 @@ from itertools import izip
 import tf
 
 import orrosplanning.srv
+from orrosplanning.srv import IKRequest
 import sensor_msgs.msg
-import trajectory_msgs.msg
+import motion_planning_msgs.msg
+from motion_planning_msgs.msg import ArmNavigationErrorCodes
 import geometry_msgs.msg
 from IPython.Shell import IPShellEmbed
 
@@ -37,15 +39,15 @@ if __name__ == "__main__":
     OpenRAVEGlobalArguments.addOptions(parser)
     parser.add_option('--scene',action="store",type='string',dest='scene',default='robots/pr2-beta-static.robot.xml',
                       help='scene to load (default=%default)')
-    parser.add_option('--collision_map',action="store",type='string',dest='collision_map',default='/collision_map/collision_map',
-                      help='The collision map topic (maping_msgs/CollisionMap), by (default=%default)')
     parser.add_option('--ipython', '-i',action="store_true",dest='ipython',default=False,
                       help='if true will drop into the ipython interpreter rather than spin')
+    parser.add_option('--collision_map',action="store",type='string',dest='collision_map',default='/collision_map/collision_map',
+                      help='The collision map topic (maping_msgs/CollisionMap), by (default=%default)')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=True)
 
     try:
-        rospy.init_node('armplanning_openrave',disable_signals=False)
+        rospy.init_node('ik_openrave',disable_signals=False)
         with env:
             env.Load(options.scene)
             robot = env.GetRobots()[0]
@@ -57,7 +59,6 @@ if __name__ == "__main__":
             env.AddKinBody(ground,False)
             baseframe = robot.GetLinks()[0].GetName()
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
-            basemanip = interfaces.BaseManipulation(robot)
         
         listener = tf.TransformListener()
         values = robot.GetDOFValues()
@@ -69,19 +70,54 @@ if __name__ == "__main__":
                     if j is not None:
                         values[j.GetDOFIndex()] = pos
 
-        def MoveToHandPositionFn(req):
+        def IKFn(req):
             with env:
                 (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
                 Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
                 Trobot[0:3,3] = robot_trans
-                hand = listener.transformPose(baseframe, req.hand_goal)
-                o = hand.pose.orientation
-                p = hand.pose.position
+                goal = listener.transformPose(baseframe, req.pose_stamped)
+                o = goal.pose.orientation
+                p = goal.pose.position
                 Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
                 Thandgoal[0:3,3] = [p.x,p.y,p.z]
                 with valueslock:
                     robot.SetTransformWithDOFValues(Trobot,values)
-                    
+                if len(req.joint_state.name) > 0:
+                    dofindices = [robot.GetJoint(name).GetDOFIndex() for name in req.joint_state.name]
+                    robot.SetDOFValues(req.joint_state.position,dofindices)
+
+                res = orrosplanning.srv.IKResponse()
+                if env.CheckCollision(robot) or robot.CheckSelfCollision():
+                    res.error_code.val = ArmNavigationErrorCodes.START_STATE_IN_COLLISION
+                    return
+
+                # resolve the ik type
+                iktype = None
+                if len(req.iktype) == 0:
+                    iktype = IkParameterization.Type.Transform6D
+                else:
+                    for value,type in IkParameterization.Type.values.iteritems():
+                        if type.name.lower() == req.iktype.lower():
+                            iktype = type
+                            break
+                    if iktype is None:
+                        rospy.logerror('failed to find iktype %s'%(str(req.iktype)))
+                        return None
+
+                ikp = IkParameterization()
+                if iktype == IkParameterization.Type.Direction3D:
+                    ikp.SetDirection(Thandgoal[0:3,2])
+                elif iktype == IkParameterization.Type.Lookat3D:
+                    ikp.SetLookat(Thandgoal[0:3,3])
+                elif iktype == IkParameterization.Type.Ray4D:
+                    ikp.SetRay(Ray(Thandgoal[0:3,3],Thandgoal[0:3,2]))
+                elif iktype == IkParameterization.Type.Rotation3D:
+                    ikp.SetRotation(quatFromRotationMatrix(Thandgoal[0:3,0:3]))
+                elif iktype == IkParameterization.Type.Transform6D:
+                    ikp.SetTransform(Thandgoal)
+                elif iktype == IkParameterization.Type.Translation3D:
+                    ikp.SetTranslation(Thandgoal[0:3,3])
+
                 if len(req.manip_name) > 0:
                     manip = robot.GetManipulator(req.manip_name)
                     if manip is None:
@@ -94,48 +130,46 @@ if __name__ == "__main__":
                         return None
                     manip = manips[0]
 
-                handlink = robot.GetLink(req.hand_frame_id)
-                if handlink is None:
-                    rospy.logerror('failed to find link %s'%req.hand_frame_id)
-                    return None
                 if manip.GetIkSolver() is None:
                     rospy.loginfo('generating ik for %s:%s'%str(manip))
-                    ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=IkParameterization.Type.Transform6D)
+                    ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=iktype)
                     if not ikmodel.load():
                         ikmodel.autogenerate()
                 
-                Tgoalee = dot(Thandgoal,dot(linalg.inv(manip.GetEndEffectorTransform()),handlink.GetTransform()))
-                trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True)
-                # parse trajectory data into the ROS structure
-                res = orrosplanning.srv.MoveToHandPositionResponse()
-                tokens = trajdata.split()
-                numpoints = int(tokens[0])
-                dof = int(tokens[1])
-                options = int(tokens[2])
-                numvalues = dof
-                offset = 0
-                if options & 4:
-                    numvalues += 1
-                    offset += 1
-                if options & 8:
-                    numvalues += 7
-                if options & 16:
-                    numvalues += dof
-                if options & 32:
-                    numvalues += dof
-                res.traj.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
-                for i in range(numpoints):
-                    start = 3+numvalues*i
-                    pt=trajectory_msgs.msg.JointTrajectoryPoint()
-                    for s in tokens[(start+offset):(start+offset+dof)]:
-                        pt.positions.append(float(s))
-                    if options & 4:
-                        pt.time_from_start = rospy.Duration(float(tokens[start]))
-                    res.traj.points.append(pt)
+                
+                if req.filteroptions & IKRequest.IGNORE_ENVIRONMENT_COLLISIONS:
+                    filteroptions = 0
+                else:
+                    filteroptions = IkFilterOptions.CheckEnvCollisions
+                if req.filteroptions & IKRequest.IGNORE_SELF_COLLISIONS:
+                    filteroptions |= IkFilterOptions.IgnoreSelfCollisions
+                if req.filteroptions & IKRequest.IGNORE_JOINT_LIMITS:
+                    filteroptions |= IkFilterOptions.IgnoreJointLimits
+
+                
+                if req.filteroptions & IKRequest.RETURN_ALL_SOLUTIONS:
+                    solutions = manip.FindIKSolutions(ikp,filteroptions)
+                else:
+                    if req.filteroptions & IKRequest.RETURN_CLOSEST_SOLUTION:
+                        rospy.logwarn('IKRequest.RETURN_CLOSEST_SOLUTION currently not implemented')
+                    solution = manip.FindIKSolution(ikp,filteroptions)
+                    if solution is None:
+                        solutions = []
+                    else:
+                        solutions = [solution]
+
+                if len(solutions) == 0:
+                    res.error_code.val = ArmNavigationErrorCodes.NO_IK_SOLUTION
+                else:
+                    res.error_code.val = ArmNavigationErrorCodes.SUCCESS
+                    res.solutions.header.stamp = rospy.Time.now()
+                    res.solutions.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
+                    for s in solutions:
+                        res.solutions.points.append(motion_planning_msgs.msg.JointPathPoint(s))
                 return res
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
-        s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
+        s = rospy.Service('IK', orrosplanning.srv.IK, IKFn)
         print 'openrave planning service started'
 
         if options.ipython:

@@ -1,4 +1,5 @@
-# the manipulator name specifying the joints to use in the IK and the coordinate system
+# the manipulator name specifying the joints to use in the IK and the coordinate system.
+# if not specified, will use the first manipulator found
 string manip_name
 
 # one of Transform6D, Rotation3D, Translation3D, Direction3D, Ray4D, Lookat3D, default is Transform6D
