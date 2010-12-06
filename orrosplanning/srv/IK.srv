@@ -1,0 +1,26 @@
+# the manipulator name specifying the joints to use in the IK and the coordinate system
+string manip_name
+
+# one of Transform6D, Rotation3D, Translation3D, Direction3D, Ray4D, Lookat3D, default is Transform6D
+string iktype
+
+# specifies initial robot state (optional). If empty, then the current robot position is used
+sensor_msgs/JointState joint_state
+
+# the goal
+geometry_msgs/PoseStamped pose_stamped
+
+# default when filteroptions is 0 is: return one solution in the fast way possible.
+int32 filteroptions
+
+# filter options
+int32 IGNORE_ENVIRONMENT_COLLISIONS=1
+int32 IGNORE_SELF_COLLISIONS=2
+int32 IGNORE_JOINT_LIMITS=4
+int32 RETURN_CLOSEST_SOLUTION=8 # has to check all solutions
+int32 RETURN_ALL_SOLUTIONS=16
+
+---
+# this just reuses the array inside JointPath, an actual path is not computed
+motion_planning_msgs/JointPath solutions
+motion_planning_msgs/ArmNavigationErrorCodes error_code

@@ -15,6 +15,7 @@
   <depend package="mapping_msgs"/>
   <depend package="geometry_msgs"/>
   <depend package="sensor_msgs"/>
+  <depend package="motion_planning_msgs"/>
   <depend package="trajectory_msgs"/>
   <depend package="resource_retriever"/>
   <depend package="actionlib"/>
