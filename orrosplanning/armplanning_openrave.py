@@ -127,8 +127,8 @@ if __name__ == "__main__":
                 for i in range(numpoints):
                     start = 3+numvalues*i
                     pt=trajectory_msgs.msg.JointTrajectoryPoint()
-                    for s in tokens[(start+offset):(start+offset+dof)]:
-                        pt.positions.append(float(s))
+                    for j in robot.GetJoints(manip.GetArmIndices()):
+                        pt.positions.append(float(tokens[start+offset+j.GetDOFIndex()]))
                     if options & 4:
                         pt.time_from_start = rospy.Duration(float(tokens[start]))
                     res.traj.points.append(pt)
