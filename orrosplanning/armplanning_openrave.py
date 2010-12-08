@@ -85,18 +85,18 @@ if __name__ == "__main__":
                 if len(req.manip_name) > 0:
                     manip = robot.GetManipulator(req.manip_name)
                     if manip is None:
-                        rospy.logerror('failed to find manipulator %s'%req.manip_name)
+                        rospy.logerr('failed to find manipulator %s'%req.manip_name)
                         return None
                 else:
                     manips = [manip for manip in robot.GetManipulators() if manip.GetEndEffector().GetName()==req.hand_frame_id]
                     if len(manips) == 0:
-                        rospy.logerror('failed to find manipulator end effector %s'%req.hand_frame_id)
+                        rospy.logerr('failed to find manipulator end effector %s'%req.hand_frame_id)
                         return None
                     manip = manips[0]
 
                 handlink = robot.GetLink(req.hand_frame_id)
                 if handlink is None:
-                    rospy.logerror('failed to find link %s'%req.hand_frame_id)
+                    rospy.logerr('failed to find link %s'%req.hand_frame_id)
                     return None
                 if manip.GetIkSolver() is None:
                     rospy.loginfo('generating ik for %s'%str(manip))
@@ -104,8 +104,12 @@ if __name__ == "__main__":
                     if not ikmodel.load():
                         ikmodel.autogenerate()
                 
-                Tgoalee = dot(Thandgoal,dot(linalg.inv(manip.GetEndEffectorTransform()),handlink.GetTransform()))
-                trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True)
+                Tgoalee = dot(Thandgoal,dot(linalg.inv(handlink.GetTransform()),manip.GetEndEffectorTransform()))
+                try:
+                    trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True)
+                except:
+                    rospy.logerr('failed to solve for T=%s'%str(Tgoalee))
+                    return None
                 # parse trajectory data into the ROS structure
                 res = orrosplanning.srv.MoveToHandPositionResponse()
                 tokens = trajdata.split()
