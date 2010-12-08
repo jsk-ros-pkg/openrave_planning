@@ -99,7 +99,7 @@ if __name__ == "__main__":
                     rospy.logerror('failed to find link %s'%req.hand_frame_id)
                     return None
                 if manip.GetIkSolver() is None:
-                    rospy.loginfo('generating ik for %s:%s'%str(manip))
+                    rospy.loginfo('generating ik for %s'%str(manip))
                     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=IkParameterization.Type.Transform6D)
                     if not ikmodel.load():
                         ikmodel.autogenerate()
