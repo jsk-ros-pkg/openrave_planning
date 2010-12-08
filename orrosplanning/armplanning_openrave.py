@@ -94,6 +94,7 @@ if __name__ == "__main__":
                         return None
                     manip = manips[0]
 
+                robot.SetActiveManipulator(manip)
                 handlink = robot.GetLink(req.hand_frame_id)
                 if handlink is None:
                     rospy.logerr('failed to find link %s'%req.hand_frame_id)
@@ -103,7 +104,7 @@ if __name__ == "__main__":
                     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=IkParameterization.Type.Transform6D)
                     if not ikmodel.load():
                         ikmodel.autogenerate()
-                
+
                 Tgoalee = dot(Thandgoal,dot(linalg.inv(handlink.GetTransform()),manip.GetEndEffectorTransform()))
                 try:
                     trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True)

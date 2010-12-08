@@ -14,10 +14,18 @@ if __name__=='__main__':
     rospy.wait_for_service('MoveToHandPosition')
     MoveToHandPositionFn = rospy.ServiceProxy('MoveToHandPosition',orrosplanning.srv.MoveToHandPosition)
     req = orrosplanning.srv.MoveToHandPositionRequest()
-    req.hand_frame_id = 'l_gripper_palm_link'
-    req.hand_goal.pose.position = geometry_msgs.msg.Point(0.6,0.189,0.4765)
+#     req.hand_frame_id = 'l_gripper_palm_link'
+#     req.hand_goal.pose.position = geometry_msgs.msg.Point(0.6,0.189,0.4765)
+#     req.hand_goal.pose.orientation = geometry_msgs.msg.Quaternion(0,0,0,1)
+#     req.hand_goal.header.frame_id = 'base_footprint'
+#     req.manip_name = 'leftarm'
+#     res=MoveToHandPositionFn(req)
+#     print res
+
+    req.hand_frame_id = 'r_gripper_palm_link'
+    req.hand_goal.pose.position = geometry_msgs.msg.Point(0.6,-0.189,0.4765)
     req.hand_goal.pose.orientation = geometry_msgs.msg.Quaternion(0,0,0,1)
     req.hand_goal.header.frame_id = 'base_footprint'
-    req.manip_name = 'leftarm'
+    req.manip_name = 'rightarm'
     res=MoveToHandPositionFn(req)
     print res
