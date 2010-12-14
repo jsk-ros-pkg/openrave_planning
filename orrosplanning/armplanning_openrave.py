@@ -49,6 +49,14 @@ if __name__ == "__main__":
         with env:
             env.Load(options.scene)
             robot = env.GetRobots()[0]
+
+            # set robot weights/resolutions (without this planning will be slow)
+            lmodel = databases.linkstatistics.LinkStatisticsModel(robot)
+            if not lmodel.load():
+                lmodel.autogenerate()
+            lmodel.setRobotWeights()
+            lmodel.setRobotResolutions()
+
             # create ground right under the robot
             ab=robot.ComputeAABB()
             ground=RaveCreateKinBody(env,'')
