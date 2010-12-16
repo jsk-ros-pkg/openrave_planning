@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_option('--ipython', '-i',action="store_true",dest='ipython',default=False,
                       help='if true will drop into the ipython interpreter rather than spin')
     (options, args) = parser.parse_args()
-    env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=True)
+    env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     print 'initializing, please wait for ready signal...'
 
     try:
@@ -68,6 +68,12 @@ if __name__ == "__main__":
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
             basemanip = interfaces.BaseManipulation(robot)
         
+        # have to do this manually because running linkstatistics when viewer is enabled segfaults things
+        if options._viewer is None:
+            env.SetViewer('qtcoin')
+        elif len(options._viewer) > 0:
+            env.SetViewer(options._viewer)
+
         listener = tf.TransformListener()
         values = robot.GetDOFValues()
         valueslock = threading.Lock()
