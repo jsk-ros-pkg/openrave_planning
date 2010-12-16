@@ -14,8 +14,8 @@ if __name__=='__main__':
     rospy.wait_for_service('IK')
     IKFn = rospy.ServiceProxy('IK',orrosplanning.srv.IK)
     req = orrosplanning.srv.IKRequest()
-    req.pose_stamped.pose.position = geometry_msgs.msg.Point(0.6,0.189,0.4765)
-    req.pose_stamped.pose.orientation = geometry_msgs.msg.Quaternion(0,0,0,1)
+    req.pose_stamped.pose.position = geometry_msgs.msg.Point(0.6,0.189,0.7)
+    req.pose_stamped.pose.orientation = geometry_msgs.msg.Quaternion(0,0.707,0,0.707)
     req.pose_stamped.header.frame_id = 'base_footprint'
     req.manip_name = 'leftarm'
     res=IKFn(req)

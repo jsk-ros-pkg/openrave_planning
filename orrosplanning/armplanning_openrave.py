@@ -43,6 +43,7 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=True)
+    print 'initializing, please wait for ready signal...'
 
     try:
         rospy.init_node('armplanning_openrave',disable_signals=False)
@@ -72,84 +73,89 @@ if __name__ == "__main__":
         valueslock = threading.Lock()
         def UpdateRobotJoints(msg):
             with valueslock:
-                for name,pos in izip(msg.name,msg.position):
-                    j = robot.GetJoint(name)
-                    if j is not None:
-                        values[j.GetDOFIndex()] = pos
+                with env:
+                    for name,pos in izip(msg.name,msg.position):
+                        j = robot.GetJoint(name)
+                        if j is not None:
+                            values[j.GetDOFIndex()] = pos
+                    robot.SetDOFValues(values)
 
         def MoveToHandPositionFn(req):
-            with env:
-                (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
-                Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
-                Trobot[0:3,3] = robot_trans
-                hand = listener.transformPose(baseframe, req.hand_goal)
-                o = hand.pose.orientation
-                p = hand.pose.position
-                Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
-                Thandgoal[0:3,3] = [p.x,p.y,p.z]
-                with valueslock:
-                    robot.SetTransformWithDOFValues(Trobot,values)
+            with valueslock:
+                with env:
+                    (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                    Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                    Trobot[0:3,3] = robot_trans
+                    robot.SetTransform(Trobot)
                     
-                if len(req.manip_name) > 0:
-                    manip = robot.GetManipulator(req.manip_name)
-                    if manip is None:
-                        rospy.logerr('failed to find manipulator %s'%req.manip_name)
-                        return None
-                else:
-                    manips = [manip for manip in robot.GetManipulators() if manip.GetEndEffector().GetName()==req.hand_frame_id]
-                    if len(manips) == 0:
-                        rospy.logerr('failed to find manipulator end effector %s'%req.hand_frame_id)
-                        return None
-                    manip = manips[0]
+                    hand = listener.transformPose(baseframe, req.hand_goal)
+                    o = hand.pose.orientation
+                    p = hand.pose.position
+                    Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
+                    Thandgoal[0:3,3] = [p.x,p.y,p.z]
+                    
+                    if len(req.manip_name) > 0:
+                        manip = robot.GetManipulator(req.manip_name)
+                        if manip is None:
+                            rospy.logerr('failed to find manipulator %s'%req.manip_name)
+                            return None
+                    else:
+                        manips = [manip for manip in robot.GetManipulators() if manip.GetEndEffector().GetName()==req.hand_frame_id]
+                        if len(manips) == 0:
+                            rospy.logerr('failed to find manipulator end effector %s'%req.hand_frame_id)
+                            return None
+                        manip = manips[0]
 
-                robot.SetActiveManipulator(manip)
-                handlink = robot.GetLink(req.hand_frame_id)
-                if handlink is None:
-                    rospy.logerr('failed to find link %s'%req.hand_frame_id)
-                    return None
-                if manip.GetIkSolver() is None:
-                    rospy.loginfo('generating ik for %s'%str(manip))
-                    ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=IkParameterization.Type.Transform6D)
-                    if not ikmodel.load():
-                        ikmodel.autogenerate()
+                    robot.SetActiveManipulator(manip)
+                    handlink = robot.GetLink(req.hand_frame_id)
+                    if handlink is None:
+                        rospy.logerr('failed to find link %s'%req.hand_frame_id)
+                        return None
+                    if manip.GetIkSolver() is None:
+                        rospy.loginfo('generating ik for %s'%str(manip))
+                        ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=IkParameterization.Type.Transform6D)
+                        if not ikmodel.load():
+                            ikmodel.autogenerate()
 
-                Tgoalee = dot(Thandgoal,dot(linalg.inv(handlink.GetTransform()),manip.GetEndEffectorTransform()))
-                try:
-                    trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True)
-                except:
-                    rospy.logerr('failed to solve for T=%s'%str(Tgoalee))
-                    return None
-                # parse trajectory data into the ROS structure
-                res = orrosplanning.srv.MoveToHandPositionResponse()
-                tokens = trajdata.split()
-                numpoints = int(tokens[0])
-                dof = int(tokens[1])
-                options = int(tokens[2])
-                numvalues = dof
-                offset = 0
-                if options & 4:
-                    numvalues += 1
-                    offset += 1
-                if options & 8:
-                    numvalues += 7
-                if options & 16:
-                    numvalues += dof
-                if options & 32:
-                    numvalues += dof
-                res.traj.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
-                for i in range(numpoints):
-                    start = 3+numvalues*i
-                    pt=trajectory_msgs.msg.JointTrajectoryPoint()
-                    for j in robot.GetJoints(manip.GetArmIndices()):
-                        pt.positions.append(float(tokens[start+offset+j.GetDOFIndex()]))
+                    Tgoalee = dot(Thandgoal,dot(linalg.inv(handlink.GetTransform()),manip.GetEndEffectorTransform()))
+                    try:
+                        starttime = time.time()
+                        trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True)
+                        print 'total planning time: %fs'%(time.time()-starttime)
+                    except:
+                        rospy.logerr('failed to solve for T=%s'%str(Tgoalee))
+                        return None
+                    # parse trajectory data into the ROS structure
+                    res = orrosplanning.srv.MoveToHandPositionResponse()
+                    tokens = trajdata.split()
+                    numpoints = int(tokens[0])
+                    dof = int(tokens[1])
+                    options = int(tokens[2])
+                    numvalues = dof
+                    offset = 0
                     if options & 4:
-                        pt.time_from_start = rospy.Duration(float(tokens[start]))
-                    res.traj.points.append(pt)
-                return res
+                        numvalues += 1
+                        offset += 1
+                    if options & 8:
+                        numvalues += 7
+                    if options & 16:
+                        numvalues += dof
+                    if options & 32:
+                        numvalues += dof
+                    res.traj.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
+                    for i in range(numpoints):
+                        start = 3+numvalues*i
+                        pt=trajectory_msgs.msg.JointTrajectoryPoint()
+                        for j in robot.GetJoints(manip.GetArmIndices()):
+                            pt.positions.append(float(tokens[start+offset+j.GetDOFIndex()]))
+                        if options & 4:
+                            pt.time_from_start = rospy.Duration(float(tokens[start]))
+                        res.traj.points.append(pt)
+                    return res
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
-        print 'openrave planning service started'
+        print 'openrave planning service ready'
 
         if options.ipython:
             ipshell = IPShellEmbed(argv='',banner = 'Dropping into IPython',exit_msg = 'Leaving Interpreter, back to program.')
