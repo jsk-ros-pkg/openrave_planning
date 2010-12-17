@@ -6,12 +6,12 @@ import time
 env = Environment() # create openrave environment
 env.SetViewer('qtcoin')
 env.Load('robots/barrettwam.robot.xml')
-robot = env.GetRobots()[0] # get the first robot
-manip = robot.GetManipulators()[0]
-jointnames = ' '.join(robot.GetJoints()[j].GetName() for j in manip.GetArmJoints())
-robot.SetController(env.CreateController('ROSOpenRAVE'),'trajectoryservice /controller_session '+jointnames)
-
-lower,upper = robot.GetJointLimits()
+with env:
+    robot = env.GetRobots()[0] # get the first robot
+    manip = robot.GetManipulators()[0]
+    jointnames = ' '.join(robot.GetJoints()[j].GetName() for j in manip.GetArmJoints())
+    robot.SetController(RaveCreateController(env,'ROSOpenRAVE trajectoryservice /controller_session '+jointnames),range(robot.GetDOF()),0)
+    lower,upper = robot.GetJointLimits()
 
 # sending velocity command?
 #robot.GetController().SendCommand("setvelocity 4 .01")
@@ -28,4 +28,4 @@ while True:
     robot.WaitForController(0)
     time.sleep(1.0)
 
-env.Destroy()
+RaveDestroy()

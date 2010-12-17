@@ -52,15 +52,15 @@ class OpenRAVEClientController : public ControllerBase
     class TrajectoryController : public boost::enable_shared_from_this<TrajectoryController>
     {
     public:
-        TrajectoryController(RobotBasePtr probot, const string& strTrajectorySession) : _fCommandTime(0), _probot(probot), _strTrajectorySession(strTrajectorySession) {}
+        TrajectoryController(const string& strTrajectorySession) : _fCommandTime(0), _strTrajectorySession(strTrajectorySession) {}
         virtual ~TrajectoryController() {
             Destroy();
         }
 
-        void Init()
+        void Init(RobotBasePtr probot)
         {
             Destroy();
-
+            _probot = probot;
             _node.reset(new ros::NodeHandle());
             
             {
@@ -116,6 +116,7 @@ class OpenRAVEClientController : public ControllerBase
 
         bool Destroy()
         {
+            _probot.reset();
             if( !!_session ) {
                 _session->terminate();
                 _session.reset();
@@ -233,21 +234,7 @@ public:
                     if( !ss ) {
                         break;
                     }
-                    // look for the correct index
-                    int index = -1;
-                    for(int i = 0; i < (int)_probot->GetJoints().size(); ++i) {
-                        if( jointname == _probot->GetJoints().at(i)->GetName() ) {
-                            index = i;
-                            break;
-                        }
-                    }
-
-                    if( index >= 0 ) {
-                        _setEnabledJoints.insert(pair<string, int>(jointname,index));
-                    }
-                    else {
-                        RAVELOG_WARN("failed to find joint %s\n", jointname.c_str());
-                    }
+                    _setEnabledJoints.insert(pair<string, int>(jointname,-1));
                 }
 
                 break;
@@ -255,7 +242,7 @@ public:
             else if( cmd == "trajectoryservice") {
                 string servicedir;
                 ss >> servicedir;
-                _listControllers.push_back(boost::shared_ptr<TrajectoryController>(new TrajectoryController(_probot, servicedir)));
+                _listControllers.push_back(boost::shared_ptr<TrajectoryController>(new TrajectoryController(servicedir)));
             }
             else if( cmd == "sendtiming") {
                 ss >> _bSendTiming;
@@ -266,24 +253,6 @@ public:
             if( !ss ) {
                 throw openrave_exception("failed controller initialization\n");
             }
-        }
-
-        if( _setEnabledJoints.size() == 0 ) {
-            RAVELOG_DEBUG("controlling using all joints of the robot\n");
-
-            FOREACH(it,_dofindices) {
-                KinBody::JointPtr pjoint = _probot->GetJointFromDOFIndex(*it);
-                _setEnabledJoints.insert(pair<string,int>(pjoint->GetName(), pjoint->GetJointIndex()));
-            }
-        }
-
-        string trajfilename = RaveGetHomeDirectory() + string("/") + _probot->GetName() + string(".ros.traj");
-        flog.open(trajfilename.c_str());
-        if( !flog ) {
-            RAVELOG_WARN(str(boost::format("failed to open %s\n")%trajfilename));
-        }
-        else {
-            flog << GetXMLId() << " " << _probot->GetName() << endl << endl;
         }
 
         _threadTrajectories = boost::thread(boost::bind(&OpenRAVEClientController::_TrajectoryThread,this));
@@ -322,9 +291,50 @@ public:
         }
 
         WriteLock lock(_mutexControllers);
+
+        if( _setEnabledJoints.size() == 0 ) {
+            RAVELOG_DEBUG("controlling using all joints of the robot\n");
+
+            FOREACH(it,_dofindices) {
+                KinBody::JointPtr pjoint = _probot->GetJointFromDOFIndex(*it);
+                _setEnabledJoints.insert(pair<string,int>(pjoint->GetName(), pjoint->GetJointIndex()));
+            }
+        }
+        else {
+            // look for the correct indices
+            set< pair<string, int> > setEnabledJoints;
+            FOREACH(it,_setEnabledJoints) {
+                int index = -1;
+                for(int i = 0; i < (int)_probot->GetJoints().size(); ++i) {
+                    if( it->first == _probot->GetJoints().at(i)->GetName() ) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if( index < 0 ) {
+                    RAVELOG_WARN(str(boost::format("failed to find joint %s\n")%it->first));
+                }
+                else {
+                    setEnabledJoints.insert(make_pair(it->first,index));
+                }
+            }
+            _setEnabledJoints = setEnabledJoints;
+        }
+
+        string trajfilename = RaveGetHomeDirectory() + string("/") + _probot->GetName() + string(".ros.traj");
+        flog.open(trajfilename.c_str());
+        if( !flog ) {
+            RAVELOG_WARN(str(boost::format("failed to open %s\n")%trajfilename));
+        }
+        else {
+            flog << GetXMLId() << " " << _probot->GetName() << endl << endl;
+        }
+
+
         FOREACH(it, _listControllers) {
             try {
-                (*it)->Init();
+                (*it)->Init(_probot);
             }
             catch(const controller_exception& err) {
                 RAVELOG_ERROR("OpenRAVEClientController error: %s\n",err.what());
@@ -339,11 +349,12 @@ public:
     {
         {
             WriteLock lock(_mutexControllers);
-            _listControllers.clear();
+            FOREACH(it,_listControllers) {
+                (*it)->Destroy();
+            }
         }
         _probot.reset();
         _bIsDone = false;
-        _setEnabledJoints.clear();
         if( flog.is_open() ) {
             flog.close();
         }
@@ -353,8 +364,9 @@ public:
     {
         Cancel();
         WriteLock lock(_mutexControllers);
-        FOREACH(itcontroller, _listControllers)
-            (*itcontroller)->Init();
+        FOREACH(itcontroller, _listControllers) {
+            (*itcontroller)->Init(_probot);
+        }
     }
 
     virtual bool SetDesired(const std::vector<dReal>& values, TransformConstPtr trans)
@@ -394,11 +406,12 @@ public:
 
         int controllerindex = 0;
         FOREACH(ittrajcontroller, _listControllers) {
-            if( _iController != controllerindex++ && _iController >= 0 )
+            if( _iController != controllerindex++ && _iController >= 0 ) {
                 continue;
-
-            if( !(*ittrajcontroller)->_session )
+            }
+            if( !(*ittrajcontroller)->_session ) {
                 continue;
+            }
             //req.requesttiming = 1; // request back the timestamps
             _bIsDone = false;
             req.hastiming = 0;
