@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
-        print 'openrave planning service ready'
+        print 'openrave %s service ready'%s.resolved_name
 
         if options.ipython:
             ipshell = IPShellEmbed(argv='',banner = 'Dropping into IPython',exit_msg = 'Leaving Interpreter, back to program.')
