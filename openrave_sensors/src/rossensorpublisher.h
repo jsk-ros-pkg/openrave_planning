@@ -161,7 +161,7 @@ protected:
                         _robot->GetController()->GetTorque(vjointvalues);
                         _jointstate.effort.insert(_jointstate.effort.end(),vjointvalues.begin(),vjointvalues.end());
                     }
-                    catch(const openrave_exception& ex) {
+                    catch(...) {//const openrave_exception& ex) {
                     }
                 }
                 _pubjointstate.publish(_jointstate);
