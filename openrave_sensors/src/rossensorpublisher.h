@@ -154,13 +154,15 @@ protected:
                 }
 
                 _robot->GetDOFVelocities(vjointvalues);
-                _jointstate.velocity.resize(0);
                 _jointstate.velocity.insert(_jointstate.velocity.end(),vjointvalues.begin(),vjointvalues.end());
                 _jointstate.effort.resize(0);
                 if( !!_robot->GetController() ) {
-                    vjointvalues.resize(0);
-                    _robot->GetController()->GetTorque(vjointvalues);
-                    _jointstate.effort.insert(_jointstate.effort.end(),vjointvalues.begin(),vjointvalues.end());
+                    try {
+                        _robot->GetController()->GetTorque(vjointvalues);
+                        _jointstate.effort.insert(_jointstate.effort.end(),vjointvalues.begin(),vjointvalues.end());
+                    }
+                    catch(const openrave_exception& ex) {
+                    }
                 }
                 _pubjointstate.publish(_jointstate);
             }
