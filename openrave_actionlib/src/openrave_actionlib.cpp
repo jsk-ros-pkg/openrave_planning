@@ -15,10 +15,11 @@
 #include "actionlib_controller.h"
 #include <rave/plugin.h>
 
-static list< boost::shared_ptr<void> > s_listRegisteredReaders;
+static std::list< boost::shared_ptr<void> >* s_listRegisteredReaders = NULL; ///< have to make it a pointer in order to prevent static object destruction from taking precedence
 InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string& interfacename, std::istream& sinput, EnvironmentBasePtr penv)
 {
-    if( s_listRegisteredReaders.size() == 0 ) {
+    if( !s_listRegisteredReaders ) {
+        s_listRegisteredReaders = new list< boost::shared_ptr<void> >();
         //s_listRegisteredReaders.push_back(ROSMocapSystem::RegisterXMLReader(penv));
     }
     switch(type) {
@@ -39,5 +40,6 @@ void GetPluginAttributesValidated(PLUGININFO& info)
 
 RAVE_PLUGIN_API void DestroyPlugin()
 {
-    s_listRegisteredReaders.clear();
+    delete s_listRegisteredReaders;
+    s_listRegisteredReaders = NULL;
 }

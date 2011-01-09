@@ -9,3 +9,6 @@ rosbuild_gensrv()
 
 rosbuild_add_library(orrosplanning src/orrosplanningmain.cpp)
 rosbuild_link_boost(orrosplanning thread)
+
+rosbuild_add_executable(mytest src/test.cpp)
+target_link_libraries(mytest crlibm)

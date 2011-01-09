@@ -15,5 +15,4 @@
   <depend package="openrave"/>
   <depend package="rosparam"/>
   <depend package="rospy" />
-  <depend package="pr2_controller_manager"/>
 </package>

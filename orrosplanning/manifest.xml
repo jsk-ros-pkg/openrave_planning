@@ -21,4 +21,5 @@
   <depend package="resource_retriever"/>
   <depend package="actionlib"/>
   <depend package="move_base_msgs"/>
+  <depend package="crlibm"/>
 </package>

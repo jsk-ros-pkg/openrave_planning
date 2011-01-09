@@ -16,7 +16,7 @@
 #ifndef OPENRAVE_ACTIONLIB_H
 #define OPENRAVE_ACTIONLIB_H
 
-#include <openrave-core.h> // declare first
+#include <rave/rave.h> // declare first
 
 #include <cstdio>
 #include <cstdlib>
