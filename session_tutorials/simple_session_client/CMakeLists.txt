@@ -1,0 +1,1 @@
+rosbuild_add_executable(simple_session_client simple_session_client.cpp)
