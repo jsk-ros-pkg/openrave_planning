@@ -18,6 +18,7 @@ __copyright__ = 'Copyright (C) 2010 Rosen Diankov (rosen.diankov@gmail.com)'
 __license__ = 'Apache License, Version 2.0'
 import roslib; roslib.load_manifest('orrosplanning')
 import rospy
+import os
 
 from optparse import OptionParser
 from openravepy import *
@@ -46,6 +47,9 @@ if __name__ == "__main__":
                       help='The collision map topic (maping_msgs/CollisionMap), by (default=%default)')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=True)
+    RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
+    # load the orrosplanning plugin
+    
     print 'initializing, please wait for ready signal...'
 
     try:
@@ -200,6 +204,7 @@ if __name__ == "__main__":
                         rospy.logerr('failed to find manipulator end effector %s'%req.ik_link_name)
                         return None
                     manip = manips[0]
+                    print manip
                     rospy.logdebug('ik_openrave.py choosing %s manipulator'%manip.GetName())
                     robot.SetActiveManipulator(manip)
 

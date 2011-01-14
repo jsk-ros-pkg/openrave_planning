@@ -44,6 +44,7 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
+    RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
     print 'initializing, please wait for ready signal...'
 
     try:
