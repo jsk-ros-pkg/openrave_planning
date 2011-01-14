@@ -32,6 +32,7 @@ import sensor_msgs.msg
 import motion_planning_msgs.msg
 from motion_planning_msgs.msg import ArmNavigationErrorCodes
 import geometry_msgs.msg
+import kinematics_msgs.srv
 from IPython.Shell import IPShellEmbed
 
 if __name__ == "__main__":
@@ -173,9 +174,54 @@ if __name__ == "__main__":
                             res.solutions.points.append(motion_planning_msgs.msg.JointPathPoint(s))
                     return res
 
+        def GetPositionIKFn(reqall):
+            req=reqall.ik_request
+            with valueslock:
+                with env:
+                    (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                    Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                    Trobot[0:3,3] = robot_trans
+                    robot.SetTransform(Trobot)
+
+                    goal = listener.transformPose(baseframe, req.pose_stamped)
+                    o = goal.pose.orientation
+                    p = goal.pose.position
+                    Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
+                    Thandgoal[0:3,3] = [p.x,p.y,p.z]
+
+                    if len(req.robot_state.joint_state.name) > 0:
+                        dofindices = [robot.GetJoint(name).GetDOFIndex() for name in req.robot_state.joint_state.name]
+                        robot.SetDOFValues(req.robot_state.joint_state.position,dofindices)
+                    #if len(req.robot_state.multi_dof_joint_state) > 0:
+                    #    rospy.logwarn('ik_openrave.py does not support multi_dof_joint_state yet')
+
+                    manips = [manip for manip in robot.GetManipulators() if manip.GetEndEffector().GetName()==req.ik_link_name]
+                    if len(manips) == 0:
+                        rospy.logerr('failed to find manipulator end effector %s'%req.ik_link_name)
+                        return None
+                    manip = manips[0]
+                    rospy.logdebug('ik_openrave.py choosing %s manipulator'%manip.GetName())
+                    robot.SetActiveManipulator(manip)
+
+                    res = kinematics_msgs.srv.GetPositionIKResponse()
+                    if env.CheckCollision(robot) or robot.CheckSelfCollision():
+                        res.error_code.val = ArmNavigationErrorCodes.START_STATE_IN_COLLISION
+                        return
+
+                    filteroptions = IkFilterOptions.CheckEnvCollisions
+                    solution = manip.FindIKSolution(Thandgoal,filteroptions)
+                    if solution is None:
+                        res.error_code.val = ArmNavigationErrorCodes.NO_IK_SOLUTION
+                    else:
+                        res.solution.joint_state.header.stamp = rospy.Time.now()
+                        res.solution.joint_state.name = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
+                        res.solution.joint_state.position = list(solution)
+                    return res
+
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
-        s = rospy.Service('IK', orrosplanning.srv.IK, IKFn)
-        print 'openrave %s service ready'%s.resolved_name
+        s1 = rospy.Service('IK', orrosplanning.srv.IK, IKFn)
+        s2 = rospy.Service('GetPositionIK', kinematics_msgs.srv.GetPositionIK, GetPositionIKFn)
+        print 'openrave services ready: %s, %s'%(s1.resolved_name,s2.resolved_name)
 
         if options.ipython:
             ipshell = IPShellEmbed(argv='',banner = 'Dropping into IPython',exit_msg = 'Leaving Interpreter, back to program.')

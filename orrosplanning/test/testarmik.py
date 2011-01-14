@@ -7,6 +7,7 @@ import roslib; roslib.load_manifest('orrosplanning')
 import rospy, time
 import orrosplanning.srv
 import geometry_msgs.msg
+import kinematics_msgs.srv
 from numpy import *
 
 if __name__=='__main__':
@@ -19,4 +20,14 @@ if __name__=='__main__':
     req.pose_stamped.header.frame_id = 'base_footprint'
     req.manip_name = 'leftarm'
     res=IKFn(req)
+    print res
+
+    # test the second service
+    GetPositionIKFn = rospy.ServiceProxy('GetPositionIK',kinematics_msgs.srv.GetPositionIK)
+    req = kinematics_msgs.srv.GetPositionIKRequest()
+    req.ik_request.pose_stamped.pose.position = geometry_msgs.msg.Point(0.6,0.189,0.7)
+    req.ik_request.pose_stamped.pose.orientation = geometry_msgs.msg.Quaternion(0,0.707,0,0.707)
+    req.ik_request.pose_stamped.header.frame_id = 'base_footprint'
+    req.ik_request.ik_link_name = 'l_gripper_palm_link'
+    res=GetPositionIKFn(req)
     print res
