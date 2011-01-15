@@ -166,13 +166,13 @@ if __name__=="__main__":
                   <translate>0.18 0 0</translate>
                   <rotate>0 1 0 90</rotate>
                 </frame_tip>
-                <gripper_axis axis="kmodel0/l_gripper_l_finger_joint/axis0">
-                  <closingdirection>
+                <gripper_joint joint="kmodel0/l_gripper_l_finger_joint">
+                  <closing_direction axis="./axis0">
                     <float>-1</float>
-                  </closingdirection>
-                </gripper_axis>
+                  </closing_direction>
+                </gripper_joint>
                 <iksolver type="Transform6D">
-                  <free_axis axis="kmodel0/l_upper_arm_roll_joint/axis0"/>
+                  <free_joint joint="kmodel0/l_upper_arm_roll_joint"/>
                   <interface_type>
                     <technique profile="OpenRAVE">
                       <interface>ikfast_pr2_leftarm</interface>
@@ -190,14 +190,14 @@ if __name__=="__main__":
                   <translate>0.18 0 0</translate>
                   <rotate>0 1 0 90</rotate>
                 </frame_tip>
-                <gripper_axis axis="kmodel0/l_gripper_l_finger_joint/axis0">
-                  <closingdirection>
+                <gripper_joint joint="kmodel0/l_gripper_l_finger_joint">
+                  <closing_direction axis="./axis0">
                     <float>-1</float>
-                  </closingdirection>
-                </gripper_axis>
+                  </closing_direction>
+                </gripper_joint>
                 <iksolver type="Transform6D">
-                  <free_axis axis="kmodel0/torso_lift_joint/axis0"/>
-                  <free_axis axis="kmodel0/l_upper_arm_roll_joint/axis0"/>
+                  <free_joint joint="kmodel0/torso_lift_joint"/>
+                  <free_joint joint="kmodel0/l_upper_arm_roll_joint"/>
                   <interface_type>
                     <technique profile="OpenRAVE">
                       <interface>ikfast_pr2_leftarm_torso</interface>
@@ -215,13 +215,13 @@ if __name__=="__main__":
                   <translate>0.18 0 0</translate>
                   <rotate>0 1 0 90</rotate>
                 </frame_tip>
-                <gripper_axis axis="kmodel0/r_gripper_l_finger_joint/axis0">
-                  <closingdirection>
+                <gripper_joint joint="kmodel0/r_gripper_l_finger_joint">
+                  <closing_direction axis="./axis0">
                     <float>-1</float>
-                  </closingdirection>
-                </gripper_axis>
+                  </closing_direction>
+                </gripper_joint>
                 <iksolver type="Transform6D">
-                  <free_axis axis="kmodel0/r_upper_arm_roll_joint/axis0"/>
+                  <free_joint joint="kmodel0/r_upper_arm_roll_joint"/>
                   <interface_type>
                     <technique profile="OpenRAVE">
                       <interface>ikfast_pr2_rightarm</interface>
@@ -239,14 +239,14 @@ if __name__=="__main__":
                   <translate>0.18 0 0</translate>
                   <rotate>0 1 0 90</rotate>
                 </frame_tip>
-                <gripper_axis axis="kmodel0/r_gripper_l_finger_joint/axis0">
-                  <closingdirection>
+                <gripper_joint joint="kmodel0/r_gripper_l_finger_joint">
+                  <closing_direction axis="./axis0">
                     <float>-1</float>
-                  </closingdirection>
-                </gripper_axis>
+                  </closing_direction>
+                </gripper_joint>
                 <iksolver type="Transform6D">
-                  <free_axis axis="kmodel0/torso_lift_joint/axis0"/>
-                  <free_axis axis="kmodel0/r_upper_arm_roll_joint/axis0"/>
+                  <free_joint joint="kmodel0/torso_lift_joint"/>
+                  <free_joint joint="kmodel0/r_upper_arm_roll_joint"/>
                   <interface_type>
                     <technique profile="OpenRAVE">
                       <interface>ikfast_pr2_rightarm_torso</interface>
@@ -277,7 +277,7 @@ if __name__=="__main__":
                 <frame_origin link="kmodel0/base_link"/>
                 <frame_tip link="kmodel0/wide_stereo_optical_frame"/>
                 <iksolver type="Lookat3D">
-                  <free_axis axis="kmodel0/torso_lift_joint/axis0"/>
+                  <free_joint joint="kmodel0/torso_lift_joint"/>
                   <interface_type>
                     <technique profile="OpenRAVE">
                       <interface>ikfast_pr2_head_torso</interface>
