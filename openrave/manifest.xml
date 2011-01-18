@@ -15,7 +15,7 @@
   <depend package="opende"/>
   <depend package="bullet"/>
   <depend package="std_msgs"/>
-<!--   <depend package="colladadom"/> -->
+  <depend package="collada_robots"/>
   <versioncontrol type="svn" url="https://openrave.svn.sourceforge.net/svnroot/openrave/trunk"/>
   <url>http://openrave.programmingvision.com</url>
   <rosdep name="libxml2"/>
