@@ -38,6 +38,15 @@ Version: 2.74\n\
 Libs: ${BULLET_LFLAGS}\n\
 CFlags: ${BULLET_CFLAGS}" > bullet.pc
 	cd $(INSTALL_DIR) && cd $(SVN_DIR) && rm -f build/CMakeCache.txt && export PATH="$(shell rospack find soqt)/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" .. && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
+	echo "#!/bin/sh\n\
+export OPENRAVE_DATA=\$$OPENRAVE_DATA:\`rospack find collada_robots\`/data\n\
+export OPENRAVE_PLUGINS=\$$OPENRAVE_PLUGINS:\`rospack find orrosplanning\`/lib\n\
+openrave.py \$$* " > $(INSTALL_DIR)/bin/openraveros.py
+	echo "#!/bin/sh\n\
+export OPENRAVE_DATA=\$$OPENRAVE_DATA:\`rospack find collada_robots\`/data\n\
+export OPENRAVE_PLUGINS=\$$OPENRAVE_PLUGINS:\`rospack find orrosplanning\`/lib\n\
+openrave \$$* " > $(INSTALL_DIR)/bin/openraveros
+	chmod +x $(INSTALL_DIR)/bin/openraveros.py $(INSTALL_DIR)/bin/openraveros
 	touch installed
 
 clean:
