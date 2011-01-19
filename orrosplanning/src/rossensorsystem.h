@@ -67,7 +67,7 @@ public:
         return !!_ros;
     }
 
-    virtual bool startsubscriptions()
+    virtual bool startsubscriptions(int queuesize=10)
     {
         Destroy();
 
@@ -76,7 +76,7 @@ public:
         if( ros::master::check() ) {
             _ros.reset(new ros::NodeHandle());
             FOREACH(ittopic,_listtopics)
-                _listsubtopics.push_back(_ros->subscribe(*ittopic,10,&ROSSensorSystem::newdatacb,this));
+                _listsubtopics.push_back(_ros->subscribe(*ittopic,queuesize,&ROSSensorSystem::newdatacb,this));
 
             _bDestroyThread = false;
             _threadros = boost::thread(boost::bind(&ROSSensorSystem::_threadrosfn, this));

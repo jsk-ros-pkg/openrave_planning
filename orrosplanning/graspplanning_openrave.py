@@ -36,7 +36,7 @@ from IPython.Shell import IPShellEmbed
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
     OpenRAVEGlobalArguments.addOptions(parser)
-    parser.add_option('--scene',action="store",type='string',dest='scene',default='robots/pr2-beta-static.robot.xml',
+    parser.add_option('--scene',action="store",type='string',dest='scene',default='robots/pr2-beta-static.zae',
                       help='scene to load (default=%default)')
     parser.add_option('--collision_map',action="store",type='string',dest='collision_map',default='/collision_map/collision_map',
                       help='The collision map topic (maping_msgs/CollisionMap), by (default=%default)')

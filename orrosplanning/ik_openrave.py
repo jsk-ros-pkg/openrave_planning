@@ -39,7 +39,7 @@ from IPython.Shell import IPShellEmbed
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
     OpenRAVEGlobalArguments.addOptions(parser)
-    parser.add_option('--scene',action="store",type='string',dest='scene',default='robots/pr2-beta-static.robot.xml',
+    parser.add_option('--scene',action="store",type='string',dest='scene',default='robots/pr2-beta-static.zae',
                       help='scene to load (default=%default)')
     parser.add_option('--ipython', '-i',action="store_true",dest='ipython',default=False,
                       help='if true will drop into the ipython interpreter rather than spin')

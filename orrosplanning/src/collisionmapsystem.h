@@ -40,12 +40,15 @@ public:
     CollisionMapSystem(EnvironmentBasePtr penv)
         : ROSSensorSystem<mapping_msgs::CollisionMap>("collisionmap",penv), _fPrunePadding(0), _nNextId(1), _bPruneCollisions(false)
     {
+        RegisterCommand("collisionstream",boost::bind(&CollisionMapSystem::collisionstream,this,_1,_2),
+                        "ROS stream");
     }
     virtual ~CollisionMapSystem() {
     }
 
     virtual bool Init(istream& sinput)
     {
+      _bCollisionStream = true;
         _listtopics.clear();
         string cmd;
         while(!sinput.eof()) {
@@ -86,13 +89,20 @@ public:
         if( _listtopics.size() == 0 )
             _listtopics.push_back("collision_map");
         
-        return startsubscriptions();
+        return startsubscriptions(1);
+    }
+
+    virtual bool collisionstream(std::ostream& os, std::istream& is)
+    {
+      is >> _bCollisionStream;
+      RAVELOG_INFO("collisionstream: %d\n",(int)_bCollisionStream);
+      return true;
     }
 
 private:
-    virtual bool startsubscriptions()
+    virtual bool startsubscriptions(int queuesize)
     {
-        if( !ROSSensorSystem<mapping_msgs::CollisionMap>::startsubscriptions() ) {
+        if( !ROSSensorSystem<mapping_msgs::CollisionMap>::startsubscriptions(queuesize) ) {
             return false;
         }
         _tflistener.reset(new tf::TransformListener(*_ros));
@@ -107,6 +117,9 @@ private:
 
     virtual void newdatacb(const boost::shared_ptr<mapping_msgs::CollisionMap const>& topicmsg)
     {
+      if( !_bCollisionStream ) {
+	return;
+      }
         KinBodyPtr pbody;
         {
             EnvironmentMutex::scoped_lock envlock(GetEnv()->GetMutex());
@@ -203,6 +216,7 @@ private:
                 _pbodytestbox.reset();
             }
 
+	    RAVELOG_INFO("number of boxes %d\n",(int)_vobbs.size());
             if( !pbody->InitFromBoxes(_vobbs, true) ) {
                 RAVELOG_ERRORA("failed to create collision map\n");
                 return;
@@ -258,6 +272,7 @@ private:
     vector<OBB> _vobbs;
     int _nNextId;
     bool _bPruneCollisions;
+    bool _bCollisionStream;
 };
 
 #endif
