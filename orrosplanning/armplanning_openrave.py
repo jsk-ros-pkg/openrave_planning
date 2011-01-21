@@ -44,7 +44,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
-    print 'initializing, please wait for ready signal...'
+    rospy.loginfo('initializing, please wait for ready signal...')
 
     try:
         rospy.init_node('armplanning_openrave',disable_signals=False)
@@ -93,12 +93,12 @@ if __name__ == "__main__":
                     robot.SetDOFValues(values)
 
         def MoveToHandPositionFn(req):
-            print "MoveToHandPosition"
+            rospy.loginfo("MoveToHandPosition")
             try:
                 collisionmap.SendCommand("collisionstream 0")
                 with valueslock:
                     with env:
-                        print "MoveToHandPosition2"
+                        rospy.loginfo("MoveToHandPosition2")
                         (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
                         Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
                         Trobot[0:3,3] = robot_trans
@@ -141,7 +141,7 @@ if __name__ == "__main__":
                         try:
                             starttime = time.time()
                             trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750)
-                            print 'total planning time: %fs'%(time.time()-starttime)
+                            rospy.loginfo('total planning time: %fs'%(time.time()-starttime))
                         except:
                             rospy.logerr('failed to solve for T=%s'%str(Tgoalee))
                             return None
@@ -177,7 +177,7 @@ if __name__ == "__main__":
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
         RaveSetDebugLevel(DebugLevel.Debug)
-        print 'openrave %s service ready'%s.resolved_name
+        rospy.loginfo('openrave %s service ready'%s.resolved_name)
 
         if options.ipython:
             ipshell = IPShellEmbed(argv='',banner = 'Dropping into IPython',exit_msg = 'Leaving Interpreter, back to program.')
