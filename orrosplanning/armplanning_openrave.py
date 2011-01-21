@@ -137,7 +137,7 @@ if __name__ == "__main__":
                             if not ikmodel.load():
                                 ikmodel.autogenerate()
 
-                        Tgoalee = dot(Thandgoal,dot(linalg.inv(handlink.GetTransform()),manip.GetEndEffectorTransform()))
+                        Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetEndEffectorTransform()))
                         try:
                             starttime = time.time()
                             trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750)
