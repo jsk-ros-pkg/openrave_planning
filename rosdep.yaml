@@ -23,10 +23,6 @@ qhull:
   macports: qhull
   gentoo: qhull
 qt4gl:
-  ubuntu: 
-    '10.04': libqt4-opengl-dev
-    '9.10': libqt4-opengl-dev
-    '9.04': libqt4-opengl-dev
-    '8.10': libqt4-opengl-dev
+  ubuntu: libqt4-opengl-dev
   debian: libqt4-opengl-dev
   gentoo: ">=x11-libs/qt-opengl-4"
