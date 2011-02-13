@@ -7,5 +7,10 @@ geometry_msgs/PoseStamped hand_goal
 # name of manipulator that specifies joints to move, if empty the first valid manipulator with an end effector of hand_frame_id will be chosen. The hand_frame_id link is assumed to be fixed to the manipulator end effecto
 string manip_name 
 
+# the name of the planner to use for moving the position. The possible names depend highly on the server
+# side. If openrave is used as the server, then the planner name can be any one of the planner interfaces.
+# If left empty, a default planner will be used.
+string planner
+
 ---
 trajectory_msgs/JointTrajectory traj

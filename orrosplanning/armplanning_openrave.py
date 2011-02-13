@@ -72,7 +72,6 @@ if __name__ == "__main__":
             env.AddKinBody(ground,False)
             baseframe = robot.GetLinks()[0].GetName()
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap expirationtime 20 bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
-            basemanip = interfaces.BaseManipulation(robot)
         
         # have to do this manually because running linkstatistics when viewer is enabled segfaults things
         if options._viewer is None:
@@ -98,6 +97,7 @@ if __name__ == "__main__":
                 collisionmap.SendCommand("collisionstream 0")
                 with valueslock:
                     with env:
+                        basemanip = interfaces.BaseManipulation(robot,plannername=None if len(req.planner)==0 else req.planner)
                         rospy.loginfo("MoveToHandPosition2")
                         (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
                         Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
