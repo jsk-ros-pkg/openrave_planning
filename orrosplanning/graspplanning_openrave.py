@@ -42,6 +42,8 @@ if __name__ == "__main__":
                       help='The collision map topic (maping_msgs/CollisionMap), by (default=%default)')
     parser.add_option('--ipython', '-i',action="store_true",dest='ipython',default=False,
                       help='if true will drop into the ipython interpreter rather than spin')
+    parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
+                      help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -66,7 +68,9 @@ if __name__ == "__main__":
             ground.SetName('map')
             ground.InitFromBoxes(array([r_[ab.pos()-array([0,0,ab.extents()[2]+0.002]),2.0,2.0,0.001]]),True)
             env.AddKinBody(ground,False)
-            baseframe = robot.GetLinks()[0].GetName()
+            if options.mapframe is None:
+                options.mapframe = robot.GetLinks()[0].GetName()
+                print 'setting map frame to %s'%options.mapframe
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
             basemanip = interfaces.BaseManipulation(robot)
             grasper = interfaces.Grasper(robot)
@@ -116,9 +120,12 @@ if __name__ == "__main__":
             Ttarget = eye(4)
             if graspableobject.type == object_manipulation_msgs.msg.GraspableObject.POINT_CLUSTER:
                 target.InitFromTrimesh(trimeshFromPointCloud(graspableobject.cluster),True)
-                (trans,rot) = listener.lookupTransform(baseframe, graspableobject.cluster.header.frame_id, rospy.Time(0))
-                Ttarget = matrixFromQuat([rot[3],rot[0],rot[1],rot[2]])
-                Ttarget[0:3,3] = trans
+                if len(options.mapframe) > 0:
+                    (trans,rot) = listener.lookupTransform(options.mapframe, graspableobject.cluster.header.frame_id, rospy.Time(0))
+                    Ttarget = matrixFromQuat([rot[3],rot[0],rot[1],rot[2]])
+                    Ttarget[0:3,3] = trans
+                else:
+                    Ttarget = eye(4)
             else:
                 raise ValueError('do not support graspable objects of type %s'%str(graspableobject.type))
             
@@ -131,10 +138,11 @@ if __name__ == "__main__":
             with valueslock:
                 with env:
                     # update the robot
-                    (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
-                    Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
-                    Trobot[0:3,3] = robot_trans
-                    robot.SetTransform(Trobot)
+                    if len(options.mapframe) > 0:
+                        (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                        Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                        Trobot[0:3,3] = robot_trans
+                        robot.SetTransform(Trobot)
                     # set the manipulator
                     if len(req.arm_name) > 0:
                         manip = robot.GetManipulator(req.arm_name)
@@ -164,7 +172,7 @@ if __name__ == "__main__":
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
                             rosgrasp = object_manipulation_msgs.msg.Grasp()
                             rosgrasp.pre_grasp_posture.header.stamp = rospy.Time.now()
-                            rosgrasp.pre_grasp_posture.header.frame_id = baseframe
+                            rosgrasp.pre_grasp_posture.header.frame_id = options.mapframe
                             rosgrasp.pre_grasp_posture.name = [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetGripperIndices()]
                             rosgrasp.pre_grasp_posture.position = fastgrasping.gmodel.getPreshape(grasp)
                             # also include the arm positions
