@@ -116,6 +116,7 @@ if __name__ == "__main__":
                 indices = reshape(pointindicesinv[triangles.flatten()],triangles.shape)
             return TriMesh(vertices=vertices,indices=indices)
         def CreateTarget(graspableobject):
+            global options
             target = RaveCreateKinBody(env,'')
             Ttarget = eye(4)
             if graspableobject.type == object_manipulation_msgs.msg.GraspableObject.POINT_CLUSTER:
@@ -135,6 +136,7 @@ if __name__ == "__main__":
             return target
 
         def GraspPlanning(req):
+            global options
             with valueslock:
                 with env:
                     # update the robot

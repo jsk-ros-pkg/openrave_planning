@@ -35,12 +35,14 @@ from IPython.Shell import IPShellEmbed
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
     OpenRAVEGlobalArguments.addOptions(parser)
-    parser.add_option('--scene',action="store",type='string',dest='scene',default='robots/pr2-beta-static.robot.xml',
+    parser.add_option('--scene',action="store",type='string',dest='scene',default='robots/pr2-beta-static.zae',
                       help='scene to load (default=%default)')
     parser.add_option('--collision_map',action="store",type='string',dest='collision_map',default='/collision_map/collision_map',
                       help='The collision map topic (maping_msgs/CollisionMap), by (default=%default)')
     parser.add_option('--ipython', '-i',action="store_true",dest='ipython',default=False,
                       help='if true will drop into the ipython interpreter rather than spin')
+    parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
+                      help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -70,7 +72,9 @@ if __name__ == "__main__":
             ground.SetName('map')
             ground.InitFromBoxes(array([r_[ab.pos()-array([0,0,ab.extents()[2]+0.002]),2.0,2.0,0.001]]),True)
             env.AddKinBody(ground,False)
-            baseframe = robot.GetLinks()[0].GetName()
+            if options.mapframe is None:
+                options.mapframe = robot.GetLinks()[0].GetName()
+                print 'setting map frame to %s'%options.mapframe
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap expirationtime 20 bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
         
         # have to do this manually because running linkstatistics when viewer is enabled segfaults things
@@ -83,6 +87,7 @@ if __name__ == "__main__":
         values = robot.GetDOFValues()
         valueslock = threading.Lock()
         def UpdateRobotJoints(msg):
+            global options
             with valueslock:
                 with env:
                     for name,pos in izip(msg.name,msg.position):
@@ -92,6 +97,7 @@ if __name__ == "__main__":
                     robot.SetDOFValues(values)
 
         def MoveToHandPositionFn(req):
+            global options
             rospy.loginfo("MoveToHandPosition")
             try:
                 collisionmap.SendCommand("collisionstream 0")
@@ -99,12 +105,14 @@ if __name__ == "__main__":
                     with env:
                         basemanip = interfaces.BaseManipulation(robot,plannername=None if len(req.planner)==0 else req.planner)
                         rospy.loginfo("MoveToHandPosition2")
-                        (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
-                        Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
-                        Trobot[0:3,3] = robot_trans
-                        robot.SetTransform(Trobot)
-
-                        hand = listener.transformPose(baseframe, req.hand_goal)
+                        if len(options.mapframe) > 0:
+                            (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                            Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                            Trobot[0:3,3] = robot_trans
+                            robot.SetTransform(Trobot)
+                            hand = listener.transformPose(options.mapframe, req.hand_goal)
+                        else:
+                            hand = req.hand_goal
                         o = hand.pose.orientation
                         p = hand.pose.position
                         Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])

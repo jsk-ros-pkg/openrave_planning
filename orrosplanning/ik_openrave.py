@@ -45,6 +45,8 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     parser.add_option('--collision_map',action="store",type='string',dest='collision_map',default='/collision_map/collision_map',
                       help='The collision map topic (maping_msgs/CollisionMap), by (default=%default)')
+    parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
+                      help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=True)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -63,7 +65,9 @@ if __name__ == "__main__":
             ground.SetName('map')
             ground.InitFromBoxes(array([r_[ab.pos()-array([0,0,ab.extents()[2]+0.002]),2.0,2.0,0.001]]),True)
             env.AddKinBody(ground,False)
-            baseframe = robot.GetLinks()[0].GetName()
+            if options.mapframe is None:
+                options.mapframe = robot.GetLinks()[0].GetName()
+                print 'setting map frame to %s'%options.mapframe
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
         
         listener = tf.TransformListener()
@@ -79,14 +83,17 @@ if __name__ == "__main__":
                     robot.SetDOFValues(values)
 
         def IKFn(req):
+            global options
             with valueslock:
                 with env:
-                    (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
-                    Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
-                    Trobot[0:3,3] = robot_trans
-                    robot.SetTransform(Trobot)
-
-                    goal = listener.transformPose(baseframe, req.pose_stamped)
+                    if len(options.mapframe) > 0:
+                        (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                        Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                        Trobot[0:3,3] = robot_trans
+                        robot.SetTransform(Trobot)
+                        goal = listener.transformPose(options.mapframe, req.pose_stamped)
+                    else:
+                        goal = req.pose_stamped
                     o = goal.pose.orientation
                     p = goal.pose.position
                     Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
@@ -179,15 +186,18 @@ if __name__ == "__main__":
                     return res
 
         def GetPositionIKFn(reqall):
+            global options
             req=reqall.ik_request
             with valueslock:
                 with env:
-                    (robot_trans,robot_rot) = listener.lookupTransform(baseframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
-                    Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
-                    Trobot[0:3,3] = robot_trans
-                    robot.SetTransform(Trobot)
-
-                    goal = listener.transformPose(baseframe, req.pose_stamped)
+                    if len(options.mapframe) > 0:
+                        (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                        Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                        Trobot[0:3,3] = robot_trans
+                        robot.SetTransform(Trobot)
+                        goal = listener.transformPose(options.mapframe, req.pose_stamped)
+                    else:
+                        goal = req.pose_stamped
                     o = goal.pose.orientation
                     p = goal.pose.position
                     Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
