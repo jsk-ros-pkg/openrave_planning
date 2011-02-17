@@ -33,6 +33,48 @@ import object_manipulation_msgs.srv
 import object_manipulation_msgs.msg
 from IPython.Shell import IPShellEmbed
 
+class FastGrasping:
+    """Computes a valid grasp for a given object as fast as possible without relying on a pre-computed grasp set
+    """
+    class GraspingException(Exception):
+        def __init__(self,args):
+            self.args=args
+
+    def __init__(self,robot,target):
+        self.robot = robot
+        self.ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,iktype=IkParameterization.Type.Transform6D)
+        if not self.ikmodel.load():
+            self.ikmodel.autogenerate()
+        self.gmodel = databases.grasping.GraspingModel(robot,target)
+        self.gmodel.init(friction=0.4,avoidlinks=[])
+
+    def checkgraspfn(self, contacts,finalconfig,grasp,info):
+        # check if grasp can be reached by robot
+        Tglobalgrasp = self.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
+        sol = self.gmodel.manip.FindIKSolution(Tglobalgrasp,True)
+        if sol is not None:
+            jointvalues = array(finalconfig[0])
+            jointvalues[self.gmodel.manip.GetArmIndices()] = sol
+            raise self.GraspingException([grasp,jointvalues])
+        return True
+
+    def computeGrasp(self,updateenv=True):
+        approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
+        standoffs = [0]
+        # roll discretization
+        rolls = arange(0,2*pi,0.5*pi)
+        # initial preshape for robot is the released fingers
+        with self.gmodel.target:
+            self.gmodel.target.Enable(False)
+            taskmanip = interfaces.TaskManipulation(self.robot)
+            final,traj = taskmanip.ReleaseFingers(execute=False,outputfinal=True)
+            preshapes = array([final])
+        try:
+            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv)
+            return None,None # did not find anything
+        except self.GraspingException, e:
+            return e.args
+
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
     OpenRAVEGlobalArguments.addOptions(parser)
@@ -168,7 +210,7 @@ if __name__ == "__main__":
                     try:
                         res = object_manipulation_msgs.srv.GraspPlanningResponse()
                         # start planning
-                        fastgrasping = examples.fastgrasping.FastGrasping(robot,target)
+                        fastgrasping = FastGrasping(robot,target)
                         grasp,jointvalues = fastgrasping.computeGrasp(updateenv=False)
                         if grasp is not None:
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
