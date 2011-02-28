@@ -130,8 +130,9 @@ public:
             _listsubscriptions.push_back(_node->subscribe(statetopic, 2, &RobotFramePublisher::statecb, this));
         }
 
-        if( _listsubscriptions.size() == 0 )
+        if( _listsubscriptions.size() == 0 ) {
             throw runtime_error("no robot mechanism states attached, define with robotX ROS parameters");
+        }
     }
 
     virtual ~RobotFramePublisher()
