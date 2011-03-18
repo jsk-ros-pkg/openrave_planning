@@ -585,7 +585,7 @@ class ROSActionLibController : public ControllerBase
 {
 public:
  ROSActionLibController(EnvironmentBasePtr penv, std::istream& ss) : ControllerBase(penv) {
-        __description = ":Interface Author: Rosen Diankov\nAllows OpenRAVE to control a robot through the ROS actionlib interface.";
+        __description = ":Interface Author: Rosen Diankov\n\nAllows OpenRAVE to control a robot through the ROS actionlib interface.";
         _bDestroyThread = true;
         _nControlTransformation = 0;
         _jointstatetopic="/joint_states";

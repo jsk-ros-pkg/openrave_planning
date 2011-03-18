@@ -217,7 +217,7 @@ class OpenRAVEClientController : public ControllerBase
 public:
  OpenRAVEClientController(EnvironmentBasePtr penv, std::istream& ss) : ControllerBase(penv),
         _fCommandTime(0), _bIsDone(false), _bSendTimestamps(false), _bDestroyThread(false) {
-        __description = ":Interface Author: Rosen Diankov\nA simple controller interface using ROS. See openrave_robot_control ROS package.";
+        __description = ":Interface Author: Rosen Diankov\n\nA simple controller interface using ROS. See openrave_robot_control ROS package.";
         _iController = -1;
         _bSyncControllers = true;
         

@@ -32,7 +32,7 @@ class ROSSensorPublisher : public ProblemInstance
 {
 public:
  ROSSensorPublisher(EnvironmentBasePtr penv) : ProblemInstance(penv), _bDestroyThread(true) {
-        __description = ":Interface Author: Rosen Diankov\nPublishes openrave robot sensor messages to the ROS network";
+        __description = ":Interface Author: Rosen Diankov\n\nPublishes openrave robot sensor messages to the ROS network";
         RegisterCommand("RegisterRobot",boost::bind(&ROSSensorPublisher::RegisterRobot,this,_1,_2),
                         "Registers a robot to publish its sensor data.");
         RegisterCommand("RegisterSensor",boost::bind(&ROSSensorPublisher::RegisterSensor,this,_1,_2),

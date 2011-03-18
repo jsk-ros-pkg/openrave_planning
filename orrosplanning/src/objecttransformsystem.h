@@ -42,7 +42,7 @@ public:
     ObjectTransformSystem(EnvironmentBasePtr penv)
         : ROSSensorSystem<posedetection_msgs::ObjectDetection>("objecttransform",penv), _nNextId(1)
     {
-        __description = ":Interface Author: Rosen Diankov\nAdd objects from the ROS network using the posedetection_msgs/ObjectDetection message. The type field in the message is interpreted as an OpenRAVE-loadable object file.";
+        __description = ":Interface Author: Rosen Diankov\n\nAdd objects from the ROS network using the posedetection_msgs/ObjectDetection message. The type field in the message is interpreted as an OpenRAVE-loadable object file.";
     }
     virtual ~ObjectTransformSystem() {
         _tflistener.reset();

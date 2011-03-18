@@ -93,7 +93,7 @@ public:
 
     ROSLaser2D(EnvironmentBasePtr penv) : SensorBase(penv)
     {
-        __description = ":Interface Author: Rosen Diankov\nConnects to a ROS LaserScan message that receives laser data in real-time and provides that information to the OpenRAVE environment";
+        __description = ":Interface Author: Rosen Diankov\n\nConnects to a ROS LaserScan message that receives laser data in real-time and provides that information to the OpenRAVE environment";
         _pgeom.reset(new LaserGeomData());
         _pdata.reset(new LaserSensorData());
 

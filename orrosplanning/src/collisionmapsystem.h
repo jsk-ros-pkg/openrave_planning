@@ -40,6 +40,7 @@ public:
     CollisionMapSystem(EnvironmentBasePtr penv)
         : ROSSensorSystem<mapping_msgs::CollisionMap>("collisionmap",penv), _fPrunePadding(0), _nNextId(1), _bPruneCollisions(false)
     {
+        __description = ":Interface Author: Rosen Diankov\n\nListens to ROS mapping_msgs/CollisionMap and dynamically updates an environment collision map.";
         RegisterCommand("collisionstream",boost::bind(&CollisionMapSystem::collisionstream,this,_1,_2),
                         "ROS stream");
     }
