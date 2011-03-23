@@ -42,7 +42,7 @@ class ROSBindings : public ProblemInstance
 {
 public:
  ROSBindings(EnvironmentBasePtr penv) : ProblemInstance(penv), _bDestroyThread(true) {
-        __description = ":Interface Author: Rosen Diankov\nVarious ROS Bindings Simplifying integration with ROS";
+        __description = ":Interface Author: Rosen Diankov\n\nBindings Simplifying integration with ROS";
         RegisterCommand("SetLocalizationFromTF",boost::bind(&ROSBindings::SetLocalizationFromTF,this,_1,_2),
                         "Set a robot's navigation from a published tf frame");
         RegisterCommand("SetLocalizationFromDetection",boost::bind(&ROSBindings::SetLocalizationFromDetection,this,_1,_2),
