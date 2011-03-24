@@ -1,7 +1,5 @@
 <package>
-  <description brief="OpenRAVE">
-    Check out the CMU Tech Report: "OpenRAVE: A Planning Architecture For Autonomous Robotics" for a brief description.
-
+  <description brief="Open Robotics Automation Virtual Environment">
     For successful compilation, remove Qt3 development tools (qt3-dev-tools,libqt3-headers) to prevent conflict with Qt4.
   </description>
   <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
