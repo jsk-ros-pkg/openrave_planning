@@ -1,11 +1,12 @@
 <stack name="openrave_planning" version="0.1">
-  <description brief="openrave packages from cmu-ros-pkg">
-    These are OpenRAVE-related packages.
+  <description brief="Open Robotics Automation Virtual Environment ROS Bindings">
+    This stack offers OpenRAVE-related bindings.
+    Maintained by the JSK lab at University of Tokyo.
   </description>
-  <author>Rosen Diankov rdiankov@cs.cmu.edu</author>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://pr.willowgarage.com/wiki/openrave</url>
+  <url>http://www.openrave.org</url>
   
   <depend stack="motion_planning_common"/> <!-- mapping_msgs, manipulation_msgs --> 
   <depend stack="geometry"/> <!-- tf, bullet --> 
