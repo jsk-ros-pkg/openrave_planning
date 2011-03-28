@@ -53,7 +53,7 @@ class ROSLaser2D : public SensorBase
             else if( name == "scantopic" )
                 ss >> _psensor->scantopic;
             else if( name == "show" )
-                ss >> _psensor->_bRender;
+                ss >> _psensor->_bRenderData;
             else if( name == "color" ) {
                 ss >> _psensor->_vColor.x >> _psensor->_vColor.y >> _psensor->_vColor.z;
                 // ok if not everything specified
@@ -98,7 +98,8 @@ public:
         _pdata.reset(new LaserSensorData());
 
         _bDestroyThread = true;
-        _bRender = false;
+        _bRenderData = false;
+        _bRenderGeometry = true;
         _bPower = true;
         _bUpdatePlot = true;
         scantopic = "/scan";
@@ -110,35 +111,48 @@ public:
     }
     virtual ~ROSLaser2D()
     {
-        Reset(0);
+        _Reset();
     }
     
-    virtual bool Init(const string& args)
+    virtual int Configure(ConfigureCommand command, bool blocking)
     {
-        Reset(1);
-        return true;
-    }
-
-    virtual void Reset(int options)
-    {
-        boost::mutex::scoped_lock lock(_mutexdata);
-
-        _listGraphicsHandles.clear();
-        _iconhandle.reset();
-
-        _bUpdatePlot = true;
-        _pdata->positions.clear();
-        _pdata->ranges.clear();
-        _pdata->intensity.clear();
-
-        _bDestroyThread = true;
-        _submstate.shutdown();
-        _node.reset();
-        _threadsensor.join();
-        
-        if( options & 1 ) {
+        switch(command) {
+        case CC_PowerOn:
+            _bPower = true;
+            return _bPower;
+        case CC_PowerOff:
+            _bPower = false;
+            _Reset();
+            return _bPower;
+        case CC_PowerCheck:
+            return _bPower;
+        case CC_RenderDataOn:
+            _bRenderData = true;
+            _Reset();
             startsubscriptions();
+            return _bRenderData;
+        case CC_RenderDataOff: {
+            boost::mutex::scoped_lock lock(_mutexdata);
+            _listGraphicsHandles.clear();
+            _bRenderData = false;
+            return _bRenderData;
         }
+        case CC_RenderDataCheck:
+            return _bRenderData;
+        case CC_RenderGeometryOn:
+            _bRenderGeometry = true;
+            _RenderGeometry();
+            return _bRenderData;
+        case CC_RenderGeometryOff: {
+            boost::mutex::scoped_lock lock(_mutexdata);
+            _graphgeometry.reset();
+            _bRenderGeometry = false;
+            return _bRenderData;
+        }
+        case CC_RenderGeometryCheck:
+            return _bRenderGeometry;
+        }
+        throw openrave_exception(str(boost::format("SensorBase::Configure: unknown command 0x%x")%command));
     }
 
     virtual void startsubscriptions()
@@ -160,40 +174,11 @@ public:
     virtual bool SimulationStep(dReal fTimeElapsed)
     {
         if( _bUpdatePlot ) {
-            Transform t = GetLaserPlaneTransform();
-            if( _pgeom->max_angle[0] > _pgeom->min_angle[0] ) {
-                if( !_iconhandle ) {
-                    int N = 10;
-                    viconpoints.resize(N+2);
-                    viconindices.resize(3*N);
-                    viconpoints[0] = t.trans;
-                    Transform trot;
-
-                    for(int i = 0; i <= N; ++i) {
-                        dReal fang = _pgeom->min_angle[0] + (_pgeom->max_angle[0]-_pgeom->min_angle[0])*(float)i/(float)N;
-                        trot.rotfromaxisangle(Vector(0,0,1), fang);
-                        viconpoints[i+1] = trot.rotate(Vector(0.05f,0,0));
-
-                        if( i < N ) {
-                            viconindices[3*i+0] = 0;
-                            viconindices[3*i+1] = i+1;
-                            viconindices[3*i+2] = i+2;
-                        }
-                    }
-
-                    RaveVector<float> vcolor = _vColor*0.5f;
-                    vcolor.w = 0.7f;
-                    _iconhandle = GetEnv()->drawtrimesh(viconpoints[0], sizeof(viconpoints[0]), &viconindices[0], N, vcolor);
-                }
-                if( !!_iconhandle ) {
-                    _iconhandle->SetTransform(t);
-                }
-            }
+            _RenderGeometry();
         }
 
         return true;
     }
-
 
     virtual SensorGeometryPtr GetSensorGeometry(SensorType type)
     {
@@ -234,7 +219,7 @@ public:
         std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
         if( cmd == "show" || cmd == "render" ) {
-            is >> _bRender;
+            is >> _bRenderData;
         }
         else if( cmd == "power") {
             is >> _bPower;
@@ -262,6 +247,61 @@ public:
 
  protected:
 
+    virtual void _Reset()
+    {
+        boost::mutex::scoped_lock lock(_mutexdata);
+
+        _listGraphicsHandles.clear();
+        _graphgeometry.reset();
+
+        _bUpdatePlot = true;
+        _pdata->positions.clear();
+        _pdata->ranges.clear();
+        _pdata->intensity.clear();
+
+        _bDestroyThread = true;
+        _submstate.shutdown();
+        _node.reset();
+        _threadsensor.join();
+    }
+
+    virtual void _RenderGeometry()
+    {
+        if( !_bRenderGeometry ) {
+            return;
+        }
+        Transform t = GetLaserPlaneTransform();
+        if( _pgeom->max_angle[0] > _pgeom->min_angle[0] ) {
+            if( !_graphgeometry ) {
+                int N = 10;
+                vector<RaveVector<float> > viconpoints;
+                vector<int> viconindices;
+                viconpoints.resize(N+2);
+                viconindices.resize(3*N);
+                viconpoints[0] = t.trans;
+                Transform trot;
+
+                for(int i = 0; i <= N; ++i) {
+                    dReal fang = _pgeom->min_angle[0] + (_pgeom->max_angle[0]-_pgeom->min_angle[0])*(float)i/(float)N;
+                    trot.rotfromaxisangle(Vector(0,0,1), fang);
+                    viconpoints[i+1] = trot.rotate(Vector(0.05f,0,0));
+
+                    if( i < N ) {
+                        viconindices[3*i+0] = 0;
+                        viconindices[3*i+1] = i+1;
+                        viconindices[3*i+2] = i+2;
+                    }
+                }
+
+                RaveVector<float> vcolor = _vColor*0.5f;
+                vcolor.w = 0.7f;
+                _graphgeometry = GetEnv()->drawtrimesh(viconpoints[0], sizeof(viconpoints[0]), &viconindices[0], N, vcolor);
+            }
+            if( !!_graphgeometry ) {
+                _graphgeometry->SetTransform(t);
+            }
+        }
+    }
     virtual Transform GetLaserPlaneTransform() { return _trans; }
     virtual void newscan_cb(const sensor_msgs::LaserScanConstPtr& msg)
     {
@@ -285,10 +325,10 @@ public:
             _pdata->ranges[i] = t.rotate(v);
         }
 
-        for(int i = 0; i < (int)_pdata->intensity.size(); ++i)
+        for(int i = 0; i < (int)_pdata->intensity.size(); ++i) {
             _pdata->intensity[i] = msg->intensities[i];
-
-        if( _bRender && msg->ranges.size() > 0 ) {
+        }
+        if( _bRenderData && msg->ranges.size() > 0 ) {
 
             // If can render, check if some time passed before last update
             list<GraphHandlePtr> listhandles;
@@ -351,15 +391,13 @@ public:
     
     Transform _trans;
     list<GraphHandlePtr> _listGraphicsHandles;
-    GraphHandlePtr _iconhandle;
-    vector<RaveVector<float> > viconpoints;
-    vector<int> viconindices;
+    GraphHandlePtr _graphgeometry;
 
     boost::mutex _mutexdata;
     boost::thread _threadsensor;
     bool _bDestroyThread;
 
-    bool _bRender, _bPower;
+    bool _bRenderData, _bRenderGeometry, _bPower;
     bool _bUpdatePlot;
 
     friend class BaseLaser2DXMLReader;
