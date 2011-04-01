@@ -72,118 +72,115 @@ if __name__ == "__main__":
         
         listener = tf.TransformListener()
         values = robot.GetDOFValues()
-        valueslock = threading.Lock()
         def UpdateRobotJoints(msg):
-            with valueslock:
-                with env:
-                    for name,pos in izip(msg.name,msg.position):
-                        j = robot.GetJoint(name)
-                        if j is not None:
-                            values[j.GetDOFIndex()] = pos
-                    robot.SetDOFValues(values)
+            with env:
+                for name,pos in izip(msg.name,msg.position):
+                    j = robot.GetJoint(name)
+                    if j is not None:
+                        values[j.GetDOFIndex()] = pos
+                robot.SetDOFValues(values)
 
         def IKFn(req):
             global options
-            with valueslock:
-                with env:
-                    if len(options.mapframe) > 0:
-                        (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
-                        Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
-                        Trobot[0:3,3] = robot_trans
-                        robot.SetTransform(Trobot)
-                        goal = listener.transformPose(options.mapframe, req.pose_stamped)
+            with env:
+                if len(options.mapframe) > 0:
+                    (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                    Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                    Trobot[0:3,3] = robot_trans
+                    robot.SetTransform(Trobot)
+                    goal = listener.transformPose(options.mapframe, req.pose_stamped)
+                else:
+                    goal = req.pose_stamped
+                o = goal.pose.orientation
+                p = goal.pose.position
+                Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
+                Thandgoal[0:3,3] = [p.x,p.y,p.z]
+
+                if len(req.joint_state.name) > 0:
+                    dofindices = [robot.GetJoint(name).GetDOFIndex() for name in req.joint_state.name]
+                    robot.SetDOFValues(req.joint_state.position,dofindices)
+
+                res = orrosplanning.srv.IKResponse()
+                if env.CheckCollision(robot) or robot.CheckSelfCollision():
+                    res.error_code.val = ArmNavigationErrorCodes.START_STATE_IN_COLLISION
+                    return
+
+                # resolve the ik type
+                iktype = None
+                if len(req.iktype) == 0:
+                    iktype = IkParameterization.Type.Transform6D
+                else:
+                    for value,type in IkParameterization.Type.values.iteritems():
+                        if type.name.lower() == req.iktype.lower():
+                            iktype = type
+                            break
+                    if iktype is None:
+                        rospy.logerror('failed to find iktype %s'%(str(req.iktype)))
+                        return None
+
+                ikp = IkParameterization()
+                if iktype == IkParameterization.Type.Direction3D:
+                    ikp.SetDirection(Thandgoal[0:3,2])
+                elif iktype == IkParameterization.Type.Lookat3D:
+                    ikp.SetLookat(Thandgoal[0:3,3])
+                elif iktype == IkParameterization.Type.Ray4D:
+                    ikp.SetRay(Ray(Thandgoal[0:3,3],Thandgoal[0:3,2]))
+                elif iktype == IkParameterization.Type.Rotation3D:
+                    ikp.SetRotation(quatFromRotationMatrix(Thandgoal[0:3,0:3]))
+                elif iktype == IkParameterization.Type.Transform6D:
+                    ikp.SetTransform(Thandgoal)
+                elif iktype == IkParameterization.Type.Translation3D:
+                    ikp.SetTranslation(Thandgoal[0:3,3])
+
+                if len(req.manip_name) > 0:
+                    manip = robot.GetManipulator(req.manip_name)
+                    if manip is None:
+                        rospy.logerror('failed to find manipulator %s'%req.manip_name)
+                        return None
+                else:
+                    manips = [manip for manip in robot.GetManipulators() if manip.GetEndEffector().GetName()==req.hand_frame_id]
+                    if len(manips) == 0:
+                        rospy.logerror('failed to find manipulator end effector %s'%req.hand_frame_id)
+                        return None
+                    manip = manips[0]
+
+                if manip.GetIkSolver() is None:
+                    rospy.loginfo('generating ik for %s:%s'%str(manip))
+                    ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=iktype)
+                    if not ikmodel.load():
+                        ikmodel.autogenerate()
+
+
+                if req.filteroptions & IKRequest.IGNORE_ENVIRONMENT_COLLISIONS:
+                    filteroptions = 0
+                else:
+                    filteroptions = IkFilterOptions.CheckEnvCollisions
+                if req.filteroptions & IKRequest.IGNORE_SELF_COLLISIONS:
+                    filteroptions |= IkFilterOptions.IgnoreSelfCollisions
+                if req.filteroptions & IKRequest.IGNORE_JOINT_LIMITS:
+                    filteroptions |= IkFilterOptions.IgnoreJointLimits
+
+
+                if req.filteroptions & IKRequest.RETURN_ALL_SOLUTIONS:
+                    solutions = manip.FindIKSolutions(ikp,filteroptions)
+                else:
+                    if req.filteroptions & IKRequest.RETURN_CLOSEST_SOLUTION:
+                        rospy.logwarn('IKRequest.RETURN_CLOSEST_SOLUTION currently not implemented')
+                    solution = manip.FindIKSolution(ikp,filteroptions)
+                    if solution is None:
+                        solutions = []
                     else:
-                        goal = req.pose_stamped
-                    o = goal.pose.orientation
-                    p = goal.pose.position
-                    Thandgoal = matrixFromQuat([o.w,o.x,o.y,o.z])
-                    Thandgoal[0:3,3] = [p.x,p.y,p.z]
-                    
-                    if len(req.joint_state.name) > 0:
-                        dofindices = [robot.GetJoint(name).GetDOFIndex() for name in req.joint_state.name]
-                        robot.SetDOFValues(req.joint_state.position,dofindices)
+                        solutions = [solution]
 
-                    res = orrosplanning.srv.IKResponse()
-                    if env.CheckCollision(robot) or robot.CheckSelfCollision():
-                        res.error_code.val = ArmNavigationErrorCodes.START_STATE_IN_COLLISION
-                        return
-
-                    # resolve the ik type
-                    iktype = None
-                    if len(req.iktype) == 0:
-                        iktype = IkParameterization.Type.Transform6D
-                    else:
-                        for value,type in IkParameterization.Type.values.iteritems():
-                            if type.name.lower() == req.iktype.lower():
-                                iktype = type
-                                break
-                        if iktype is None:
-                            rospy.logerror('failed to find iktype %s'%(str(req.iktype)))
-                            return None
-
-                    ikp = IkParameterization()
-                    if iktype == IkParameterization.Type.Direction3D:
-                        ikp.SetDirection(Thandgoal[0:3,2])
-                    elif iktype == IkParameterization.Type.Lookat3D:
-                        ikp.SetLookat(Thandgoal[0:3,3])
-                    elif iktype == IkParameterization.Type.Ray4D:
-                        ikp.SetRay(Ray(Thandgoal[0:3,3],Thandgoal[0:3,2]))
-                    elif iktype == IkParameterization.Type.Rotation3D:
-                        ikp.SetRotation(quatFromRotationMatrix(Thandgoal[0:3,0:3]))
-                    elif iktype == IkParameterization.Type.Transform6D:
-                        ikp.SetTransform(Thandgoal)
-                    elif iktype == IkParameterization.Type.Translation3D:
-                        ikp.SetTranslation(Thandgoal[0:3,3])
-
-                    if len(req.manip_name) > 0:
-                        manip = robot.GetManipulator(req.manip_name)
-                        if manip is None:
-                            rospy.logerror('failed to find manipulator %s'%req.manip_name)
-                            return None
-                    else:
-                        manips = [manip for manip in robot.GetManipulators() if manip.GetEndEffector().GetName()==req.hand_frame_id]
-                        if len(manips) == 0:
-                            rospy.logerror('failed to find manipulator end effector %s'%req.hand_frame_id)
-                            return None
-                        manip = manips[0]
-
-                    if manip.GetIkSolver() is None:
-                        rospy.loginfo('generating ik for %s:%s'%str(manip))
-                        ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=iktype)
-                        if not ikmodel.load():
-                            ikmodel.autogenerate()
-
-
-                    if req.filteroptions & IKRequest.IGNORE_ENVIRONMENT_COLLISIONS:
-                        filteroptions = 0
-                    else:
-                        filteroptions = IkFilterOptions.CheckEnvCollisions
-                    if req.filteroptions & IKRequest.IGNORE_SELF_COLLISIONS:
-                        filteroptions |= IkFilterOptions.IgnoreSelfCollisions
-                    if req.filteroptions & IKRequest.IGNORE_JOINT_LIMITS:
-                        filteroptions |= IkFilterOptions.IgnoreJointLimits
-
-
-                    if req.filteroptions & IKRequest.RETURN_ALL_SOLUTIONS:
-                        solutions = manip.FindIKSolutions(ikp,filteroptions)
-                    else:
-                        if req.filteroptions & IKRequest.RETURN_CLOSEST_SOLUTION:
-                            rospy.logwarn('IKRequest.RETURN_CLOSEST_SOLUTION currently not implemented')
-                        solution = manip.FindIKSolution(ikp,filteroptions)
-                        if solution is None:
-                            solutions = []
-                        else:
-                            solutions = [solution]
-
-                    if len(solutions) == 0:
-                        res.error_code.val = ArmNavigationErrorCodes.NO_IK_SOLUTION
-                    else:
-                        res.error_code.val = ArmNavigationErrorCodes.SUCCESS
-                        res.solutions.header.stamp = rospy.Time.now()
-                        res.solutions.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
-                        for s in solutions:
-                            res.solutions.points.append(motion_planning_msgs.msg.JointPathPoint(s))
-                    return res
+                if len(solutions) == 0:
+                    res.error_code.val = ArmNavigationErrorCodes.NO_IK_SOLUTION
+                else:
+                    res.error_code.val = ArmNavigationErrorCodes.SUCCESS
+                    res.solutions.header.stamp = rospy.Time.now()
+                    res.solutions.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
+                    for s in solutions:
+                        res.solutions.points.append(motion_planning_msgs.msg.JointPathPoint(s))
+                return res
 
         def GetPositionIKFn(reqall):
             global options
