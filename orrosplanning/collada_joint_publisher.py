@@ -50,12 +50,12 @@ class ColladaJointPublisher():
                 t.header.stamp = msg.header.stamp
                 t.child_frame_id = link.GetName()
                 T = link.GetTransform()
-                if link.GetParentLink() is None:
+                if len(link.GetParentLinks()) == 0:
                     t.header.frame_id = '/map'
                     Tparent = numpy.eye(4)
                 else:
-                    t.header.frame_id = link.GetParentLink().GetName()
-                    Tparent = link.GetParentLink().GetTransform()
+                    t.header.frame_id = link.GetParentLinks()[0].GetName()
+                    Tparent = link.GetParentLinks()[0].GetTransform()
                 T = numpy.dot(numpy.linalg.inv(Tparent),T)
                 q = quatFromRotationMatrix(T[0:3,0:3])
                 t.transform.translation.x = T[0,3]

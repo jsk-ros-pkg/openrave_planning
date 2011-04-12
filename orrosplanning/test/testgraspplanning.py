@@ -25,7 +25,7 @@ if __name__=='__main__':
     GraspPlanningFn = rospy.ServiceProxy('GraspPlanning',object_manipulation_msgs.srv.GraspPlanning)
     req = object_manipulation_msgs.srv.GraspPlanningRequest()
     req.arm_name = 'leftarm_torso'
-    req.target.type = object_manipulation_msgs.msg.GraspableObject.POINT_CLUSTER
+    #req.target.type = object_manipulation_msgs.msg.GraspableObject.POINT_CLUSTER
     req.target.cluster.header.frame_id = 'base_link'
     offset = [0.7,-0.05,0.8]
     req.target.cluster.points = [geometry_msgs.msg.Point32(p[0]+offset[0],p[1]+offset[1],p[2]+offset[2]) for p in trimesh.vertices]

@@ -71,8 +71,9 @@ class FastGrasping:
             taskmanip = interfaces.TaskManipulation(self.robot)
             final,traj = taskmanip.ReleaseFingers(execute=False,outputfinal=True)
             preshapes = array([final])
+        preshapes=[[-1.57,-1.57,0,0,0,0]]
         try:
-            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv)
+            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv,graspingnoise=0.003)
             return None,None # did not find anything
         except self.GraspingException, e:
             return e.args
@@ -93,6 +94,7 @@ if __name__ == "__main__":
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
     print 'initializing, please wait for ready signal...'
 
+    envlock = threading.Lock()
     try:
         rospy.init_node('graspplanning_openrave',disable_signals=False)
         with env:
@@ -115,7 +117,8 @@ if __name__ == "__main__":
             if options.mapframe is None:
                 options.mapframe = robot.GetLinks()[0].GetName()
                 print 'setting map frame to %s'%options.mapframe
-            collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
+            if len(options.collision_map) > 0:
+                collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
             basemanip = interfaces.BaseManipulation(robot)
             grasper = interfaces.Grasper(robot)
         
@@ -128,12 +131,13 @@ if __name__ == "__main__":
         listener = tf.TransformListener()
         values = robot.GetDOFValues()
         def UpdateRobotJoints(msg):
-            with env:
-                for name,pos in izip(msg.name,msg.position):
-                    j = robot.GetJoint(name)
-                    if j is not None:
-                        values[j.GetDOFIndex()] = pos
-                robot.SetDOFValues(values)
+            with envlock:
+                with env:
+                    for name,pos in izip(msg.name,msg.position):
+                        j = robot.GetJoint(name)
+                        if j is not None:
+                            values[j.GetDOFIndex()] = pos
+                    robot.SetDOFValues(values)
 
         def trimeshFromPointCloud(pointcloud):
             points = zeros((len(pointcloud.points),3),double)
@@ -161,7 +165,7 @@ if __name__ == "__main__":
             global options
             target = RaveCreateKinBody(env,'')
             Ttarget = eye(4)
-            if graspableobject.type == object_manipulation_msgs.msg.GraspableObject.POINT_CLUSTER:
+            if 1:#graspableobject.type == object_manipulation_msgs.msg.GraspableObject.POINT_CLUSTER:
                 target.InitFromTrimesh(trimeshFromPointCloud(graspableobject.cluster),True)
                 if len(options.mapframe) > 0:
                     (trans,rot) = listener.lookupTransform(options.mapframe, graspableobject.cluster.header.frame_id, rospy.Time(0))
@@ -179,59 +183,66 @@ if __name__ == "__main__":
 
         def GraspPlanning(req):
             global options
-            with env:
-                # update the robot
-                if len(options.mapframe) > 0:
-                    (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
-                    Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
-                    Trobot[0:3,3] = robot_trans
-                    robot.SetTransform(Trobot)
-                # set the manipulator
-                if len(req.arm_name) > 0:
-                    manip = robot.GetManipulator(req.arm_name)
-                    if manip is None:
-                        rospy.logerr('failed to find manipulator %s'%req.arm_name)
-                        return None
-                else:
-                    manips = [manip for manip in robot.GetManipulators() if manip.GetIkSolver() is not None and len(manip.GetArmIndices()) >= 6]
-                    if len(manips) == 0:
-                        rospy.logerr('failed to find manipulator end effector %s'%req.hand_frame_id)
-                        return None
-                    manip = manips[0]
-                robot.SetActiveManipulator(manip)
-
-                # create the target
-                target = env.GetKinBody(req.collision_object_name)
-                removetarget=False
-                if target is None:
-                    target = CreateTarget(req.target)
-                    removetarget = True
-                try:
-                    res = object_manipulation_msgs.srv.GraspPlanningResponse()
-                    # start planning
-                    fastgrasping = FastGrasping(robot,target)
-                    grasp,jointvalues = fastgrasping.computeGrasp(updateenv=False)
-                    if grasp is not None:
-                        res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
-                        rosgrasp = object_manipulation_msgs.msg.Grasp()
-                        rosgrasp.pre_grasp_posture.header.stamp = rospy.Time.now()
-                        rosgrasp.pre_grasp_posture.header.frame_id = options.mapframe
-                        rosgrasp.pre_grasp_posture.name = [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetGripperIndices()]
-                        rosgrasp.pre_grasp_posture.position = fastgrasping.gmodel.getPreshape(grasp)
-                        # also include the arm positions
-                        rosgrasp.grasp_posture.header = rosgrasp.pre_grasp_posture.header
-                        rosgrasp.grasp_posture.name = rosgrasp.pre_grasp_posture.name + [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetArmIndices()]
-                        rosgrasp.grasp_posture.position = jointvalues[r_[fastgrasping.gmodel.manip.GetGripperIndices(),fastgrasping.gmodel.manip.GetArmIndices()]]
-                        T = fastgrasping.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
-                        q = quatFromRotationMatrix(T[0:3,0:3])
-                        rosgrasp.grasp_pose.position = geometry_msgs.msg.Point(T[0,3],T[1,3],T[2,3])
-                        rosgrasp.grasp_pose.orientation = geometry_msgs.msg.Quaternion(q[1],q[2],q[3],q[0])
-                        res.grasps.append(rosgrasp)
+            with envlock:
+                with env:
+                    # update the robot
+                    if len(options.mapframe) > 0:
+                        (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
+                        Trobot = matrixFromQuat([robot_rot[3],robot_rot[0],robot_rot[1],robot_rot[2]])
+                        Trobot[0:3,3] = robot_trans
+                        robot.SetTransform(Trobot)
+                    # set the manipulator
+                    if len(req.arm_name) > 0:
+                        manip = robot.GetManipulator(req.arm_name)
+                        if manip is None:
+                            rospy.logerr('failed to find manipulator %s'%req.arm_name)
+                            return None
                     else:
-                        res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.OTHER_ERROR
-                    return res
-                finally:
-                    env.Remove(target)
+                        manips = [manip for manip in robot.GetManipulators() if manip.GetIkSolver() is not None and len(manip.GetArmIndices()) >= 6]
+                        if len(manips) == 0:
+                            rospy.logerr('failed to find manipulator end effector %s'%req.hand_frame_id)
+                            return None
+                        manip = manips[0]
+                    robot.SetActiveManipulator(manip)
+
+                    # create the target
+                    target = env.GetKinBody(req.collision_object_name)
+                    removetarget=False
+                    if target is None:
+                        target = CreateTarget(req.target)
+                        removetarget = True
+                    try:
+                        res = object_manipulation_msgs.srv.GraspPlanningResponse()
+                        # start planning
+                        fastgrasping = FastGrasping(robot,target)
+                        grasp,jointvalues = fastgrasping.computeGrasp(updateenv=False)
+                        if grasp is not None:
+                            res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
+                            rosgrasp = object_manipulation_msgs.msg.Grasp()
+                            rosgrasp.pre_grasp_posture.header.stamp = rospy.Time.now()
+                            rosgrasp.pre_grasp_posture.header.frame_id = options.mapframe
+                            rosgrasp.pre_grasp_posture.name = [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetGripperIndices()]
+                            rosgrasp.pre_grasp_posture.position = fastgrasping.gmodel.getPreshape(grasp)
+                            # also include the arm positions
+                            rosgrasp.grasp_posture.header = rosgrasp.pre_grasp_posture.header
+                            rosgrasp.grasp_posture.name = rosgrasp.pre_grasp_posture.name + [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetArmIndices()]
+                            rosgrasp.grasp_posture.position = jointvalues[r_[fastgrasping.gmodel.manip.GetGripperIndices(),fastgrasping.gmodel.manip.GetArmIndices()]]
+                            T = fastgrasping.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
+                            q = quatFromRotationMatrix(T[0:3,0:3])
+                            rosgrasp.grasp_pose.position = geometry_msgs.msg.Point(T[0,3],T[1,3],T[2,3])
+                            rosgrasp.grasp_pose.orientation = geometry_msgs.msg.Quaternion(q[1],q[2],q[3],q[0])
+                            res.grasps.append(rosgrasp)
+                            #indices = [robot.GetJoint(name).GetDOFIndex() for name in rosgrasp.grasp_posture.name]
+                            #robot.SetDOFValues(rosgrasp.grasp_posture.position,indices)
+                        else:
+                            res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.OTHER_ERROR
+                        rospy.loginfo('removing target %s'%target.GetName())
+                        return res
+                    finally:                    
+                        with env:                       
+                            if False and target is not None:
+                                rospy.loginfo('removing target in finally %s'%target.GetName())
+                                env.Remove(target)
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('GraspPlanning', object_manipulation_msgs.srv.GraspPlanning, GraspPlanning)
