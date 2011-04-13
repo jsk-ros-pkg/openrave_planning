@@ -11,7 +11,7 @@ import geometry_msgs.msg
 import sensor_msgs.msg
 from numpy import *
 import openravepy
-
+import pickle
 if __name__=='__main__':
     env=openravepy.Environment()
     body=env.ReadKinBodyXMLFile('data/ketchup.kinbody.xml')
@@ -33,4 +33,5 @@ if __name__=='__main__':
     req.collision_object_name = ''
     req.collision_support_surface_name = ''
     res=GraspPlanningFn(req)
+    pickle.dump(res,open('grasps.pp','w'))
     print res

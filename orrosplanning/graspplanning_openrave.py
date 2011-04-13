@@ -40,7 +40,9 @@ class FastGrasping:
         def __init__(self,args):
             self.args=args
 
-    def __init__(self,robot,target):
+    def __init__(self,robot,target,ignoreik=False,checkallgrasps=False):
+        self.ignoreik=ignoreik
+        self.checkallgrasps = checkallgrasps
         self.robot = robot
         self.ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,iktype=IkParameterization.Type.Transform6D)
         if not self.ikmodel.load():
@@ -53,12 +55,24 @@ class FastGrasping:
         Tglobalgrasp = self.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
         # have to set the preshape since the current robot is at the final grasp!
         self.gmodel.setPreshape(grasp)
-        sol = self.gmodel.manip.FindIKSolution(Tglobalgrasp,True)
-        if sol is not None:
+        if ignoreik:
+            if self.CheckEndEffectorCollision(Tglobalgrasp):
+               return False 
+            
+            grasp.jointvalues = []
+        else:
+            sol = self.gmodel.manip.FindIKSolution(Tglobalgrasp,True)
+            if sol is None:
+                return False
+            
             jointvalues = array(finalconfig[0])
             jointvalues[self.gmodel.manip.GetArmIndices()] = sol
-            raise self.GraspingException([grasp,jointvalues])
-        return True
+            grasp.jointvalues = jointvalues
+
+        if self.checkallgrasps:
+            return True
+        
+        raise self.GraspingException(grasp)
 
     def computeGrasp(self,updateenv=True):
         approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
@@ -71,12 +85,14 @@ class FastGrasping:
             taskmanip = interfaces.TaskManipulation(self.robot)
             final,traj = taskmanip.ReleaseFingers(execute=False,outputfinal=True)
             preshapes = array([final])
-        preshapes=[[-1.57,-1.57,0,0,0,0]]
+        #preshapes=[[-1.57,-1.57,0,0,0,0]]
         try:
             self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv,graspingnoise=0.003)
             return None,None # did not find anything
         except self.GraspingException, e:
-            return e.args
+            return [e.args]
+        
+        return self.gmodel.grasps
 
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
@@ -89,6 +105,10 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
                       help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
+    parser.add_option('--checkallgrasps',action="store_true",dest='checkrallgrasps',default=False,
+                      help='return all the grasps')
+    parser.add_option('--ignoreik',action="store_true",dest='ignoreik',default=False,
+                      help='ignores the ik computations')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -215,25 +235,27 @@ if __name__ == "__main__":
                         res = object_manipulation_msgs.srv.GraspPlanningResponse()
                         # start planning
                         fastgrasping = FastGrasping(robot,target)
-                        grasp,jointvalues = fastgrasping.computeGrasp(updateenv=False)
-                        if grasp is not None:
+                        grasps = fastgrasping.computeGrasp(updateenv=False)
+                        if grasps is not None and len(grasps) > 0:
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
-                            rosgrasp = object_manipulation_msgs.msg.Grasp()
-                            rosgrasp.pre_grasp_posture.header.stamp = rospy.Time.now()
-                            rosgrasp.pre_grasp_posture.header.frame_id = options.mapframe
-                            rosgrasp.pre_grasp_posture.name = [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetGripperIndices()]
-                            rosgrasp.pre_grasp_posture.position = fastgrasping.gmodel.getPreshape(grasp)
-                            # also include the arm positions
-                            rosgrasp.grasp_posture.header = rosgrasp.pre_grasp_posture.header
-                            rosgrasp.grasp_posture.name = rosgrasp.pre_grasp_posture.name + [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetArmIndices()]
-                            rosgrasp.grasp_posture.position = jointvalues[r_[fastgrasping.gmodel.manip.GetGripperIndices(),fastgrasping.gmodel.manip.GetArmIndices()]]
-                            T = fastgrasping.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
-                            q = quatFromRotationMatrix(T[0:3,0:3])
-                            rosgrasp.grasp_pose.position = geometry_msgs.msg.Point(T[0,3],T[1,3],T[2,3])
-                            rosgrasp.grasp_pose.orientation = geometry_msgs.msg.Quaternion(q[1],q[2],q[3],q[0])
-                            res.grasps.append(rosgrasp)
-                            #indices = [robot.GetJoint(name).GetDOFIndex() for name in rosgrasp.grasp_posture.name]
-                            #robot.SetDOFValues(rosgrasp.grasp_posture.position,indices)
+                            for grasp in grasps:
+                                jointvalues = grasp.jointvalues
+                                rosgrasp = object_manipulation_msgs.msg.Grasp()
+                                rosgrasp.pre_grasp_posture.header.stamp = rospy.Time.now()
+                                rosgrasp.pre_grasp_posture.header.frame_id = options.mapframe
+                                rosgrasp.pre_grasp_posture.name = [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetGripperIndices()]
+                                rosgrasp.pre_grasp_posture.position = fastgrasping.gmodel.getPreshape(grasp)
+                                # also include the arm positions
+                                rosgrasp.grasp_posture.header = rosgrasp.pre_grasp_posture.header
+                                rosgrasp.grasp_posture.name = rosgrasp.pre_grasp_posture.name + [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetArmIndices()]
+                                rosgrasp.grasp_posture.position = jointvalues[r_[fastgrasping.gmodel.manip.GetGripperIndices(),fastgrasping.gmodel.manip.GetArmIndices()]]
+                                T = fastgrasping.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
+                                q = quatFromRotationMatrix(T[0:3,0:3])
+                                rosgrasp.grasp_pose.position = geometry_msgs.msg.Point(T[0,3],T[1,3],T[2,3])
+                                rosgrasp.grasp_pose.orientation = geometry_msgs.msg.Quaternion(q[1],q[2],q[3],q[0])
+                                res.grasps.append(rosgrasp)
+                                #indices = [robot.GetJoint(name).GetDOFIndex() for name in rosgrasp.grasp_posture.name]
+                                #robot.SetDOFValues(rosgrasp.grasp_posture.position,indices)
                         else:
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.OTHER_ERROR
                         rospy.loginfo('removing target %s'%target.GetName())
