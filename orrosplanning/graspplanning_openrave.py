@@ -49,30 +49,30 @@ class FastGrasping:
             self.ikmodel.autogenerate()
         self.gmodel = databases.grasping.GraspingModel(robot,target)
         self.gmodel.init(friction=0.4,avoidlinks=[])
+        self.jointvalues = []
 
     def checkgraspfn(self, contacts,finalconfig,grasp,info):
         # check if grasp can be reached by robot
         Tglobalgrasp = self.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
         # have to set the preshape since the current robot is at the final grasp!
         self.gmodel.setPreshape(grasp)
-        if ignoreik:
-            if self.CheckEndEffectorCollision(Tglobalgrasp):
+        jointvalues = array(finalconfig[0])
+        if self.ignoreik:
+            if self.gmodel.manip.CheckEndEffectorCollision(Tglobalgrasp):
                return False 
-            
-            grasp.jointvalues = []
+
         else:
             sol = self.gmodel.manip.FindIKSolution(Tglobalgrasp,True)
             if sol is None:
                 return False
             
-            jointvalues = array(finalconfig[0])
             jointvalues[self.gmodel.manip.GetArmIndices()] = sol
-            grasp.jointvalues = jointvalues
 
+        self.jointvalues.append(jointvalues)
         if self.checkallgrasps:
             return True
         
-        raise self.GraspingException(grasp)
+        raise self.GraspingException([[grasp],[jointvalues]])
 
     def computeGrasp(self,updateenv=True):
         approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
@@ -87,12 +87,10 @@ class FastGrasping:
             preshapes = array([final])
         #preshapes=[[-1.57,-1.57,0,0,0,0]]
         try:
-            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv,graspingnoise=0.003)
-            return None,None # did not find anything
+            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv,graspingnoise=0)
+            return self.gmodel.grasps,self.jointvalues
         except self.GraspingException, e:
-            return [e.args]
-        
-        return self.gmodel.grasps
+            return e.args
 
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
@@ -105,7 +103,7 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
                       help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
-    parser.add_option('--checkallgrasps',action="store_true",dest='checkrallgrasps',default=False,
+    parser.add_option('--checkallgrasps',action="store_true",dest='checkallgrasps',default=False,
                       help='return all the grasps')
     parser.add_option('--ignoreik',action="store_true",dest='ignoreik',default=False,
                       help='ignores the ik computations')
@@ -234,12 +232,11 @@ if __name__ == "__main__":
                     try:
                         res = object_manipulation_msgs.srv.GraspPlanningResponse()
                         # start planning
-                        fastgrasping = FastGrasping(robot,target)
-                        grasps = fastgrasping.computeGrasp(updateenv=False)
-                        if grasps is not None and len(grasps) > 0:
+                        fastgrasping = FastGrasping(robot,target,ignoreik=options.ignoreik,checkallgrasps=options.checkallgrasps)
+                        allgrasps,alljointvalues = fastgrasping.computeGrasp(updateenv=False)
+                        if allgrasps is not None and len(allgrasps) > 0:
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
-                            for grasp in grasps:
-                                jointvalues = grasp.jointvalues
+                            for grasp,jointvalues in izip(allgrasps,alljointvalues):
                                 rosgrasp = object_manipulation_msgs.msg.Grasp()
                                 rosgrasp.pre_grasp_posture.header.stamp = rospy.Time.now()
                                 rosgrasp.pre_grasp_posture.header.frame_id = options.mapframe
