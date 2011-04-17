@@ -34,7 +34,6 @@ import motion_planning_msgs.msg
 from motion_planning_msgs.msg import ArmNavigationErrorCodes
 import geometry_msgs.msg
 import kinematics_msgs.srv
-from IPython.Shell import IPShellEmbed
 
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
@@ -70,6 +69,7 @@ if __name__ == "__main__":
                 print 'setting map frame to %s'%options.mapframe
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
         
+        valueslock = threading.Lock()
         listener = tf.TransformListener()
         values = robot.GetDOFValues()
         def UpdateRobotJoints(msg):
@@ -236,6 +236,7 @@ if __name__ == "__main__":
         print 'openrave services ready: %s, %s'%(s1.resolved_name,s2.resolved_name)
 
         if options.ipython:
+            from IPython.Shell import IPShellEmbed
             ipshell = IPShellEmbed(argv='',banner = 'Dropping into IPython',exit_msg = 'Leaving Interpreter, back to program.')
             ipshell(local_ns=locals())
         else:

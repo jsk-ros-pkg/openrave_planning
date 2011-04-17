@@ -31,7 +31,6 @@ import trajectory_msgs.msg
 import geometry_msgs.msg
 import object_manipulation_msgs.srv
 import object_manipulation_msgs.msg
-from IPython.Shell import IPShellEmbed
 
 class FastGrasping:
     """Computes a valid grasp for a given object as fast as possible without relying on a pre-computed grasp set
@@ -268,6 +267,7 @@ if __name__ == "__main__":
         print 'openrave %s service ready'%s.resolved_name
 
         if options.ipython:
+            from IPython.Shell import IPShellEmbed
             ipshell = IPShellEmbed(argv='',banner = 'Dropping into IPython',exit_msg = 'Leaving Interpreter, back to program.')
             ipshell(local_ns=locals())
         else:

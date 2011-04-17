@@ -1,5 +1,11 @@
 coin:
-  ubuntu: libcoin40-dev
+  ubuntu:
+    8.04: libcoin40-dev
+    8.10: libcoin40-dev
+    9.04: libcoin40-dev
+    9.10: libcoin40-dev
+    10.04: libcoin60-dev
+    10.10: libcoin60-dev
   debian: libcoin40-dev
   arch: coin
   macports: coin
