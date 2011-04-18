@@ -3,7 +3,7 @@ all: installed
 INSTALL_DIR=`rospack find openrave`
 SVN_DIR = openrave_svn
 # Should really specify a revision
-SVN_REVISION = -r 2348
+SVN_REVISION = -r 2365
 SVN_URL = https://openrave.svn.sourceforge.net/svnroot/openrave/trunk
 #SVN_PATCH = fini_patch.patch
 include $(shell rospack find mk)/svn_checkout.mk
@@ -37,7 +37,7 @@ Description: Bullet as built by ROS\n\
 Version: 2.74\n\
 Libs: ${BULLET_LFLAGS}\n\
 CFlags: ${BULLET_CFLAGS}" > bullet.pc
-	cd $(INSTALL_DIR) && cd $(SVN_DIR) && rm -f $(BUILDDIR)/CMakeCache.txt && export PATH="$(shell rospack find soqt)/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" .. && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
+	cd $(INSTALL_DIR) && rm -rf share/openrave include/rave include/openrave-core.h && cd $(SVN_DIR) && rm -f $(BUILDDIR)/CMakeCache.txt && export PATH="$(shell rospack find soqt)/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" .. && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
 	echo "#!/bin/sh\n\
 export OPENRAVE_DATA=\$$OPENRAVE_DATA:\`rospack find collada_robots\`/data\n\
 export OPENRAVE_PLUGINS=\$$OPENRAVE_PLUGINS:\`rospack find orrosplanning\`/lib\n\
