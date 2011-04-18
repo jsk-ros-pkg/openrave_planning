@@ -145,7 +145,7 @@ if __name__ == "__main__":
                     manip = manips[0]
 
                 if manip.GetIkSolver() is None:
-                    rospy.loginfo('generating ik for %s:%s'%str(manip))
+                    rospy.loginfo('generating ik for %s'%str(manip))
                     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=iktype)
                     if not ikmodel.load():
                         ikmodel.autogenerate()
@@ -214,6 +214,13 @@ if __name__ == "__main__":
                     print manip
                     rospy.logdebug('ik_openrave.py choosing %s manipulator'%manip.GetName())
                     robot.SetActiveManipulator(manip)
+
+                    if manip.GetIkSolver() is None:
+                        rospy.loginfo('generating ik for %s'%str(manip))
+                        ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=IkParameterization.Type.Transform6D)
+                        if not ikmodel.load():
+                            ikmodel.autogenerate()
+
 
                     res = kinematics_msgs.srv.GetPositionIKResponse()
                     if env.CheckCollision(robot) or robot.CheckSelfCollision():
