@@ -26,7 +26,6 @@
 #include "plugindefs.h"
 
 #include "objecttransformsystem.h"
-#include "mocapsystem.h"
 #include "rosbindings.h"
 #include "collisionmapsystem.h"
 
@@ -37,20 +36,12 @@ InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string&
 {
     if( !s_listRegisteredReaders ) {
         s_listRegisteredReaders = new list< boost::shared_ptr<void> >();
-        s_listRegisteredReaders->push_back(ROSMocapSystem::RegisterXMLReader(penv));
         s_listRegisteredReaders->push_back(ObjectTransformSystem::RegisterXMLReader(penv));
         s_listRegisteredReaders->push_back(CollisionMapSystem::RegisterXMLReader(penv));
     }
     switch(type) {
     case PT_SensorSystem:
-        if( interfacename == "rosmocap" ) {
-            boost::shared_ptr<ROSMocapSystem> psys(new ROSMocapSystem(penv));
-            if( !psys->Init(sinput) ) {
-                RAVELOG_WARN(str(boost::format("failed to init %s\n")%interfacename));
-            }
-            return psys;
-        }
-        else if( interfacename == "objecttransform" ) {
+        if( interfacename == "objecttransform" ) {
             boost::shared_ptr<ObjectTransformSystem> psys(new ObjectTransformSystem(penv));
             if( !psys->Init(sinput) ) {
                 RAVELOG_WARN(str(boost::format("failed to init %s\n")%interfacename));
@@ -76,7 +67,6 @@ InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string&
 
 void GetPluginAttributesValidated(PLUGININFO& info)
 {
-    info.interfacenames[OpenRAVE::PT_SensorSystem].push_back("ROSMocap");
     info.interfacenames[OpenRAVE::PT_SensorSystem].push_back("ObjectTransform");
     info.interfacenames[OpenRAVE::PT_SensorSystem].push_back("CollisionMap");
     info.interfacenames[OpenRAVE::PT_ProblemInstance].push_back("ROSBindings");

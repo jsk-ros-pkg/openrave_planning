@@ -2,7 +2,7 @@
   <description brief="OpenRAVE Plugin for ROS Planning">
     Contains robot ik solvers, planners, and commonly used functions that integrate with the ROS framework.
   </description>
-  <author>Rosen Diankov (rdiankov@cs.cmu.edu)</author>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
   <license>BSD</license>
   <export>
     <openrave pluginpath="${prefix}/lib"/>
@@ -11,7 +11,6 @@
   <depend package="openrave"/>
   <depend package="posedetection_msgs"/>
   <depend package="tf"/>
-  <depend package="mocap_msgs"/>
   <depend package="mapping_msgs"/>
   <depend package="geometry_msgs"/>
   <depend package="sensor_msgs"/>
@@ -19,7 +18,6 @@
   <depend package="object_manipulation_msgs"/>
   <depend package="trajectory_msgs"/>
   <depend package="kinematics_msgs"/>
-  <depend package="resource_retriever"/>
   <depend package="actionlib"/>
   <depend package="move_base_msgs"/>
   <depend package="std_msgs"/>
