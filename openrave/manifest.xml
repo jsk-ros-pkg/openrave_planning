@@ -7,7 +7,7 @@
   <review status="3rdparty" notes=""/>
   <export>
     <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave-config --libs`" cflags="`${prefix}/bin/openrave-config --cflags`"/>
-    <python path="${prefix}/share/openrave"/>
+    <python path="`${prefix}/bin/openrave-config --python-dir`"/>
   </export>
   <depend package="soqt"/>
   <depend package="opende"/>
@@ -18,7 +18,9 @@
   <versioncontrol type="svn" url="https://openrave.svn.sourceforge.net/svnroot/openrave/trunk"/>
   <url>http://openrave.programmingvision.com</url>
   <rosdep name="libxml2"/>
+  <rosdep name="python-sympy"/>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>
+  <platform os="ubuntu" version="10.10"/>
 </package>
