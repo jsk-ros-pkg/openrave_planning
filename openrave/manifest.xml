@@ -7,7 +7,7 @@
   <review status="3rdparty" notes=""/>
   <export>
     <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave-config --libs`" cflags="`${prefix}/bin/openrave-config --cflags`"/>
-    <python path="`${prefix}/bin/openrave-config --python-dir`"/>
+    <python path="${prefix}/share/openrave-0.3"/>
   </export>
   <depend package="soqt"/>
   <depend package="opende"/>
