@@ -3,7 +3,7 @@ all: installed
 INSTALL_DIR=`rospack find openrave`
 SVN_DIR = openrave_svn
 # Should really specify a revision
-SVN_REVISION = -r 2374
+SVN_REVISION = -r 2391
 SVN_URL = https://openrave.svn.sourceforge.net/svnroot/openrave/trunk
 #SVN_PATCH = fini_patch.patch
 include $(shell rospack find mk)/svn_checkout.mk
@@ -22,8 +22,10 @@ BULLET_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags bullet)
 ODE_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags opende)
 ODE_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags opende)
 
-BUILDDIR=$(shell if [ $(DEBUG) ]; then echo builddebug; else echo build; fi)
-CMAKE_BUILD_TYPE=$(shell if [ $(DEBUG) ]; then echo Debug; else echo RelWithDebInfo; fi)
+BUILDDIR2=$(shell if [ $(DEBUG) ]; then echo builddebug; else echo build; fi)
+CMAKE_BUILD_TYPE2=$(shell if [ $(DEBUG) ]; then echo Debug; else echo RelWithDebInfo; fi)
+BUILDDIR=$(shell if [ $(RELEASE) ]; then echo buildrelease; else echo $(BUILDDIR2); fi)
+CMAKE_BUILD_TYPE=$(shell if [ $(RELEASE) ]; then echo Release; else echo $(CMAKE_BUILD_TYPE2); fi)
 
 COLLADA_DIR=$(shell rospack find colladadom)
 
@@ -38,6 +40,8 @@ Version: 2.74\n\
 Libs: ${BULLET_LFLAGS}\n\
 CFlags: ${BULLET_CFLAGS}" > bullet.pc
 	cd $(INSTALL_DIR) && rm -rf share/openrave include/rave include/openrave-core.h share/openrave0.3/openravepy && rm -f $(BUILDDIR)/CMakeCache.txt && export PATH="$(shell rospack find soqt)/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" ../$(SVN_DIR) && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
+	rm -f src
+	ln -s `./bin/openrave-config --python-dir` src
 	touch installed
 
 clean:
@@ -45,7 +49,7 @@ clean:
 	rm -f installed
 
 wipe: clean
-	rm -rf $(SVN_DIR) include lib share bin
+	rm -rf $(SVN_DIR) include lib share bin src
 
 leave_only_products:
 	rm -rf $(SVN_DIR)
