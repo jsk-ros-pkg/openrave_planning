@@ -19,6 +19,7 @@ if __name__=='__main__':
     req.pose_stamped.pose.orientation = geometry_msgs.msg.Quaternion(0,0.707,0,0.707)
     req.pose_stamped.header.frame_id = 'base_footprint'
     req.manip_name = 'leftarm'
+    req.filteroptions = orrosplanning.srv.IKRequest.RETURN_CLOSEST_SOLUTION
     res=IKFn(req)
     print res
 
