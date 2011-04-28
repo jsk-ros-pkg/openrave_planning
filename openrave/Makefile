@@ -3,7 +3,7 @@ all: installed
 INSTALL_DIR=`rospack find openrave`
 SVN_DIR = openrave_svn
 # Should really specify a revision
-SVN_REVISION = -r 2417
+SVN_REVISION = -r 2420
 SVN_URL = https://openrave.svn.sourceforge.net/svnroot/openrave/trunk
 #SVN_PATCH = fini_patch.patch
 include $(shell rospack find mk)/svn_checkout.mk
@@ -26,8 +26,6 @@ BUILDDIR2=$(shell if [ $(DEBUG) ]; then echo builddebug; else echo build; fi)
 CMAKE_BUILD_TYPE2=$(shell if [ $(DEBUG) ]; then echo Debug; else echo RelWithDebInfo; fi)
 BUILDDIR=$(shell if [ $(RELEASE) ]; then echo buildrelease; else echo $(BUILDDIR2); fi)
 CMAKE_BUILD_TYPE=$(shell if [ $(RELEASE) ]; then echo Release; else echo $(CMAKE_BUILD_TYPE2); fi)
-
-COLLADA_DIR=$(shell rospack find colladadom)
 
 installed: $(SVN_DIR) patched
 	echo "prefix=${BULLET_DIR}\n\
