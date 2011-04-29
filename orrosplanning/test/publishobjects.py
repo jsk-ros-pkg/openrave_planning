@@ -16,7 +16,7 @@ if __name__=='__main__':
     while not rospy.is_shutdown():
         angle = 0.5*(time.time()-starttime)
         pose = posedetection_msgs.msg.Object6DPose()
-        pose.type = 'package://openrave/share/openrave/data/mug1.kinbody.xml'
+        pose.type = 'package://openrave/share/openrave-0.3/data/mug1.kinbody.xml'
         pose.pose.orientation.w = 1
         pose.pose.orientation.x = 0
         pose.pose.orientation.y = 0
