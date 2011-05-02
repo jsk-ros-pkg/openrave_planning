@@ -32,7 +32,7 @@ qt4gl:
   ubuntu: libqt4-opengl-dev
   debian: libqt4-opengl-dev
   gentoo: ">=x11-libs/qt-opengl-4"
-sympy:
+python-sympy:
   ubuntu: python-sympy
   debian: python-sympy
   
