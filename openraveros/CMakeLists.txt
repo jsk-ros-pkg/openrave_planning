@@ -9,7 +9,6 @@ rosbuild_gensrv()
 rosbuild_add_boost_directories()
 
 rosbuild_add_executable(openraveros src/openraveros.cpp)
-target_link_libraries (openraveros openrave-core)
 rosbuild_link_boost(openraveros thread)
 
 # add sessions dependency
