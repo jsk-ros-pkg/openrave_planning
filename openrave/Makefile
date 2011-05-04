@@ -3,7 +3,7 @@ all: installed
 INSTALL_DIR=`rospack find openrave`
 SVN_DIR = openrave_svn
 # Should really specify a revision
-SVN_REVISION = -r 2440
+SVN_REVISION = -r 2441
 SVN_URL = https://openrave.svn.sourceforge.net/svnroot/openrave/trunk
 #SVN_PATCH = fini_patch.patch
 include $(shell rospack find mk)/svn_checkout.mk
@@ -37,8 +37,9 @@ Description: Bullet as built by ROS\n\
 Version: 2.74\n\
 Libs: ${BULLET_LFLAGS}\n\
 CFlags: ${BULLET_CFLAGS}" > bullet.pc
-	rm -rf bin src
-	cd $(INSTALL_DIR) && rm -rf share/openrave include/rave include/openrave-core.h share/openrave0.3/openravepy && rm -f $(BUILDDIR)/CMakeCache.txt && export PATH="$(shell rospack find soqt)/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" ../$(SVN_DIR) && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS) install
+	cd $(INSTALL_DIR) && rm -rf share/openrave include/rave include/openrave-core.h share/openrave0.3/openravepy && rm -f $(BUILDDIR)/CMakeCache.txt && export PATH="$(shell rospack find soqt)/bin:$(PATH)" && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_HAVE_ALLOCATE_DATA_THREAD=1 -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" ../$(SVN_DIR) && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS)
+	rm -rf bin src lib
+	cd $(INSTALL_DIR)/$(BUILDDIR) && make install
 	cp `./bin/openrave-config --share-dir`/openrave_completion.bash `./bin/openrave-config --share-dir`/openravebash
 	ln -s `./bin/openrave-config --python-dir` src
 	touch installed
