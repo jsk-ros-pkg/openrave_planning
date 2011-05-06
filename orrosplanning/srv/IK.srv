@@ -2,7 +2,8 @@
 # if not specified, will use the first manipulator found
 string manip_name
 
-# one of Transform6D, Rotation3D, Translation3D, Direction3D, Ray4D, Lookat3D, default is Transform6D
+# one of Transform6D, Rotation3D, Translation3D, Direction3D, Ray4D, Lookat3D, TranslationDirection5D.
+# default is Transform6D
 string iktype
 
 # specifies initial robot state (optional). If empty, then the current robot position is used

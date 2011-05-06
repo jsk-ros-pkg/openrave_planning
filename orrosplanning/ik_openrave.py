@@ -133,6 +133,8 @@ if __name__ == "__main__":
                         ikp.SetTransform(Thandgoal)
                     elif iktype == IkParameterization.Type.Translation3D:
                         ikp.SetTranslation(Thandgoal[0:3,3])
+                    elif iktype == IkParameterization.Type.TranslationDirection5D:
+                        ikp.SetTranslationDirection5D(Ray(Thandgoal[0:3,3],Thandgoal[0:3,2]))
 
                     if len(req.manip_name) > 0:
                         manip = robot.GetManipulator(req.manip_name)
