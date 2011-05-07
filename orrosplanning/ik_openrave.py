@@ -103,9 +103,6 @@ if __name__ == "__main__":
                         robot.SetDOFValues(req.joint_state.position,dofindices)
 
                     res = orrosplanning.srv.IKResponse()
-                    if env.CheckCollision(robot) or robot.CheckSelfCollision():
-                        res.error_code.val = ArmNavigationErrorCodes.START_STATE_IN_COLLISION
-                        return
 
                     # resolve the ik type
                     iktype = None
@@ -148,10 +145,14 @@ if __name__ == "__main__":
                             return None
                         manip = manips[0]
 
+                    if manip.CheckIndependentCollision():
+                        res.error_code.val = ArmNavigationErrorCodes.START_STATE_IN_COLLISION
+                        return
+
                     robot.SetActiveManipulator(manip)
                     robot.SetActiveDOFs(manip.GetArmIndices())
                     
-                    if manip.GetIkSolver() is None:
+                    if manip.GetIkSolver() is None or not manip.GetIkSolver().Supports(IkParameterization.Type.TranslationDirection5D):
                         rospy.loginfo('generating ik for %s'%str(manip))
                         ikmodel = databases.inversekinematics.InverseKinematicsModel(robot,iktype=iktype)
                         if not ikmodel.load():
@@ -165,7 +166,6 @@ if __name__ == "__main__":
                         filteroptions |= IkFilterOptions.IgnoreSelfCollisions
                     if req.filteroptions & IKRequest.IGNORE_JOINT_LIMITS:
                         filteroptions |= IkFilterOptions.IgnoreJointLimits
-
 
                     if req.filteroptions & IKRequest.RETURN_ALL_SOLUTIONS:
                         solutions = manip.FindIKSolutions(ikp,filteroptions)
@@ -237,7 +237,7 @@ if __name__ == "__main__":
 
 
                     res = kinematics_msgs.srv.GetPositionIKResponse()
-                    if env.CheckCollision(robot) or robot.CheckSelfCollision():
+                    if manip.CheckIndependentCollision():
                         res.error_code.val = ArmNavigationErrorCodes.START_STATE_IN_COLLISION
                         return
 
