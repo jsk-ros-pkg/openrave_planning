@@ -39,9 +39,9 @@ class FastGrasping:
         def __init__(self,args):
             self.args=args
 
-    def __init__(self,robot,target,ignoreik=False,checkallgrasps=False):
+    def __init__(self,robot,target,ignoreik=False,returngrasps=1):
         self.ignoreik=ignoreik
-        self.checkallgrasps = checkallgrasps
+        self.returngrasps = returngrasps
         self.robot = robot
         self.ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,iktype=IkParameterization.Type.Transform6D)
         if not self.ikmodel.load():
@@ -68,7 +68,7 @@ class FastGrasping:
             jointvalues[self.gmodel.manip.GetArmIndices()] = sol
 
         self.jointvalues.append(jointvalues)
-        if self.checkallgrasps:
+        if len(self.jointvalues) < self.returngrasps:
             return True
         
         raise self.GraspingException([[grasp],[jointvalues]])
@@ -102,7 +102,7 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
                       help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
-    parser.add_option('--checkallgrasps',action="store_true",dest='checkallgrasps',default=False,
+    parser.add_option('--returngrasps',action="store",type='int',dest='returngrasps',default=1,
                       help='return all the grasps')
     parser.add_option('--ignoreik',action="store_true",dest='ignoreik',default=False,
                       help='ignores the ik computations')
@@ -231,7 +231,7 @@ if __name__ == "__main__":
                     try:
                         res = object_manipulation_msgs.srv.GraspPlanningResponse()
                         # start planning
-                        fastgrasping = FastGrasping(robot,target,ignoreik=options.ignoreik,checkallgrasps=options.checkallgrasps)
+                        fastgrasping = FastGrasping(robot,target,ignoreik=options.ignoreik,returngrasps=options.returngrasps)
                         allgrasps,alljointvalues = fastgrasping.computeGrasp(updateenv=False)
                         if allgrasps is not None and len(allgrasps) > 0:
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
