@@ -154,17 +154,17 @@ if __name__ == "__main__":
                     tokens = trajdata.split()
                     numpoints = int(tokens[0])
                     dof = int(tokens[1])
-                    options = int(tokens[2])
+                    trajoptions = int(tokens[2])
                     numvalues = dof
                     offset = 0
-                    if options & 4:
+                    if trajoptions & 4:
                         numvalues += 1
                         offset += 1
-                    if options & 8:
+                    if trajoptions & 8:
                         numvalues += 7
-                    if options & 16:
+                    if trajoptions & 16:
                         numvalues += dof
-                    if options & 32:
+                    if trajoptions & 32:
                         numvalues += dof
                     res.traj.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
                     for i in range(numpoints):
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                         pt=trajectory_msgs.msg.JointTrajectoryPoint()
                         for j in robot.GetJoints(manip.GetArmIndices()):
                             pt.positions.append(float(tokens[start+offset+j.GetDOFIndex()]))
-                        if options & 4:
+                        if trajoptions & 4:
                             pt.time_from_start = rospy.Duration(float(tokens[start]))
                         res.traj.points.append(pt)
                     return res
