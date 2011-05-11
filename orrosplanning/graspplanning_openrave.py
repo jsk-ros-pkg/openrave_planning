@@ -49,6 +49,7 @@ class FastGrasping:
         self.gmodel = databases.grasping.GraspingModel(robot,target)
         self.gmodel.init(friction=0.4,avoidlinks=[])
         self.jointvalues = []
+        self.grasps = []
 
     def checkgraspfn(self, contacts,finalconfig,grasp,info):
         # check if grasp can be reached by robot
@@ -68,10 +69,11 @@ class FastGrasping:
             jointvalues[self.gmodel.manip.GetArmIndices()] = sol
 
         self.jointvalues.append(jointvalues)
+        self.grasps.append(grasp)
         if len(self.jointvalues) < self.returngrasps:
             return True
         
-        raise self.GraspingException([[grasp],[jointvalues]])
+        raise self.GraspingException((self.grasps,self.jointvalues))
 
     def computeGrasp(self,updateenv=True):
         approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
@@ -87,7 +89,7 @@ class FastGrasping:
         #preshapes=[[-1.57,-1.57,0,0,0,0]]
         try:
             self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv,graspingnoise=0)
-            return self.gmodel.grasps,self.jointvalues
+            return self.grasps,self.jointvalues
         except self.GraspingException, e:
             return e.args
 
