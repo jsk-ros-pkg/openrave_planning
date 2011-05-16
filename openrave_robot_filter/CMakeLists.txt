@@ -8,7 +8,7 @@ rosbuild_add_boost_directories()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 rosbuild_add_executable(robotlinks_filter_node src/robotlinks_filter_node.cpp)
-target_link_libraries (robotlinks_filter_node openrave-core qhull)
+target_link_libraries (robotlinks_filter_node ${OPENRAVE_LIBRARIES} qhull)
 
 # check for OpenMP
 include(CheckIncludeFile)
