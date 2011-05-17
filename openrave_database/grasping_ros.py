@@ -125,6 +125,22 @@ class GraspingModelROS(grasping.GraspingModel):
             rospy.spin()
             return
         
+        if approachrays is None:
+            approachrays = self.computeBoxApproachRays(delta=0.02,normalanglerange=0)
+        if preshapes is None:
+            # should disable everything but the robot
+            with self.target:
+                self.target.Enable(False)
+                # do not fill with plannername
+                taskmanip = interfaces.TaskManipulation(self.robot)
+                final,traj = taskmanip.ReleaseFingers(execute=False,outputfinal=True)
+            preshapes = array([final])
+        if rolls is None:
+            rolls = arange(0,2*pi,pi/2)
+        if standoffs is None:
+            standoffs = array([0,0.025])
+        if graspingnoise is None:
+            graspingnoise = 0.0
         time.sleep(0.1) # sleep or otherwise viewer might not load well
         N = approachrays.shape[0]
         with self.env:
