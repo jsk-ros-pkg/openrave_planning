@@ -312,7 +312,6 @@ public:
         _pgeom->max_range = msg->range_max;
 
         Transform t = _trans;
-        _pdata->t = t;
         _pdata->positions.resize(msg->ranges.size());
         _pdata->ranges.resize(msg->ranges.size());
         _pdata->intensity.resize(msg->intensities.size());

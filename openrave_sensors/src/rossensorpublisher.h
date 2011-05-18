@@ -20,6 +20,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointField.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
@@ -156,6 +157,7 @@ protected:
                     case SensorBase::ST_Laser:
                         _msgs.push_back(make_pair(ros::MessagePtr(new sensor_msgs::LaserScan()), _node->advertise<sensor_msgs::LaserScan>("scan",5)));
                         _msgs.push_back(make_pair(ros::MessagePtr(new sensor_msgs::PointCloud2()), _node->advertise<sensor_msgs::PointCloud2>("pointcloud",5)));
+                        _msgs.push_back(make_pair(ros::MessagePtr(new sensor_msgs::PointCloud()), _node->advertise<sensor_msgs::PointCloud>("pointcloud_old",5)));
                         break;
                     case SensorBase::ST_IMU:
                         _msgs.push_back(make_pair(ros::MessagePtr(new sensor_msgs::Imu()), _node->advertise<sensor_msgs::Imu>("imu",5)));
@@ -191,27 +193,35 @@ protected:
                     }
                     boost::shared_ptr<SensorBase::CameraGeomData> pcamerageom = boost::static_pointer_cast<SensorBase::CameraGeomData>(_sensor->GetSensorGeometry());
                     boost::shared_ptr<SensorBase::CameraSensorData> pcameradata = boost::static_pointer_cast<SensorBase::CameraSensorData>(itdata->second);
-                    sensor_msgs::CameraInfoPtr infomsg = boost::dynamic_pointer_cast<sensor_msgs::CameraInfo>(_msgs.at(imsgindex+1).first);
-                    infomsg->header = header;
-                    infomsg->width = pcamerageom->width;
-                    infomsg->height = pcamerageom->height;
-                    infomsg->K[0] = pcamerageom->KK.fx; infomsg->K[1] = 0; infomsg->K[2] = pcamerageom->KK.cx;
-                    infomsg->K[3] = 0; infomsg->K[4] = pcamerageom->KK.fy; infomsg->K[5] = pcamerageom->KK.cy;
-                    infomsg->K[6] = 0; infomsg->K[7] = 0; infomsg->K[8] = 1;
-                    infomsg->R[0] = 1; infomsg->R[1] = 0; infomsg->R[2] = 0;
-                    infomsg->R[3] = 0; infomsg->R[4] = 1; infomsg->R[5] = 0;
-                    infomsg->R[6] = 0; infomsg->R[7] = 0; infomsg->R[8] = 1;
-                    infomsg->P[0] = pcamerageom->KK.fx; infomsg->P[1] = 0; infomsg->P[2] = pcamerageom->KK.cx; infomsg->P[3] = 0;
-                    infomsg->P[4] = 0; infomsg->P[5] = pcamerageom->KK.fy; infomsg->P[6] = pcamerageom->KK.cy; infomsg->P[7] = 0;
-                    infomsg->P[8] = 0; infomsg->P[9] = 0; infomsg->P[10] = 1; infomsg->P[11] = 0;
-                    _msgs.at(imsgindex).second.publish(*infomsg);
-                    imagemsg->header = header;
-                    imagemsg->width = pcamerageom->width;
-                    imagemsg->height = pcamerageom->height;
-                    imagemsg->encoding = "rgb8";
-                    imagemsg->step = pcamerageom->width*3;
-                    imagemsg->data = pcameradata->vimagedata;
-                    _msgs.at(imsgindex+1).second.publish(*imagemsg);
+
+                    if( _msgs.at(imsgindex+0).second.getNumSubscribers() > 0 ) {
+                        sensor_msgs::CameraInfoPtr infomsg = boost::dynamic_pointer_cast<sensor_msgs::CameraInfo>(_msgs.at(imsgindex+1).first);
+                        infomsg->header = header;
+                        infomsg->width = pcamerageom->width;
+                        infomsg->height = pcamerageom->height;
+                        infomsg->distortion_model = pcamerageom->KK.distortion_model;
+                        infomsg->D.resize(pcamerageom->KK.distortion_coeffs.size());
+                        std::copy(pcamerageom->KK.distortion_coeffs.begin(),pcamerageom->KK.distortion_coeffs.end(),infomsg->D.begin());
+                        infomsg->K[0] = pcamerageom->KK.fx; infomsg->K[1] = 0; infomsg->K[2] = pcamerageom->KK.cx;
+                        infomsg->K[3] = 0; infomsg->K[4] = pcamerageom->KK.fy; infomsg->K[5] = pcamerageom->KK.cy;
+                        infomsg->K[6] = 0; infomsg->K[7] = 0; infomsg->K[8] = 1;
+                        infomsg->R[0] = 1; infomsg->R[1] = 0; infomsg->R[2] = 0;
+                        infomsg->R[3] = 0; infomsg->R[4] = 1; infomsg->R[5] = 0;
+                        infomsg->R[6] = 0; infomsg->R[7] = 0; infomsg->R[8] = 1;
+                        infomsg->P[0] = pcamerageom->KK.fx; infomsg->P[1] = 0; infomsg->P[2] = pcamerageom->KK.cx; infomsg->P[3] = 0;
+                        infomsg->P[4] = 0; infomsg->P[5] = pcamerageom->KK.fy; infomsg->P[6] = pcamerageom->KK.cy; infomsg->P[7] = 0;
+                        infomsg->P[8] = 0; infomsg->P[9] = 0; infomsg->P[10] = 1; infomsg->P[11] = 0;
+                        _msgs.at(imsgindex).second.publish(*infomsg);
+                    }
+                    if( _msgs.at(imsgindex+1).second.getNumSubscribers() > 0 ) {
+                        imagemsg->header = header;
+                        imagemsg->width = pcamerageom->width;
+                        imagemsg->height = pcamerageom->height;
+                        imagemsg->encoding = "rgb8";
+                        imagemsg->step = pcamerageom->width*3;
+                        imagemsg->data = pcameradata->vimagedata;
+                        _msgs.at(imsgindex+1).second.publish(*imagemsg);
+                    }
                     imsgindex += 2;
                     break;
                 }
@@ -223,61 +233,111 @@ protected:
                     }
                     boost::shared_ptr<SensorBase::LaserGeomData> plasergeom = boost::static_pointer_cast<SensorBase::LaserGeomData>(_sensor->GetSensorGeometry());
                     boost::shared_ptr<SensorBase::LaserSensorData> plaserdata = boost::static_pointer_cast<SensorBase::LaserSensorData>(itdata->second);
-                    laserscanmsg->header = header;
-                    laserscanmsg->angle_min = plasergeom->min_angle[0];
-                    laserscanmsg->angle_max = plasergeom->max_angle[0];
-                    laserscanmsg->angle_increment = plasergeom->resolution[0];
-                    laserscanmsg->time_increment = plasergeom->time_increment;
-                    laserscanmsg->scan_time = plasergeom->time_scan;
-                    laserscanmsg->range_min = plasergeom->min_range;
-                    laserscanmsg->range_max = plasergeom->max_range;
-                    laserscanmsg->ranges.resize(plaserdata->ranges.size());
-                    for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
-                        laserscanmsg->ranges[i] = RaveSqrt(plaserdata->ranges[i].lengthsqr3());
-                    }
-                    laserscanmsg->intensities.resize(plaserdata->intensity.size());
-                    std::copy(plaserdata->intensity.begin(),plaserdata->intensity.end(),laserscanmsg->intensities.begin());
-                    _msgs.at(imsgindex).second.publish(laserscanmsg);
 
-                    sensor_msgs::PointCloud2Ptr pointcloud2 = boost::dynamic_pointer_cast<sensor_msgs::PointCloud2>(_msgs.at(imsgindex+1).first);
-                    pointcloud2->header = header;
-                    pointcloud2->height = 1;
-                    pointcloud2->width = plaserdata->ranges.size();
-                    uint8_t drealtype = 0;
-                    switch(sizeof(dReal)) {
-                    case 4: drealtype = sensor_msgs::PointField::FLOAT32; break;
-                    case 8: drealtype = sensor_msgs::PointField::FLOAT64; break;
-                    default:
-                        RAVELOG_WARN("bad type\n");
-                        return;
+                    if( _msgs.at(imsgindex+0).second.getNumSubscribers() > 0 ) {
+                        laserscanmsg->header = header;
+                        laserscanmsg->angle_min = plasergeom->min_angle[0];
+                        laserscanmsg->angle_max = plasergeom->max_angle[0];
+                        laserscanmsg->angle_increment = plasergeom->resolution[0];
+                        laserscanmsg->time_increment = plasergeom->time_increment;
+                        laserscanmsg->scan_time = plasergeom->time_scan;
+                        laserscanmsg->range_min = plasergeom->min_range;
+                        laserscanmsg->range_max = plasergeom->max_range;
+                        laserscanmsg->ranges.resize(plaserdata->ranges.size());
+                        for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
+                            laserscanmsg->ranges[i] = RaveSqrt(plaserdata->ranges[i].lengthsqr3());
+                        }
+                        laserscanmsg->intensities.resize(plaserdata->intensity.size());
+                        std::copy(plaserdata->intensity.begin(),plaserdata->intensity.end(),laserscanmsg->intensities.begin());
+                        _msgs.at(imsgindex).second.publish(laserscanmsg);
                     }
-                    pointcloud2->point_step = 0;
-                    pointcloud2->fields.resize(1 + (plaserdata->intensity.size()==plaserdata->ranges.size()));
-                    pointcloud2->fields[0].name = "position";
-                    pointcloud2->fields[0].offset = pointcloud2->point_step;
-                    pointcloud2->fields[0].datatype = drealtype;
-                    pointcloud2->fields[0].count = 3;
-                    pointcloud2->point_step += 3*sizeof(dReal);
-                    if( plaserdata->intensity.size()==plaserdata->ranges.size() ) {
-                        pointcloud2->fields[1].name = "intensity";
-                        pointcloud2->fields[1].offset = pointcloud2->point_step;
-                        pointcloud2->fields[1].datatype = drealtype;
-                        pointcloud2->fields[1].count = 1;
-                        pointcloud2->point_step += sizeof(dReal);
+
+                    if( _msgs.at(imsgindex+1).second.getNumSubscribers() > 0 ) {
+                        sensor_msgs::PointCloud2Ptr pointcloud2 = boost::dynamic_pointer_cast<sensor_msgs::PointCloud2>(_msgs.at(imsgindex+1).first);
+                        pointcloud2->header = header;
+                        pointcloud2->height = 1;
+                        pointcloud2->width = plaserdata->ranges.size();
+                        uint8_t drealtype = 0;
+                        switch(sizeof(dReal)) {
+                        case 4: drealtype = sensor_msgs::PointField::FLOAT32; break;
+                        case 8: drealtype = sensor_msgs::PointField::FLOAT64; break;
+                        default:
+                            RAVELOG_WARN("bad type\n");
+                            return;
+                        }
+                        pointcloud2->point_step = 0;
+                        pointcloud2->fields.resize(1 + (plaserdata->intensity.size()==plaserdata->ranges.size()));
+                        pointcloud2->fields[0].name = "position";
+                        pointcloud2->fields[0].offset = pointcloud2->point_step;
+                        pointcloud2->fields[0].datatype = drealtype;
+                        pointcloud2->fields[0].count = 3;
+                        pointcloud2->point_step += 3*sizeof(dReal);
+                        if( plaserdata->intensity.size()==plaserdata->ranges.size() ) {
+                            pointcloud2->fields[1].name = "intensity";
+                            pointcloud2->fields[1].offset = pointcloud2->point_step;
+                            pointcloud2->fields[1].datatype = drealtype;
+                            pointcloud2->fields[1].count = 1;
+                            pointcloud2->point_step += sizeof(dReal);
+                        }
+                        pointcloud2->is_bigendian = false;
+                        pointcloud2->row_step = plaserdata->ranges.size()*pointcloud2->point_step;
+                        pointcloud2->data.resize(pointcloud2->row_step);
+                        for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
+                            dReal* p = (dReal*)(&pointcloud2->data.at(i*pointcloud2->point_step));
+                            if( i < plaserdata->positions.size() ) {
+                                p[0] = plaserdata->ranges[i].x + plaserdata->positions[i].x;
+                                p[1] = plaserdata->ranges[i].y + plaserdata->positions[i].y;
+                                p[2] = plaserdata->ranges[i].z + plaserdata->positions[i].z;
+                            }
+                            else if( plaserdata->positions.size() > 0 ) {
+                                p[0] = plaserdata->ranges[i].x + plaserdata->positions[0].x;
+                                p[1] = plaserdata->ranges[i].y + plaserdata->positions[0].y;
+                                p[2] = plaserdata->ranges[i].z + plaserdata->positions[0].z;
+                            }
+                            else {
+                                p[0] = plaserdata->ranges[i].x;
+                                p[1] = plaserdata->ranges[i].y;
+                                p[2] = plaserdata->ranges[i].z;
+                            }
+                            p[3] = plaserdata->intensity[i];
+                        }
+                        pointcloud2->is_dense = true;
+                        _msgs.at(imsgindex+1).second.publish(*pointcloud2);
                     }
-                    pointcloud2->is_bigendian = false;
-                    pointcloud2->row_step = plaserdata->ranges.size()*pointcloud2->point_step;
-                    pointcloud2->data.resize(pointcloud2->row_step);
-                    for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
-                        dReal* p = (dReal*)(&pointcloud2->data.at(i*pointcloud2->point_step));
-                        p[0] = plaserdata->ranges[i].x;
-                        p[1] = plaserdata->ranges[i].y;
-                        p[2] = plaserdata->ranges[i].z;
-                        p[3] = plaserdata->intensity[i];
+
+                    if( _msgs.at(imsgindex+2).second.getNumSubscribers() > 0 ) {
+                        sensor_msgs::PointCloudPtr pointcloud = boost::dynamic_pointer_cast<sensor_msgs::PointCloud>(_msgs.at(imsgindex+2).first);
+                        pointcloud->header = header;
+                        if( plaserdata->intensity.size()==plaserdata->ranges.size() ) {
+                            pointcloud->channels.resize(1);
+                            pointcloud->channels[0].name = "intensity";
+                            pointcloud->channels[0].values.resize(plaserdata->intensity.size());
+                            for(size_t i = 0; i < plaserdata->intensity.size(); ++i) {
+                                pointcloud->channels[0].values[i] = plaserdata->intensity[i];
+                            }
+                        }
+                        pointcloud->points.resize(plaserdata->ranges.size());
+                        for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
+                            if( i < plaserdata->positions.size() ) {
+                                pointcloud->points[i].x = plaserdata->ranges[i].x + plaserdata->positions[i].x;
+                                pointcloud->points[i].y = plaserdata->ranges[i].y + plaserdata->positions[i].y;
+                                pointcloud->points[i].z = plaserdata->ranges[i].z + plaserdata->positions[i].z;
+                            }
+                            else if( plaserdata->positions.size() > 0 ) {
+                                pointcloud->points[i].x = plaserdata->ranges[i].x + plaserdata->positions[0].x;
+                                pointcloud->points[i].y = plaserdata->ranges[i].y + plaserdata->positions[0].y;
+                                pointcloud->points[i].z = plaserdata->ranges[i].z + plaserdata->positions[0].z;
+                            }
+                            else {
+                                pointcloud->points[i].x = plaserdata->ranges[i].x;
+                                pointcloud->points[i].y = plaserdata->ranges[i].y;
+                                pointcloud->points[i].z = plaserdata->ranges[i].z;
+                            }
+                        }
+                        _msgs.at(imsgindex+2).second.publish(*pointcloud);
                     }
-                    pointcloud2->is_dense = true;
-                    _msgs.at(imsgindex+1).second.publish(*pointcloud2);
-                    imsgindex += 2;
+
+                    imsgindex += 3;
                     break;
                 }
                 case SensorBase::ST_Force6D: {
