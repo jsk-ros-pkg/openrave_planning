@@ -260,7 +260,7 @@ if __name__ == "__main__":
                         return res
                     finally:                    
                         with env:                       
-                            if False and target is not None:
+                            if target is not None:
                                 rospy.loginfo('removing target in finally %s'%target.GetName())
                                 env.Remove(target)
 
