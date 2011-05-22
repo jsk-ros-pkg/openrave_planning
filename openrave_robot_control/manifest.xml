@@ -15,6 +15,7 @@
   <export>
     <cpp cflags="-I${prefix}/srv/cpp -I${prefix}/msg/cpp -I${prefix}/include"/>
     <openrave pluginpath="${prefix}/lib"/>
+    <rosdoc config="rosdoc.yaml" />
   </export>
   <depend package="roscpp_sessions"/>
   <depend package="openrave"/>

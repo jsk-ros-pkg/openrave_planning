@@ -3,4 +3,7 @@
     <!-- it is possible to add more robots by setting the OPENRAVE_DATA path here -->
     <env name="OPENRAVE_DATA" value="$(optenv OPENRAVE_DATA):$(find openrave)/share/openrave"/>
   </node>
+  <sphinxdoc><![CDATA[
+The script starts a simulation server for the schunk robot using joints that are manually set.
+  ]]></sphinxdoc>
 </launch>

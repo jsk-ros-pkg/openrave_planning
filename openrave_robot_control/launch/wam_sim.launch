@@ -7,4 +7,11 @@
     <env name="PYTHONPATH" value="$(optenv PYTHONPATH):$(find openrave)/share/openrave"/>
     <env name="OPENRAVE_PLUGINS" value="$(optenv OPENRAVE_PLUGINS):$(find openrave)/share/openrave/plugins:$(find openrave_robot_control)/lib"/>
   </node>
+  <sphinxdoc><![CDATA[
+This script starts the openrave simulation server and a test controller. The test controller moves the robot and the simulator receives the robot joint angles and moves shows it moving. The script uses the WAM arm and sets the controllable joints usings its manipulator.
+
+.. image:: ../images/wam_sim.png
+  :width: 400
+
+  ]]></sphinxdoc>
 </launch>
