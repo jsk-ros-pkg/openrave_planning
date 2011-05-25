@@ -10,7 +10,7 @@
   <sphinxdoc><![CDATA[
 This script starts the openrave simulation server and a test controller. The test controller moves the robot and the simulator receives the robot joint angles and moves shows it moving. The script uses the WAM arm and sets the controllable joints usings its manipulator.
 
-.. image:: ../images/wam_sim.png
+.. image:: launch/images/wam_sim.png
   :width: 400
 
   ]]></sphinxdoc>
