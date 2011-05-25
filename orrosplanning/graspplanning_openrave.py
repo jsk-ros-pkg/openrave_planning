@@ -31,6 +31,7 @@ import trajectory_msgs.msg
 import geometry_msgs.msg
 import object_manipulation_msgs.srv
 import object_manipulation_msgs.msg
+import orrosplanning.srv
 
 class FastGrasping:
     """Computes a valid grasp for a given object as fast as possible without relying on a pre-computed grasp set
@@ -75,18 +76,29 @@ class FastGrasping:
         
         raise self.GraspingException((self.grasps,self.jointvalues))
 
-    def computeGrasp(self,updateenv=True):
-        approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
-        standoffs = [0]
-        # roll discretization
-        rolls = arange(0,2*pi,0.5*pi)
-        # initial preshape for robot is the released fingers
-        with self.gmodel.target:
-            self.gmodel.target.Enable(False)
-            taskmanip = interfaces.TaskManipulation(self.robot)
-            final,traj = taskmanip.ReleaseFingers(execute=False,outputfinal=True)
-            preshapes = array([final])
-        #preshapes=[[-1.57,-1.57,0,0,0,0]]
+    def computeGrasp(self,graspparameters, updateenv=True):
+        if len(graspparameters.approachrays) == 0:
+            approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
+        else:
+            approachrays = reshape(graspparameters.approachrays,[len(graspparameters.approachrays)/6,6])
+        if len(graspparameters.standoffs) == 0:
+            standoffs = [0]
+        else:
+            standoffs = graspparameters.standoffs
+        if len(graspparameters.rolls) == 0:
+            rolls = arange(0,2*pi,0.5*pi)
+        else:
+            rolls = graspparameters.rolls        
+        if len(graspparameters.preshapes) == 0:
+            # initial preshape for robot is the released fingers
+            with self.gmodel.target:
+                self.gmodel.target.Enable(False)
+                taskmanip = interfaces.TaskManipulation(self.robot)
+                final,traj = taskmanip.ReleaseFingers(execute=False,outputfinal=True)
+                preshapes = array([final])
+        else:
+            dim = len(self.gmodel.manip.GetGripperIndices())
+            preshapes = reshape(graspparameters.preshapes,[len(graspparameters.preshapes)/dim,dim])
         try:
             self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv,graspingnoise=0)
             return self.grasps,self.jointvalues
@@ -113,6 +125,7 @@ if __name__ == "__main__":
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
     print 'initializing, please wait for ready signal...'
 
+    graspparameters = orrosplanning.srv.SetGraspParametersRequest()
     envlock = threading.Lock()
     try:
         rospy.init_node('graspplanning_openrave',disable_signals=False)
@@ -181,7 +194,6 @@ if __name__ == "__main__":
                 indices = reshape(pointindicesinv[triangles.flatten()],triangles.shape)
             return TriMesh(vertices=vertices,indices=indices)
         def CreateTarget(graspableobject):
-            global options
             target = RaveCreateKinBody(env,'')
             Ttarget = eye(4)
             if 1:#graspableobject.type == object_manipulation_msgs.msg.GraspableObject.POINT_CLUSTER:
@@ -201,7 +213,7 @@ if __name__ == "__main__":
             return target
 
         def GraspPlanning(req):
-            global options
+            global graspparameters
             with envlock:
                 with env:
                     # update the robot
@@ -234,7 +246,7 @@ if __name__ == "__main__":
                         res = object_manipulation_msgs.srv.GraspPlanningResponse()
                         # start planning
                         fastgrasping = FastGrasping(robot,target,ignoreik=options.ignoreik,returngrasps=options.returngrasps)
-                        allgrasps,alljointvalues = fastgrasping.computeGrasp(updateenv=False)
+                        allgrasps,alljointvalues = fastgrasping.computeGrasp(graspparameters,updateenv=False)
                         if allgrasps is not None and len(allgrasps) > 0:
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
                             for grasp,jointvalues in izip(allgrasps,alljointvalues):
@@ -264,8 +276,15 @@ if __name__ == "__main__":
                                 rospy.loginfo('removing target in finally %s'%target.GetName())
                                 env.Remove(target)
 
+        def SetGraspParameters(req):
+            global graspparameters
+            graspparameters = req
+            res = orrosplanning.srv.SetGraspParametersResponse()
+            return res
+
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('GraspPlanning', object_manipulation_msgs.srv.GraspPlanning, GraspPlanning)
+        sparameters = rospy.Service('SetGraspParameters', orrosplanning.srv.SetGraspParameters, SetGraspParameters)
         print 'openrave %s service ready'%s.resolved_name
 
         if options.ipython:
