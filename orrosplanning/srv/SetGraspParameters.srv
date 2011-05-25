@@ -1,5 +1,7 @@
+# Nx6 array of rays. first 3 numbers are position, second 3 are direction
 float64[] approachrays
 float64[] standoffs
 float64[] rolls
+# NxD array of numbers where D is the number of DOFs on the gripper
 float64[] preshapes
 ---
