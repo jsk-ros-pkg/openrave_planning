@@ -11,7 +11,7 @@
   </description>
   <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
   <license>Apache License, Version 2.0</license>
-  <url>http://openrave.programmingvision.com/index.php/ROS:ControllingRobots</url>
+  <url>http://openrave.programmingvision.com/wiki/index.php/ROS:ControllingRobots</url>
   <export>
     <cpp cflags="-I${prefix}/srv/cpp -I${prefix}/msg/cpp -I${prefix}/include"/>
     <openrave pluginpath="${prefix}/lib"/>
