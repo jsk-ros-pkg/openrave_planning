@@ -233,6 +233,7 @@ protected:
                     }
                     boost::shared_ptr<SensorBase::LaserGeomData> plasergeom = boost::static_pointer_cast<SensorBase::LaserGeomData>(_sensor->GetSensorGeometry());
                     boost::shared_ptr<SensorBase::LaserSensorData> plaserdata = boost::static_pointer_cast<SensorBase::LaserSensorData>(itdata->second);
+                    Transform tinv = plaserdata->__trans.inverse();
 
                     if( _msgs.at(imsgindex+0).second.getNumSubscribers() > 0 ) {
                         laserscanmsg->header = header;
@@ -296,19 +297,22 @@ protected:
                         for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
                             float* p = (float*)(&pointcloud2->data.at(i*pointcloud2->point_step));
                             if( i < plaserdata->positions.size() ) {
-                                p[0] = plaserdata->ranges[i].x + plaserdata->positions[i].x;
-                                p[1] = plaserdata->ranges[i].y + plaserdata->positions[i].y;
-                                p[2] = plaserdata->ranges[i].z + plaserdata->positions[i].z;
+                                Vector v = tinv*(plaserdata->ranges[i] + plaserdata->positions[i]);
+                                p[0] = (float)v.x;
+                                p[1] = (float)v.y;
+                                p[2] = (float)v.z;
                             }
                             else if( plaserdata->positions.size() > 0 ) {
-                                p[0] = plaserdata->ranges[i].x + plaserdata->positions[0].x;
-                                p[1] = plaserdata->ranges[i].y + plaserdata->positions[0].y;
-                                p[2] = plaserdata->ranges[i].z + plaserdata->positions[0].z;
+                                Vector v = tinv*(plaserdata->ranges[i] + plaserdata->positions[0]);
+                                p[0] = (float)v.x;
+                                p[1] = (float)v.y;
+                                p[2] = (float)v.z;
                             }
                             else {
-                                p[0] = plaserdata->ranges[i].x;
-                                p[1] = plaserdata->ranges[i].y;
-                                p[2] = plaserdata->ranges[i].z;
+                                Vector v = tinv*plaserdata->ranges[i];
+                                p[0] = (float)v.x;
+                                p[1] = (float)v.y;
+                                p[2] = (float)v.z;
                             }
                             if( plaserdata->intensity.size()==plaserdata->ranges.size() ) {
                                 p[3] = plaserdata->intensity[i];
@@ -332,19 +336,22 @@ protected:
                         pointcloud->points.resize(plaserdata->ranges.size());
                         for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
                             if( i < plaserdata->positions.size() ) {
-                                pointcloud->points[i].x = plaserdata->ranges[i].x + plaserdata->positions[i].x;
-                                pointcloud->points[i].y = plaserdata->ranges[i].y + plaserdata->positions[i].y;
-                                pointcloud->points[i].z = plaserdata->ranges[i].z + plaserdata->positions[i].z;
+                                Vector v = tinv*(plaserdata->ranges[i] + plaserdata->positions[i]);
+                                pointcloud->points[i].x = v.x;
+                                pointcloud->points[i].y = v.y;
+                                pointcloud->points[i].z = v.z;
                             }
                             else if( plaserdata->positions.size() > 0 ) {
-                                pointcloud->points[i].x = plaserdata->ranges[i].x + plaserdata->positions[0].x;
-                                pointcloud->points[i].y = plaserdata->ranges[i].y + plaserdata->positions[0].y;
-                                pointcloud->points[i].z = plaserdata->ranges[i].z + plaserdata->positions[0].z;
+                                Vector v = tinv*(plaserdata->ranges[i] + plaserdata->positions[0]);
+                                pointcloud->points[i].x = v.x;
+                                pointcloud->points[i].y = v.y;
+                                pointcloud->points[i].z = v.z;
                             }
                             else {
-                                pointcloud->points[i].x = plaserdata->ranges[i].x;
-                                pointcloud->points[i].y = plaserdata->ranges[i].y;
-                                pointcloud->points[i].z = plaserdata->ranges[i].z;
+                                Vector v = tinv*(plaserdata->ranges[i]);
+                                pointcloud->points[i].x = v.x;
+                                pointcloud->points[i].y = v.y;
+                                pointcloud->points[i].z = v.z;
                             }
                         }
                         _msgs.at(imsgindex+2).second.publish(*pointcloud);
