@@ -14,11 +14,12 @@
   <depend package="bullet"/>
   <depend package="std_msgs"/>
   <depend package="collada_robots"/>
-  <depend package="assimp"/>
   <versioncontrol type="svn" url="https://openrave.svn.sourceforge.net/svnroot/openrave/trunk"/>
-  <url>http://openrave.programmingvision.com</url>
+  <url>http://openrave.org</url>
   <rosdep name="libxml2"/>
   <rosdep name="python-sympy"/>
+  <rosdep name="assimp"/>
+  <rosdep name="collada-dom"/>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>
