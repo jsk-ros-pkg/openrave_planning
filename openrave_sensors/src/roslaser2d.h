@@ -283,7 +283,7 @@ public:
 
                 for(int i = 0; i <= N; ++i) {
                     dReal fang = _pgeom->min_angle[0] + (_pgeom->max_angle[0]-_pgeom->min_angle[0])*(float)i/(float)N;
-                    trot.rotfromaxisangle(Vector(0,0,1), fang);
+                    trot.rot = quatFromAxisAngle(Vector(0,0,1), fang);
                     viconpoints[i+1] = trot.rotate(Vector(0.05f,0,0));
 
                     if( i < N ) {

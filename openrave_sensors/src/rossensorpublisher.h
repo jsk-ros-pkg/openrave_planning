@@ -181,7 +181,7 @@ protected:
                 if( !_sensor->GetSensorData(itdata->second) ) {
                     continue;
                 }
-                roslib::Header header;
+                std_msgs::Header header;
                 header.stamp = ros::Time(itdata->second->__stamp/1000000,(uint32_t)(1000*(itdata->second->__stamp%1000000)));
                 header.frame_id = _frame_id;
                 switch(itdata->first) {
@@ -265,25 +265,36 @@ protected:
                             RAVELOG_WARN("bad type\n");
                             return;
                         }
+                        drealtype = sensor_msgs::PointField::FLOAT32;
                         pointcloud2->point_step = 0;
-                        pointcloud2->fields.resize(1 + (plaserdata->intensity.size()==plaserdata->ranges.size()));
-                        pointcloud2->fields[0].name = "position";
+                        pointcloud2->fields.resize(3 + (plaserdata->intensity.size()==plaserdata->ranges.size()));
+                        pointcloud2->fields[0].name = "x";
                         pointcloud2->fields[0].offset = pointcloud2->point_step;
                         pointcloud2->fields[0].datatype = drealtype;
-                        pointcloud2->fields[0].count = 3;
-                        pointcloud2->point_step += 3*sizeof(dReal);
+                        pointcloud2->fields[0].count = 1;
+                        pointcloud2->point_step += sizeof(float);
+                        pointcloud2->fields[1].name = "y";
+                        pointcloud2->fields[1].offset = pointcloud2->point_step;
+                        pointcloud2->fields[1].datatype = drealtype;
+                        pointcloud2->fields[1].count = 1;
+                        pointcloud2->point_step += sizeof(float);
+                        pointcloud2->fields[2].name = "z";
+                        pointcloud2->fields[2].offset = pointcloud2->point_step;
+                        pointcloud2->fields[2].datatype = drealtype;
+                        pointcloud2->fields[2].count = 1;
+                        pointcloud2->point_step += sizeof(float);
                         if( plaserdata->intensity.size()==plaserdata->ranges.size() ) {
-                            pointcloud2->fields[1].name = "intensity";
-                            pointcloud2->fields[1].offset = pointcloud2->point_step;
-                            pointcloud2->fields[1].datatype = drealtype;
-                            pointcloud2->fields[1].count = 1;
-                            pointcloud2->point_step += sizeof(dReal);
+                            pointcloud2->fields[3].name = "intensity";
+                            pointcloud2->fields[3].offset = pointcloud2->point_step;
+                            pointcloud2->fields[3].datatype = drealtype;
+                            pointcloud2->fields[3].count = 1;
+                            pointcloud2->point_step += sizeof(float);
                         }
                         pointcloud2->is_bigendian = false;
                         pointcloud2->row_step = plaserdata->ranges.size()*pointcloud2->point_step;
                         pointcloud2->data.resize(pointcloud2->row_step);
                         for(size_t i = 0; i < plaserdata->ranges.size(); ++i) {
-                            dReal* p = (dReal*)(&pointcloud2->data.at(i*pointcloud2->point_step));
+                            float* p = (float*)(&pointcloud2->data.at(i*pointcloud2->point_step));
                             if( i < plaserdata->positions.size() ) {
                                 p[0] = plaserdata->ranges[i].x + plaserdata->positions[i].x;
                                 p[1] = plaserdata->ranges[i].y + plaserdata->positions[i].y;
@@ -299,7 +310,9 @@ protected:
                                 p[1] = plaserdata->ranges[i].y;
                                 p[2] = plaserdata->ranges[i].z;
                             }
-                            p[3] = plaserdata->intensity[i];
+                            if( plaserdata->intensity.size()==plaserdata->ranges.size() ) {
+                                p[3] = plaserdata->intensity[i];
+                            }
                         }
                         pointcloud2->is_dense = true;
                         _msgs.at(imsgindex+1).second.publish(*pointcloud2);

@@ -816,7 +816,7 @@ protected:
             EnvironmentMutex::scoped_lock lock(_penv->GetMutex());
             BOOST_ASSERT((int)vjointvalues.size()==_probot->GetActiveDOF());
             _probot->SetActiveDOFValues(vjointvalues);
-            _probot->GetBodyTransformations(vlinktrans);
+            _probot->GetLinkTransformations(vlinktrans);
         }
 
         // publish link frames
