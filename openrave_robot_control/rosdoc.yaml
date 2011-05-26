@@ -1,6 +1,5 @@
  - builder: rosmake
  - builder: sphinx
-   output_dir: launch
    name: roslaunch scripts
  - builder: doxygen
    name: C++ API
