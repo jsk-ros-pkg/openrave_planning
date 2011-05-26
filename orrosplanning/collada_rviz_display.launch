@@ -1,6 +1,0 @@
-<launch>
-	<arg name="model" />
-	<param name="robot_description" textfile="$(arg model)" />
-	<node name="collada_joint_publisher" pkg="orrosplanning" type="collada_joint_publisher.py" ></node>
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find orrosplanning)/urdf.vcg" />
-</launch>
