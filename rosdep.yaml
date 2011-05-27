@@ -38,14 +38,14 @@ python-sympy:
 assimp:
   ubuntu: |
    if [ ! -f /etc/apt/sources.list.d/openrave-release*.list ] ; then
-     sudo add-apt-repository ppa:openrave/release
+     echo "deb http://ppa.launchpad.net/openrave/release/ubuntu `lsb_release -cs` main" |  sudo tee /etc/apt/sources.list.d/openrave-release.list
      sudo apt-get update
    fi
    sudo apt-get install assimp-dev
 collada-dom:
   ubuntu: |
    if [ ! -f /etc/apt/sources.list.d/openrave-release*.list ] ; then
-     sudo add-apt-repository ppa:openrave/release
+     echo "deb http://ppa.launchpad.net/openrave/release/ubuntu `lsb_release -cs` main" |  sudo tee /etc/apt/sources.list.d/openrave-release.list
      sudo apt-get update
    fi
    sudo apt-get install libcollada15dom-dev
