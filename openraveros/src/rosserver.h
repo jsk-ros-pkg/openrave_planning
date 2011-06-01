@@ -1272,7 +1272,7 @@ public:
                 tKK.m[4*i+2] = res.caminfo.K[3*i+2];
             }
 
-            TransformMatrix tP = tKK * pcameradata->t.inverse();
+            TransformMatrix tP = tKK * pcameradata->__trans.inverse();
 
             res.caminfo.R[0] = 1; res.caminfo.R[1] = 0; res.caminfo.R[2] = 0;
             res.caminfo.R[3] = 0; res.caminfo.R[4] = 1; res.caminfo.R[5] = 0;
