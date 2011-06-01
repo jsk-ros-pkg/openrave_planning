@@ -487,13 +487,17 @@ public:
     bool env_createbody_srv(env_createbody::Request& req, env_createbody::Response& res)
     {
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
-        KinBodyPtr pbody = RaveCreateKinBody(GetEnv());
+        KinBodyPtr pbody;
 
         if( req.file.size() > 0 ) {
-            if( !pbody->InitFromFile(req.file, std::list<std::pair<std::string,std::string> >()) )
-                return false;
+            pbody = GetEnv()->ReadKinBodyXMLFile(req.file);
         }
-
+        else {
+            pbody = RaveCreateKinBody(GetEnv());
+        }
+        if( !pbody ) {
+            return false;
+        }
         pbody->SetName(req.name);
 
         if( !GetEnv()->AddKinBody(pbody) )
@@ -557,15 +561,16 @@ public:
 
     bool env_createrobot_srv(env_createrobot::Request& req, env_createrobot::Response& res)
     {
-        RobotBasePtr probot = RaveCreateRobot(GetEnv(),req.type);
-        if( !probot )
-            return false;
-
+        RobotBasePtr probot;
         if( req.file.size() > 0 ) {
-            if( !probot->InitFromFile(req.file,std::list<std::pair<std::string,std::string> >()) )
-                return false;
+            probot = GetEnv()->ReadRobotXMLFile(req.file);
         }
-
+        else {
+            probot = RaveCreateRobot(GetEnv(),req.type);
+        }
+        if( !probot ) {
+            return false;
+        }
         probot->SetName(req.name);
 
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
@@ -607,7 +612,7 @@ public:
                 info.jointvalues[i] = vvalues[i];
         }
         if( options & BodyInfo::Req_Links ) {
-            vector<Transform> vlinks; pbody->GetBodyTransformations(vlinks);
+            vector<Transform> vlinks; pbody->GetLinkTransformations(vlinks);
             info.links.resize(vlinks.size());
             for(size_t i = 0; i < vlinks.size(); ++i)
                 info.links[i] = GetAffineTransform(vlinks[i]);
@@ -808,7 +813,7 @@ public:
         if( req.colors.size() >= 3 )
             vOneColor = RaveVector<float>(req.colors[0], req.colors[1], req.colors[2],falpha);
         
-        EnvironmentBase::GraphHandlePtr figure;
+        GraphHandlePtr figure;
         switch(req.drawtype) {
         case env_plot::Request::Draw_Point:
             if( bOneColor )
@@ -1477,7 +1482,7 @@ private:
     boost::function<bool(const string&,const string&)> _setviewer;
     map<int, PlannerBasePtr > _mapplanners;
     map<int, ProblemInstancePtr > _mapproblems;
-    map<int, EnvironmentBase::GraphHandlePtr > _mapFigureIds;
+    map<int, GraphHandlePtr > _mapFigureIds;
     int _nSessionId;
     int _nNextFigureId, _nNextPlannerId, _nNextProblemId;
     float _fSimulationTimestep;
