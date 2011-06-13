@@ -199,7 +199,7 @@ protected:
                         infomsg->header = header;
                         infomsg->width = pcamerageom->width;
                         infomsg->height = pcamerageom->height;
-#ifdef ROS_VERSION >= ROS_VERSION_COMBINED(1,4,0)
+#if ROS_VERSION >= ROS_VERSION_COMBINED(1,4,0)
                         infomsg->distortion_model = pcamerageom->KK.distortion_model;
 #endif
                         infomsg->D.resize(pcamerageom->KK.distortion_coeffs.size());
