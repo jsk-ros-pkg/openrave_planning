@@ -181,7 +181,11 @@ protected:
                 if( !_sensor->GetSensorData(itdata->second) ) {
                     continue;
                 }
+#if ROS_VERSION >= ROS_VERSION_COMBINED(1,4,0)
                 std_msgs::Header header;
+#else
+                roslib::Header header;
+#endif
                 header.stamp = ros::Time(itdata->second->__stamp/1000000,(uint32_t)(1000*(itdata->second->__stamp%1000000)));
                 header.frame_id = _frame_id;
                 switch(itdata->first) {
