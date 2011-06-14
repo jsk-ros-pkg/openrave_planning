@@ -1,0 +1,19 @@
+<launch>
+  <arg name="model" />
+  <param name="robot_description" textfile="$(arg model)" />
+  <node name="collada_joint_publisher" pkg="orrosplanning" type="collada_joint_publisher.py" ></node>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find orrosplanning)/urdf.vcg" />
+  <sphinxdoc><![CDATA[
+Loads a collada model onto the parameter server and publishes joint state information. The collada filename is passed as an argument to the launch script.
+
+For example::
+
+.. code-block:: bash
+
+  roslaunch orrosplanning collada_rviz_display.launch model:=`rospack find collada_robots`/data/robots/kawada-hironx.dae
+
+.. image:: collada_rviz_hiro.png
+  :width: 400
+
+  ]]></sphinxdoc>
+</launch>
