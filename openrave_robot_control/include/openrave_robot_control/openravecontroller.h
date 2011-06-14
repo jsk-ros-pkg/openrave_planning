@@ -622,8 +622,7 @@ protected:
             _InitEnvironment();
             EnvironmentMutex::scoped_lock lock(_penv->GetMutex());
             _probot = _penv->ReadRobotXMLFile(robotfile);
-            if( !_penv->AddRobot(_probot) )
-                throw controller_exception("failed to add robot");
+            _penv->AddRobot(_probot);
 
             ROS_INFO_STREAM(str(boost::format("found openrave robot %s, numjoints=%d")%_probot->GetName()%_probot->GetDOF()));
 

@@ -42,13 +42,14 @@ public:
 
         // create the main environment
         _penv = OpenRAVE::RaveCreateEnvironment();
-        if( !_penv )
+        if( !_penv ) {
             throw runtime_error("failed to create openrave environment");
+        }
         _probot = _penv->ReadRobotXMLFile(RobotBasePtr(), robotfile, std::list<std::pair<std::string,std::string> >());
-        if( !_probot )
+        if( !_probot ) {
             throw runtime_error("failed to create openrave robot");
-        if( !_penv->AddRobot(_probot) )
-            throw runtime_error("failed to add robot to openrave environment");
+        }
+        _penv->AddRobot(_probot);
 
         RAVELOG_INFOA(str(boost::format("found openrave robot %s, numjoints=%d\n")%_probot->GetName()%_probot->GetDOF()));
 

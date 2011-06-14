@@ -206,10 +206,7 @@ private:
 
                     // append an id to the body
                     pbody->SetName(str(boost::format("%s%d")%pbody->GetName()%(_nNextId++)));
-                    if( !GetEnv()->AddKinBody(pbody) ) {
-                        RAVELOG_ERRORA(str(boost::format("failed to add body %s\n")%pbody->GetName()));
-                        continue;
-                    }
+                    GetEnv()->AddKinBody(pbody,true);
 
                     boost::shared_ptr<BodyData> b = boost::static_pointer_cast<BodyData>(AddKinBody(pbody, XMLReadableConstPtr()));
                     if( !b ) {

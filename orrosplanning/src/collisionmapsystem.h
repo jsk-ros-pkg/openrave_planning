@@ -227,10 +227,7 @@ private:
             pbody->SetName(str(boost::format("CollisionMap%d")%_nNextId++));
 
             // add the new kinbody
-            if( !GetEnv()->AddKinBody(pbody) ) {
-                RAVELOG_ERRORA(str(boost::format("failed to add body %s\n")%pbody->GetName()));
-                return;
-            }
+            GetEnv()->AddKinBody(pbody, true);
             pbody->SetTransform(tcollision);
         }
 
