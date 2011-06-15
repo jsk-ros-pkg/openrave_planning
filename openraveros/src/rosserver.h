@@ -162,15 +162,15 @@ public:
             boost::mutex::scoped_lock lock(_mutexViewer);
             _pviewer = RaveCreateViewer(GetEnv(),strviewer);
             if( !!_pviewer ) {
-                GetEnv()->AttachViewer(_pviewer);
+                GetEnv()->AddViewer(_pviewer);
                 _pviewer->ViewerSetSize(1024,768);
             }
             _conditionViewer.notify_all();
         }
 
-        if( !_pviewer )
+        if( !_pviewer ) {
             return;
-
+        }
         _pviewer->main(); // spin until quitfrommainloop is called
         RAVELOG_DEBUGA("destroying viewer\n");
         _pviewer.reset();
@@ -500,9 +500,7 @@ public:
         }
         pbody->SetName(req.name);
 
-        if( !GetEnv()->AddKinBody(pbody) )
-            return false;
-
+        GetEnv()->AddKinBody(pbody);
         res.bodyid = pbody->GetEnvironmentId();
         return true;
     }
@@ -574,9 +572,7 @@ public:
         probot->SetName(req.name);
 
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
-        if( !GetEnv()->AddRobot(probot) )
-            return false;
-
+        GetEnv()->AddRobot(probot);;
         res.bodyid = probot->GetEnvironmentId();
         return true;
     }
@@ -962,20 +958,23 @@ public:
             mlevels["warn"] = Level_Warn;
             mlevels["debug"] = Level_Debug;
             mlevels["verbose"] = Level_Verbose;
-            DebugLevel level = GetEnv()->GetDebugLevel();
+            int level = GetEnv()->GetDebugLevel();
             if( mlevels.find(req.debuglevel) != mlevels.end() )
                 level = mlevels[req.debuglevel];
             else {
                 stringstream ss(req.debuglevel);
                 int nlevel;
                 ss >> nlevel;
-                if( !!ss )
-                    level = (DebugLevel)nlevel;
+                if( !!ss ) {
+                    level = nlevel;
+                }
             }
             GetEnv()->SetDebugLevel(level);
         }
         if( req.setmask & env_set::Request::Set_Viewer ) {
-            GetEnv()->AttachViewer(ViewerBasePtr());
+            if( !!_pviewer ) {
+                GetEnv()->Remove(_pviewer);
+            }
             SetViewer(req.viewer);
         }
         if( req.setmask & env_set::Request::Set_ViewerDims ) {

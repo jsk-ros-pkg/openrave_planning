@@ -139,8 +139,11 @@ public:
     {
         _ok = false;
         boost::mutex::scoped_lock lockcreate(_mutexViewer);
-        if( !!_penvViewer )
-            _penvViewer->AttachViewer(ViewerBasePtr());
+        if( !!_penvViewer ) {
+            if( !!_pviewer ) {
+                _penvViewer->Remove(_pviewer);
+            }
+        }
     }
 
     bool SetViewer(EnvironmentBasePtr penv, const string& viewer, const string& title)
@@ -149,7 +152,9 @@ public:
         
         // destroy the old viewer
         if( !!_penvViewer ) {
-            _penvViewer->AttachViewer(ViewerBasePtr());
+            if( !!_pviewer ) {
+                _penvViewer->Remove(_pviewer);
+            }
             _conditionViewer.wait(lock);
         }
          
@@ -200,7 +205,7 @@ protected:
 
                 _pviewer = RaveCreateViewer(_penvViewer,_strviewer);
                 if( !!_pviewer ) {
-                    _penvViewer->AttachViewer(_pviewer);
+                    _penvViewer->AddViewer(_pviewer);
                     _pviewer->ViewerSetSize(1024,768);
                 }
 
@@ -221,7 +226,9 @@ protected:
             boost::mutex::scoped_lock lockcreate(_mutexViewer);
             RAVELOG_DEBUGA("destroying viewer\n");
             ROS_ASSERT(_penvViewer == _pviewer->GetEnv());
-            _penvViewer->AttachViewer(ViewerBasePtr());            
+            if( !!_pviewer ) {
+                _penvViewer->Remove(_pviewer);
+            }
             _pviewer.reset();
             usleep(100000); // wait a little
             _penvViewer.reset();
