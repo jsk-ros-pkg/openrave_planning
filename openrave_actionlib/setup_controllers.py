@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import os, roslib, time
 roslib.load_manifest('openrave_actionlib')
+roslib.load_manifest('pr2_controller_manager')
 
 import rospy, sys
 import rosparam
