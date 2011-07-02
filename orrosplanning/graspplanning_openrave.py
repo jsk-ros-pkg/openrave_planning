@@ -6,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,20 +60,20 @@ class FastGrasping:
         jointvalues = array(finalconfig[0])
         if self.ignoreik:
             if self.gmodel.manip.CheckEndEffectorCollision(Tglobalgrasp):
-               return False 
+               return False
 
         else:
             sol = self.gmodel.manip.FindIKSolution(Tglobalgrasp,True)
             if sol is None:
                 return False
-            
+
             jointvalues[self.gmodel.manip.GetArmIndices()] = sol
 
         self.jointvalues.append(jointvalues)
         self.grasps.append(grasp)
         if len(self.jointvalues) < self.returngrasps:
             return True
-        
+
         raise self.GraspingException((self.grasps,self.jointvalues))
 
     def computeGrasp(self,graspparameters, updateenv=True):
@@ -88,7 +88,7 @@ class FastGrasping:
         if len(graspparameters.rolls) == 0:
             rolls = arange(0,2*pi,0.5*pi)
         else:
-            rolls = graspparameters.rolls        
+            rolls = graspparameters.rolls
         if len(graspparameters.preshapes) == 0:
             # initial preshape for robot is the released fingers
             with self.gmodel.target:
@@ -153,7 +153,7 @@ if __name__ == "__main__":
                 collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
             basemanip = interfaces.BaseManipulation(robot)
             grasper = interfaces.Grasper(robot)
-        
+
         # have to do this manually because running linkstatistics when viewer is enabled segfaults things
         if options._viewer is None:
             env.SetViewer('qtcoin')
@@ -206,7 +206,7 @@ if __name__ == "__main__":
                     Ttarget = eye(4)
             else:
                 raise ValueError('do not support graspable objects of type %s'%str(graspableobject.type))
-            
+
             target.SetName('graspableobject')
             env.AddKinBody(target,True)
             target.SetTransform(Ttarget)
@@ -270,8 +270,8 @@ if __name__ == "__main__":
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.OTHER_ERROR
                         rospy.loginfo('removing target %s'%target.GetName())
                         return res
-                    finally:                    
-                        with env:                       
+                    finally:
+                        with env:
                             if target is not None:
                                 rospy.loginfo('removing target in finally %s'%target.GetName())
                                 env.Remove(target)
