@@ -42,6 +42,8 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
                       help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
+    parser.add_option('--maxvelmult',action='store',type='float',dest='maxvelmult',default=1.0,
+                      help='The maximum velocity multiplier when timing the trajectories (default=%default)')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -102,7 +104,7 @@ if __name__ == "__main__":
                 collisionmap.SendCommand("collisionstream 0")
                 with envlock:
                     with env:
-                        basemanip = interfaces.BaseManipulation(robot,plannername=None if len(req.planner)==0 else req.planner)
+                        basemanip = interfaces.BaseManipulation(robot,plannername=None if len(req.planner)==0 else req.planner,maxvelmult=options.maxvelmult)
                         rospy.loginfo("MoveToHandPosition2")
                         if len(options.mapframe) > 0:
                             (robot_trans,robot_rot) = listener.lookupTransform(options.mapframe, robot.GetLinks()[0].GetName(), rospy.Time(0))
