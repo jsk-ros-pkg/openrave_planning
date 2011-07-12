@@ -17,7 +17,7 @@ To execute use:
 
 .. code-block:: bash
 
-  rosrun parallel_util workmanagerlauncher.py --module=kinematicreachability_ros --launchservice=...
+  roscd openrave_database; rosrun parallel_util workmanagerlauncher.py --module=kinematicreachability_ros --launchservice=...
 
 """
 
