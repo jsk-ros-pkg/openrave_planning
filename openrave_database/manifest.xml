@@ -7,8 +7,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://openrave.org</url>
   <depend package="openrave"/>
-  <depend package="rospy"/>
-  <depend package="roslaunch"/>
+  <depend package="parallel_util"/>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>
