@@ -10,3 +10,5 @@ rosbuild_gensrv()
 rosbuild_add_library(orrosplanning src/orrosplanningmain.cpp)
 rosbuild_link_boost(orrosplanning thread)
 
+rosbuild_find_ros_package("jsk_tools")
+execute_process(COMMAND cmake -E chdir ${PROJECT_SOURCE_DIR} python ${jsk_tools_PACKAGE_PATH}/bin/launchdoc-generator.py ${PROJECT_NAME} --output_dir=. --nomakefile RESULT_VARIABLE _make_failed)
