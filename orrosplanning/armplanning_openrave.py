@@ -26,7 +26,7 @@ from numpy import *
 import numpy,time,threading
 from itertools import izip
 import tf
-
+import os
 import orrosplanning.srv
 import sensor_msgs.msg
 import trajectory_msgs.msg
