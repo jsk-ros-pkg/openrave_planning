@@ -22,6 +22,7 @@ import os
 
 from optparse import OptionParser
 from openravepy import *
+from openravepy.misc import OpenRAVEGlobalArguments
 from numpy import *
 import numpy,time,threading
 from itertools import izip
