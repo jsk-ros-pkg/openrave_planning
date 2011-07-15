@@ -21,4 +21,5 @@
   <depend package="actionlib"/>
   <depend package="move_base_msgs"/>
   <depend package="std_msgs"/>
+  <rosdep name="mayavi2"/>
 </package>

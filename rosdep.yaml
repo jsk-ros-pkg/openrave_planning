@@ -35,6 +35,8 @@ qt4gl:
 python-sympy:
   ubuntu: python-sympy
   debian: python-sympy
+mayavi2:
+  ubuntu: mayavi2
 assimp2:
   ubuntu: |
    if [ ! -f /etc/apt/sources.list.d/openrave-release*.list ] ; then
