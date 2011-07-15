@@ -43,6 +43,8 @@ if __name__ == "__main__":
                       help='if true will drop into the ipython interpreter rather than spin')
     parser.add_option('--mapframe',action="store",type='string',dest='mapframe',default=None,
                       help='The frame of the map used to position the robot. If --mapframe="" is specified, then nothing will be transformed with tf')
+    parser.add_option('--jitter',action="store",type='float',dest='jitter',default=None,
+                      help='The jitter to use when moving robot out of collision')
     parser.add_option('--maxvelmult',action='store',type='float',dest='maxvelmult',default=1.0,
                       help='The maximum velocity multiplier when timing the trajectories (default=%default)')
     (options, args) = parser.parse_args()
@@ -150,7 +152,7 @@ if __name__ == "__main__":
                         Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetEndEffectorTransform()))
                         try:
                             starttime = time.time()
-                            trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750)
+                            trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter)
                             rospy.loginfo('total planning time: %fs'%(time.time()-starttime))
                         except:
                             rospy.logerr('failed to solve for T=%s'%str(Tgoalee))
