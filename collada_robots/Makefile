@@ -2,7 +2,7 @@ all: installed
 
 SVN_DIR = data
 # Should really specify a revision
-SVN_REVISION = -r 2610
+SVN_REVISION = -r 2613
 SVN_URL = https://openrave.svn.sourceforge.net/svnroot/openrave/data
 include $(shell rospack find mk)/svn_checkout.mk
 
