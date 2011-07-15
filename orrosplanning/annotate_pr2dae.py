@@ -91,7 +91,7 @@ if __name__=="__main__":
           <format>uint8</format>
           <measurement_time>0.05</measurement_time>
           <intrinsic>2955 0 1224.5 0 2955 1025.5</intrinsic>
-          <distortion>0 0 0 0 0</distortion>
+          <distortion_model>0 0 0 0 0</distortion_model>
           <interface_type>
             <technique profile="OpenRAVE">
               <interface>BaseCamera</interface>
@@ -103,7 +103,7 @@ if __name__=="__main__":
           <format>uint8</format>
           <measurement_time>0.04</measurement_time>
           <intrinsic>395.71449999999999 0.0 335.86279000000002 0.0 395.71449999999999 245.62557000000001</intrinsic>
-          <distortion>0 0 0 0 0</distortion>
+          <distortion_model>0 0 0 0 0</distortion_model>
           <interface_type>
             <technique profile="OpenRAVE">
               <interface>BaseCamera</interface>
@@ -115,7 +115,7 @@ if __name__=="__main__":
           <format>uint8</format>
           <measurement_time>0.04</measurement_time>
           <intrinsic>395.71449999999999 0.0 335.86279000000002 0.0 395.71449999999999 245.62557000000001</intrinsic>
-          <distortion>0 0 0 0 0</distortion>
+          <distortion_model>0 0 0 0 0</distortion_model>
           <interface_type>
             <technique profile="OpenRAVE">
               <interface>BaseCamera</interface>
@@ -130,12 +130,44 @@ if __name__=="__main__":
             <rectification>0.99941000000000013 0.0035200000000000001 -0.034260000000000006 -0.0034600000000000004 0.99999000000000005 0.0017800000000000001 0.034270000000000002 -0.0016600000000000002 0.99941000000000013</rectification>
           </instance_sensor>
         </sensor>
+        <sensor type="base_pinhole_camera" id="narrow_l_stereo_camera_sensor">
+          <image_dimensions>640 480 1</image_dimensions>
+          <format>uint8</format>
+          <measurement_time>0.04</measurement_time>
+          <intrinsic>772.55 0 320.05 0 772.55 240.5</intrinsic>
+          <distortion_model type="plumb_bob">0 0 0 0 0</distortion_model>
+          <interface_type>
+            <technique profile="OpenRAVE">
+              <interface>BaseCamera</interface>
+            </technique>
+          </interface_type>
+        </sensor>
+        <sensor type="base_pinhole_camera" id="narrow_r_stereo_camera_sensor">
+          <image_dimensions>640 480 1</image_dimensions>
+          <format>uint8</format>
+          <measurement_time>0.04</measurement_time>
+          <intrinsic>772.55 0 320.05 0 772.55 240.5</intrinsic>
+          <distortion_model type="plumb_bob">0 0 0 0 0</distortion_model>
+          <interface_type>
+            <technique profile="OpenRAVE">
+              <interface>BaseCamera</interface>
+            </technique>
+          </interface_type>
+        </sensor>
+        <sensor type="base_stereo_camera" id="narrow_stereo_camera_sensor">
+          <instance_sensor url="#narrow_l_stereo_camera_sensor">
+            <rectification>1 0 0 0 1 0 0 0 1</rectification>
+          </instance_sensor>
+          <instance_sensor url="#narrow_r_stereo_camera_sensor">
+            <rectification>1 0 0 0 1 0 0 0 1</rectification>
+          </instance_sensor>
+        </sensor>
         <sensor type="base_pinhole_camera" id="l_forearm_cam_sensor">
           <image_dimensions>640 480 1</image_dimensions>
           <format>uint8</format>
           <measurement_time>0.04</measurement_time>
           <intrinsic>426.35142000000002 0.0 313.91464000000002 0.0 426.51092999999997 238.27394000000001</intrinsic>
-          <distortion>0 0 0 0 0</distortion>
+          <distortion_model>0 0 0 0 0</distortion_model>
           <interface_type>
             <technique profile="OpenRAVE">
               <interface>BaseCamera</interface>
@@ -147,7 +179,7 @@ if __name__=="__main__":
           <format>uint8</format>
           <measurement_time>0.04</measurement_time>
           <intrinsic>430.5514 0.0 320.85068000000001 0.0 429.22170999999997 240.4314</intrinsic>
-          <distortion>0 0 0 0 0</distortion>
+          <distortion_model>0 0 0 0 0</distortion_model>
           <interface_type>
             <technique profile="OpenRAVE">
               <interface>BaseCamera</interface>
