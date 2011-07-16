@@ -118,7 +118,7 @@ class GraspingModelROS(grasping.GraspingModel):
                     if t.req is None:
                         repeat = False
 
-    def generate(self,preshapes,standoffs,rolls,approachrays, graspingnoise=None,forceclosurethreshold=1e-9,updateenv=None):
+    def generate(self,preshapes,standoffs,rolls,approachrays, graspingnoise=None,forceclosurethreshold=1e-9,updateenv=None,manipulatordirections=None,translationstepmult=None,finestep=None):
         if self.server:
             rospy.init_node('ComputeGrasping',anonymous=True)
             s = rospy.Service('ComputeGraspingService', PickledService, self.ComputeGraspingService)
@@ -141,6 +141,8 @@ class GraspingModelROS(grasping.GraspingModel):
             standoffs = array([0,0.025])
         if graspingnoise is None:
             graspingnoise = 0.0
+        if manipulatordirections is None:
+            manipulatordirections = array([self.manip.GetDirection()])
         time.sleep(0.1) # sleep or otherwise viewer might not load well
         N = approachrays.shape[0]
         with self.env:
@@ -148,7 +150,7 @@ class GraspingModelROS(grasping.GraspingModel):
 
         # transform each ray into the global coordinate system in order to plot it
         gapproachrays = c_[dot(approachrays[:,0:3],transpose(Ttarget[0:3,0:3]))+tile(Ttarget[0:3,3],(N,1)),dot(approachrays[:,3:6],transpose(Ttarget[0:3,0:3]))]
-        totalgrasps = N*len(preshapes)*len(rolls)*len(standoffs)
+        totalgrasps = N*len(preshapes)*len(rolls)*len(standoffs)*len(manipulatordirections)
         counter = 0
         self.grasps = []
         self.forceclosurethreshold = forceclosurethreshold
@@ -162,15 +164,17 @@ class GraspingModelROS(grasping.GraspingModel):
             for roll in rolls:
                 for preshape in preshapes:
                     for standoff in standoffs:
-                        print 'grasp %d/%d'%(counter,totalgrasps),'preshape:',preshape
-                        counter += 1
-                        grasp = zeros(self.totaldof)
-                        grasp[self.graspindices.get('igrasppos')] = approachray[0:3]
-                        grasp[self.graspindices.get('igraspdir')] = -approachray[3:6]
-                        grasp[self.graspindices.get('igrasproll')] = roll
-                        grasp[self.graspindices.get('igraspstandoff')] = standoff
-                        grasp[self.graspindices.get('igrasppreshape')] = preshape
-                        self.sendRequest(busythreads,pickle.dumps((grasp,graspingnoise,forceclosurethreshold)))
+                        for manipulatordirection in manipulatordirections:
+                            print 'grasp %d/%d'%(counter,totalgrasps),'preshape:',preshape
+                            counter += 1
+                            grasp = zeros(self.totaldof)
+                            grasp[self.graspindices.get('igrasppos')] = approachray[0:3]
+                            grasp[self.graspindices.get('igraspdir')] = -approachray[3:6]
+                            grasp[self.graspindices.get('igrasproll')] = roll
+                            grasp[self.graspindices.get('igraspstandoff')] = standoff
+                            grasp[self.graspindices.get('igrasppreshape')] = preshape
+                            grasp[self.graspindices.get('imanipulatordirection')] = manipulatordirection
+                            self.sendRequest(busythreads,pickle.dumps((grasp,graspingnoise,forceclosurethreshold)))
         self.waitForThreads(busythreads)
         self.grasps = array(self.grasps)
 
@@ -235,6 +239,9 @@ class GraspingModelROS(grasping.GraspingModel):
         if options.preshapes is not None:
             for preshape in options.preshapes:
                 controlargs += '--preshape=\'%s\' '%preshape
+        if options.manipulatordirections is not None:
+            for manipulatordirection in options.manipulatordirections:
+                controlargs += '--manipulatordirection=\'%s\' '%manipulatordirection
         if options.avoidlinks is not None:
             for avoidlink in options.avoidlinks:
                 controlargs += '--avoidlink=%s '%avoidlink
