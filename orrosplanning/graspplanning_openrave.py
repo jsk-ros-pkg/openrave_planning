@@ -77,7 +77,7 @@ class FastGrasping:
 
         raise self.GraspingException((self.grasps,self.jointvalues))
 
-    def computeGrasp(self,graspparameters, updateenv=True):
+    def computeGrasp(self,graspparameters):
         if len(graspparameters.approachrays) == 0:
             approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
         else:
@@ -102,7 +102,7 @@ class FastGrasping:
             preshapes = reshape(graspparameters.preshapes,[len(graspparameters.preshapes)/dim,dim])
         try:
             self.gmodel.disableallbodies=False
-            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,updateenv=updateenv,graspingnoise=0)
+            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,graspingnoise=0)
             return self.grasps,self.jointvalues
         except self.GraspingException, e:
             return e.args
@@ -248,7 +248,7 @@ if __name__ == "__main__":
                         res = object_manipulation_msgs.srv.GraspPlanningResponse()
                         # start planning
                         fastgrasping = FastGrasping(robot,target,ignoreik=options.ignoreik,returngrasps=options.returngrasps)
-                        allgrasps,alljointvalues = fastgrasping.computeGrasp(graspparameters,updateenv=False)
+                        allgrasps,alljointvalues = fastgrasping.computeGrasp(graspparameters)
                         if allgrasps is not None and len(allgrasps) > 0:
                             res.error_code.value = object_manipulation_msgs.msg.GraspPlanningErrorCode.SUCCESS
                             for grasp,jointvalues in izip(allgrasps,alljointvalues):
