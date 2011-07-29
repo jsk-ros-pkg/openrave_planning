@@ -101,7 +101,8 @@ class FastGrasping:
             dim = len(self.gmodel.manip.GetGripperIndices())
             preshapes = reshape(graspparameters.preshapes,[len(graspparameters.preshapes)/dim,dim])
         try:
-            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,disableallbodies=False,updateenv=updateenv,graspingnoise=0)
+            self.gmodel.disableallbodies=False
+            self.gmodel.generate(preshapes=preshapes,standoffs=standoffs,rolls=rolls,approachrays=approachrays,checkgraspfn=self.checkgraspfn,updateenv=updateenv,graspingnoise=0)
             return self.grasps,self.jointvalues
         except self.GraspingException, e:
             return e.args
