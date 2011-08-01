@@ -11,7 +11,6 @@
   <depend stack="motion_planning_common"/> <!-- mapping_msgs, manipulation_msgs --> 
   <depend stack="geometry"/> <!-- tf, bullet --> 
   <depend stack="physics_ode"/> <!-- opende --> 
-  <depend stack="jsk_common"/>
   <depend stack="ros"/> <!-- std_msgs, roscpp --> 
   <depend stack="common_msgs"/> <!-- sensor_msgs -->
   <depend stack="robot_model"/> <!-- colladadom, collada_urdf -->
