@@ -50,6 +50,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=True)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
+    env.LoadProblem(RaveCreateModule(env,"textserver"),"")
     # load the orrosplanning plugin
     
     print 'initializing, please wait for ready signal...'
