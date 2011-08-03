@@ -32,6 +32,7 @@ import sensor_msgs.msg
 import trajectory_msgs.msg
 import geometry_msgs.msg
 
+
 if __name__ == "__main__":
     parser = OptionParser(description='openrave planning example')
     OpenRAVEGlobalArguments.addOptions(parser)
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
     env.LoadProblem(RaveCreateModule(env,"textserver"),"")
     rospy.loginfo('initializing, please wait for ready signal...')
-
+    handles = [] # for viewer
     try:
         rospy.init_node('armplanning_openrave',disable_signals=False)
         with env:
@@ -152,17 +153,12 @@ if __name__ == "__main__":
 
                         Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetEndEffectorTransform()))
 
-                        #debug for viewerj
-                        env.plot3(points=Tgoalee[0:3,3],pointsize=10,colors=(1,0,0))
-                        env.UpdatePublishedBodies()
-                        time.sleep(3)
-                        """
-                        cbox = RaveCreateKinBody(env,'')
-                        cbox.InitFromBoxes(array([[p.x,p.y,p.z,0.01,0.01,0.01]]),False)
-                        cbox.SetName('cbox')
-                        env.AddKinBody(cbox,False)
-                        env.UpdatePublishedBodies()
-                        """
+                        # debug for viewer
+                        global debugpoints
+                        debugpoints = array(((p.x,p.y,p.z),(0,0,2)))
+                        global handles
+                        handles.append(env.plot3(points=debugpoints,pointsize=10))
+                        time.sleep(1)
 
                         try:
                             starttime = time.time()
@@ -204,6 +200,10 @@ if __name__ == "__main__":
 
             finally:
                 collisionmap.SendCommand("collisionstream 1")
+                global handles
+                global debugpoints
+                handles.append(env.plot3(points=debugpoints,pointsize=10))
+
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
         RaveSetDebugLevel(DebugLevel.Debug)
