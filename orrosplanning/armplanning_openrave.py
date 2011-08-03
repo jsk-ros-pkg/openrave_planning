@@ -158,7 +158,7 @@ if __name__ == "__main__":
                         global debugpoints
 
                         debugpoints = Tgoalee[0:3,3]
-                        handles.append(env.plot3(points=debugpoints,pointsize=10))
+                        handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
                         time.sleep(1)
 
                         try:
@@ -205,7 +205,7 @@ if __name__ == "__main__":
                     with env:
                         global handles
                         global debugpoints
-                        handles.append(env.plot3(points=debugpoints,pointsize=10))
+                        handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
