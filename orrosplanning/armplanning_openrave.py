@@ -158,7 +158,7 @@ if __name__ == "__main__":
                         except:
                             rospy.logerr('failed to solve for T=%s, error messages are:'%repr(Tgoalee))
                             RaveSetDebugLevel(DebugLevel.Verbose)
-                            ikmodel.manip.FindIKSolution(Tgoalee,IkFilterOptions.CheckEnvCollisions)
+                            manip.FindIKSolution(Tgoalee,IkFilterOptions.CheckEnvCollisions)
                             RaveSetDebugLevel(DebugLevel.Debug)
                             return None
                         # parse trajectory data into the ROS structure
