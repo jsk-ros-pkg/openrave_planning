@@ -151,6 +151,19 @@ if __name__ == "__main__":
                                 ikmodel.autogenerate()
 
                         Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetEndEffectorTransform()))
+
+                        #debug for viewerj
+                        env.plot3(points=Tgoalee[0:3,3],pointsize=10,colors=(1,0,0))
+                        env.UpdatePublishedBodies()
+                        time.sleep(3)
+                        """
+                        cbox = RaveCreateKinBody(env,'')
+                        cbox.InitFromBoxes(array([[p.x,p.y,p.z,0.01,0.01,0.01]]),False)
+                        cbox.SetName('cbox')
+                        env.AddKinBody(cbox,False)
+                        env.UpdatePublishedBodies()
+                        """
+
                         try:
                             starttime = time.time()
                             trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter)
@@ -188,7 +201,7 @@ if __name__ == "__main__":
                                 pt.time_from_start = rospy.Duration(float(tokens[start]))
                             res.traj.points.append(pt)
                         return res
-                
+
             finally:
                 collisionmap.SendCommand("collisionstream 1")
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
