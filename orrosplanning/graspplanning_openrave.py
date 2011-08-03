@@ -83,6 +83,12 @@ class FastGrasping:
             approachrays = self.gmodel.computeBoxApproachRays(delta=0.02,normalanglerange=0.5) # rays to approach object
         else:
             approachrays = reshape(graspparameters.approachrays,[len(graspparameters.approachrays)/6,6])
+
+        Ttarget = self.gmodel.target.GetTransform()
+        gapproachrays = c_[dot(approachrays[:,0:3],transpose(Ttarget[0:3,0:3]))+tile(Ttarget[0:3,3],(N,1)),dot(approachrays[:,3:6],transpose(Ttarget[0:3,0:3]))]
+        self.approachgraphs = [self.env.plot3(points=gapproachrays[:,0:3],pointsize=5,colors=array((1,0,0))),
+                               self.env.drawlinelist(points=reshape(c_[gapproachrays[:,0:3],gapproachrays[:,0:3]+0.005*gapproachrays[:,3:6]],(2*N,3)),linewidth=4,colors=array((1,0,0,1)))]
+
         if len(graspparameters.standoffs) == 0:
             standoffs = [0]
         else:
@@ -157,12 +163,6 @@ if __name__ == "__main__":
                 collisionmap = RaveCreateSensorSystem(env,'CollisionMap bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
             basemanip = interfaces.BaseManipulation(robot)
             grasper = interfaces.Grasper(robot)
-
-        # have to do this manually because running linkstatistics when viewer is enabled segfaults things
-        if options._viewer is None:
-            env.SetViewer('qtcoin')
-        elif len(options._viewer) > 0:
-            env.SetViewer(options._viewer)
 
         listener = tf.TransformListener()
         values = robot.GetDOFValues()
@@ -290,6 +290,12 @@ if __name__ == "__main__":
         s = rospy.Service('GraspPlanning', object_manipulation_msgs.srv.GraspPlanning, GraspPlanning)
         sparameters = rospy.Service('SetGraspParameters', orrosplanning.srv.SetGraspParameters, SetGraspParameters)
         print 'openrave %s service ready'%s.resolved_name
+
+        # have to do this manually because running linkstatistics when viewer is enabled segfaults things
+        if options._viewer is None:
+            env.SetViewer('qtcoin')
+        elif len(options._viewer) > 0:
+            env.SetViewer(options._viewer)
 
         if options.ipython:
             from IPython.Shell import IPShellEmbed
