@@ -156,7 +156,10 @@ if __name__ == "__main__":
                             trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter)
                             rospy.loginfo('total planning time: %fs'%(time.time()-starttime))
                         except:
-                            rospy.logerr('failed to solve for T=%s'%str(Tgoalee))
+                            rospy.logerr('failed to solve for T=%s, error messages are:'%repr(Tgoalee))
+                            RaveSetDebugLevel(DebugLevel.Verbose)
+                            ikmodel.manip.FindIKSolution(Tgoalee,IkFilterOptions.CheckEnvCollisions)
+                            RaveSetDebugLevel(DebugLevel.Debug)
                             return None
                         # parse trajectory data into the ROS structure
                         res = orrosplanning.srv.MoveToHandPositionResponse()
