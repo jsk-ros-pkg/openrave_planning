@@ -154,9 +154,10 @@ if __name__ == "__main__":
                         Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetEndEffectorTransform()))
 
                         # debug for viewer
-                        global debugpoints
-                        debugpoints = array(((p.x,p.y,p.z),(0,0,2)))
                         global handles
+                        global debugpoints
+
+                        debugpoints = Tgoalee[0:3,3]
                         handles.append(env.plot3(points=debugpoints,pointsize=10))
                         time.sleep(1)
 
