@@ -201,9 +201,11 @@ if __name__ == "__main__":
 
             finally:
                 collisionmap.SendCommand("collisionstream 1")
-                global handles
-                global debugpoints
-                handles.append(env.plot3(points=debugpoints,pointsize=10))
+                with envlock:
+                    with env:
+                        global handles
+                        global debugpoints
+                        handles.append(env.plot3(points=debugpoints,pointsize=10))
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
