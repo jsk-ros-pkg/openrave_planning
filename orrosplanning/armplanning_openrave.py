@@ -154,9 +154,7 @@ if __name__ == "__main__":
                         Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetEndEffectorTransform()))
 
                         # debug for viewer
-                        global handles
-                        global debugpoints
-
+                        global handles,debugpoints
                         debugpoints = Tgoalee[0:3,3]
                         handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
                         time.sleep(1)
@@ -201,11 +199,8 @@ if __name__ == "__main__":
 
             finally:
                 collisionmap.SendCommand("collisionstream 1")
-                with envlock:
-                    with env:
-                        global handles
-                        global debugpoints
-                        handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
+                global handles,debugpoints
+                handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
