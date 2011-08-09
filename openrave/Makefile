@@ -50,7 +50,7 @@ clean:
 	rm -f installed
 
 wipe: clean
-	rm -rf $(SVN_DIR) include lib share bin src
+	rm -rf $(BUILDDIR) include lib share bin src
 
 leave_only_products:
 	rm -rf $(SVN_DIR)
