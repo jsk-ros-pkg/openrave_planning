@@ -37,8 +37,12 @@ model = producer = consumer = gatherer = produceriter = None
 producercount = 0
 def start(args=None):
     global model, producer, consumer, gatherer
-    options,model = grasping.GraspingModel.InitializeFromParser(args=args)
-    producer, consumer, gatherer, num = model.generatepcg(*model.autogenerateparams(options))
+    try:
+        options,model = grasping.GraspingModel.InitializeFromParser(args=args)
+        producer, consumer, gatherer, num = model.generatepcg(*model.autogenerateparams(options))
+    except Exception, e:
+        print e
+        print 'faile with args: ',args
     print 'total jobs: ',num
     
 def service_start(args):
