@@ -9,7 +9,7 @@ import orrosplanning.srv
 import geometry_msgs.msg
 import kinematics_msgs.srv
 from numpy import *
-from motion_planning_msgs.msg import ArmNavigationErrorCodes
+from arm_navigation_msgs.msg import ArmNavigationErrorCodes
 
 if __name__=='__main__':
     rospy.init_node('armik_test')

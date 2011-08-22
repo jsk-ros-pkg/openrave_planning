@@ -31,8 +31,8 @@ import tf
 import orrosplanning.srv
 from orrosplanning.srv import IKRequest
 import sensor_msgs.msg
-import motion_planning_msgs.msg
-from motion_planning_msgs.msg import ArmNavigationErrorCodes
+import arm_navigation_msgs.msg
+from arm_navigation_msgs.msg import ArmNavigationErrorCodes
 import geometry_msgs.msg
 import kinematics_msgs.srv
 
@@ -196,7 +196,7 @@ if __name__ == "__main__":
                         res.solutions.header.stamp = rospy.Time.now()
                         res.solutions.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
                         for s in solutions:
-                            res.solutions.points.append(motion_planning_msgs.msg.JointPathPoint(s))
+                            res.solutions.points.append(trajectory_msgs.msg.JointTrajectoryPoint(positions=s))
                     return res
 
         def GetPositionIKFn(reqall):

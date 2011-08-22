@@ -11,11 +11,10 @@
   <depend package="openrave"/>
   <depend package="posedetection_msgs"/>
   <depend package="tf"/>
-  <depend package="mapping_msgs"/>
+  <depend package="arm_navigation_msgs"/>
   <depend package="geometry_msgs"/>
   <depend package="sensor_msgs"/>
-  <depend package="motion_planning_msgs"/>
-  <depend package="object_manipulation_msgs"/>
+<!--   <depend package="object_manipulation_msgs"/> -->
   <depend package="trajectory_msgs"/>
   <depend package="kinematics_msgs"/>
   <depend package="actionlib"/>

@@ -27,9 +27,9 @@
 #define COLLISIONMAP_MOCAP_SYSTEM
 
 #include "rossensorsystem.h"
-#include <mapping_msgs/CollisionMap.h>
+#include <arm_navigation_msgs/CollisionMap.h>
 
-class CollisionMapSystem : public ROSSensorSystem<mapping_msgs::CollisionMap>
+class CollisionMapSystem : public ROSSensorSystem<arm_navigation_msgs::CollisionMap>
 {
 public:
     static boost::shared_ptr<void> RegisterXMLReader(EnvironmentBasePtr penv)
@@ -38,9 +38,9 @@ public:
     }
 
     CollisionMapSystem(EnvironmentBasePtr penv)
-        : ROSSensorSystem<mapping_msgs::CollisionMap>("collisionmap",penv), _fPrunePadding(0), _nNextId(1), _bPruneCollisions(false)
+        : ROSSensorSystem<arm_navigation_msgs::CollisionMap>("collisionmap",penv), _fPrunePadding(0), _nNextId(1), _bPruneCollisions(false)
     {
-        __description = ":Interface Author: Rosen Diankov\n\nListens to ROS mapping_msgs/CollisionMap and dynamically updates an environment collision map.";
+        __description = ":Interface Author: Rosen Diankov\n\nListens to ROS arm_navigation_msgs/CollisionMap and dynamically updates an environment collision map.";
         RegisterCommand("collisionstream",boost::bind(&CollisionMapSystem::collisionstream,this,_1,_2),
                         "ROS stream");
     }
@@ -49,7 +49,7 @@ public:
 
     virtual bool Init(istream& sinput)
     {
-      _bCollisionStream = true;
+        _bCollisionStream = true;
         _listtopics.clear();
         string cmd;
         while(!sinput.eof()) {
@@ -80,7 +80,7 @@ public:
             }
             else
                 break;
-            
+
             if( !sinput ) {
                 RAVELOG_ERROR("failed\n");
                 return false;
@@ -89,21 +89,21 @@ public:
 
         if( _listtopics.size() == 0 )
             _listtopics.push_back("collision_map");
-        
+
         return startsubscriptions(1);
     }
 
     virtual bool collisionstream(std::ostream& os, std::istream& is)
     {
-      is >> _bCollisionStream;
-      RAVELOG_INFO("collisionstream: %d\n",(int)_bCollisionStream);
-      return true;
+        is >> _bCollisionStream;
+        RAVELOG_INFO("collisionstream: %d\n",(int)_bCollisionStream);
+        return true;
     }
 
 private:
     virtual bool startsubscriptions(int queuesize)
     {
-        if( !ROSSensorSystem<mapping_msgs::CollisionMap>::startsubscriptions(queuesize) ) {
+        if( !ROSSensorSystem<arm_navigation_msgs::CollisionMap>::startsubscriptions(queuesize) ) {
             return false;
         }
         _tflistener.reset(new tf::TransformListener(*_ros));
@@ -112,15 +112,15 @@ private:
 
     virtual void Destroy()
     {
-        ROSSensorSystem<mapping_msgs::CollisionMap>::Destroy();
+        ROSSensorSystem<arm_navigation_msgs::CollisionMap>::Destroy();
         _tflistener.reset();
     }
 
-    virtual void newdatacb(const boost::shared_ptr<mapping_msgs::CollisionMap const>& topicmsg)
+    virtual void newdatacb(const boost::shared_ptr<arm_navigation_msgs::CollisionMap const>& topicmsg)
     {
-      if( !_bCollisionStream ) {
-	return;
-      }
+        if( !_bCollisionStream ) {
+            return;
+        }
         KinBodyPtr pbody;
         {
             EnvironmentMutex::scoped_lock envlock(GetEnv()->GetMutex());
@@ -217,7 +217,7 @@ private:
                 _pbodytestbox.reset();
             }
 
-	    RAVELOG_INFO("number of boxes %d\n",(int)_vobbs.size());
+            RAVELOG_INFO("number of boxes %d\n",(int)_vobbs.size());
             if( !pbody->InitFromBoxes(_vobbs, true) ) {
                 RAVELOG_ERRORA("failed to create collision map\n");
                 return;

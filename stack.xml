@@ -8,7 +8,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://www.openrave.org</url>
   
-  <depend stack="motion_planning_common"/> <!-- mapping_msgs, manipulation_msgs --> 
+  <depend stack="arm_navigation_msgs"/> <!-- mapping_msgs, manipulation_msgs --> 
   <depend stack="geometry"/> <!-- tf, bullet --> 
   <depend stack="physics_ode"/> <!-- opende --> 
   <depend stack="ros"/> <!-- std_msgs, roscpp --> 
