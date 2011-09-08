@@ -39,7 +39,7 @@ def start(args=None):
     global model, producer, consumer, gatherer
     options,model = kinematicreachability.ReachabilityModel.InitializeFromParser(args=args)
     producer, consumer, gatherer, num = model.generatepcg(*model.autogenerateparams(options))
-    print 'total jobs: ',nums
+    print 'total jobs: ',num
 
 def service_start(args):
     start(args)
