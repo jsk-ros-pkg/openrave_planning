@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-PKG = 'robot_openrave_control'
+PKG = 'openrave_robot_control'
 import roslib; roslib.load_manifest(PKG)
 
 import sys, os
 import rospy
-from robot_openrave_control.srv import *
-from robot_openrave_control.msg import *
+from openrave_robot_control.srv import *
+from openrave_robot_control.msg import *
 
 from string import atoi,atof
 from optparse import OptionParser
@@ -25,7 +25,7 @@ from optparse import OptionParser
 from IPython.Shell import IPShellEmbed
 
 class ControllerClient():
-    """Controls robots connected using the robot_openrave_control set of services using python"""
+    """Controls robots connected using the openrave_robot_control set of services using python"""
     def __init__(self,session='controller_session'):
         sessionpath=os.path.split(session)[0]
         rospy.init_node('robot_openrave_client', anonymous=True)
