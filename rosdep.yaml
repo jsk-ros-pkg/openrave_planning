@@ -28,6 +28,7 @@ mayavi2:
   ubuntu: mayavi2
 assimp2:
   ubuntu: |
+   #!/bin/bash
    if [ ! -f /etc/apt/sources.list.d/openrave-release*.list ] ; then
      echo "deb http://ppa.launchpad.net/openrave/release/ubuntu `lsb_release -cs` main" |  sudo tee /etc/apt/sources.list.d/openrave-release.list
      sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 58E6B835EDC85D09
@@ -36,6 +37,7 @@ assimp2:
    sudo apt-get -y --force-yes install assimp-dev
 collada-dom:
   ubuntu: |
+   #!/bin/bash
    if [ ! -f /etc/apt/sources.list.d/openrave-release*.list ] ; then
      echo "deb http://ppa.launchpad.net/openrave/release/ubuntu `lsb_release -cs` main" |  sudo tee /etc/apt/sources.list.d/openrave-release.list
      sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 58E6B835EDC85D09
