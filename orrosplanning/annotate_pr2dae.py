@@ -38,6 +38,8 @@ if __name__=="__main__":
                 <ignore_link_pair link0="kmodel0/torso_lift_link" link1="kmodel0/r_shoulder_lift_link"/>
                 <ignore_link_pair link0="kmodel0/l_shoulder_pan_link" link1="kmodel0/l_upper_arm_roll_link"/>
                 <ignore_link_pair link0="kmodel0/r_shoulder_pan_link" link1="kmodel0/r_upper_arm_roll_link"/>
+                <ignore_link_pair link0="kmodel0/l_shoulder_pan_link" link1="kmodel0/l_upper_arm_link"/>
+                <ignore_link_pair link0="kmodel0/r_shoulder_pan_link" link1="kmodel0/r_upper_arm_link"/>
                 <ignore_link_pair link0="kmodel0/l_elbow_flex_link" link1="kmodel0/l_forearm_link"/>
                 <ignore_link_pair link0="kmodel0/r_elbow_flex_link" link1="kmodel0/r_forearm_link"/>
                 <ignore_link_pair link0="kmodel0/l_upper_arm_link" link1="kmodel0/l_forearm_roll_link"/>

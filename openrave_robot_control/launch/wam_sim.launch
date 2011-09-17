@@ -3,8 +3,8 @@
   <machine name="wam" address="localhost"/>
   <node machine="wam" name="wam" pkg="openrave_robot_control" type="simulationserver" respawn="false" output="screen" args="--robotfile robots/barrettsegway.robot.xml --manipname arm --maxvelmult 1.0">
   </node>
-  <node machine="wam" name="openrave" pkg="openrave_robot_control" type="testopenravecontrol.py" respawn="false">
-    <env name="PYTHONPATH" value="$(optenv PYTHONPATH):$(find openrave)/share/openrave"/>
+  <node machine="wam" name="openrave" pkg="openrave_robot_control" type="testopenravecontrol.py" respawn="false" args="robots/barrettwam.robot.xml">
+    <env name="PYTHONPATH" value="$(optenv PYTHONPATH)"/>
     <env name="OPENRAVE_PLUGINS" value="$(optenv OPENRAVE_PLUGINS):$(find openrave)/share/openrave/plugins:$(find openrave_robot_control)/lib"/>
   </node>
   <sphinxdoc><![CDATA[

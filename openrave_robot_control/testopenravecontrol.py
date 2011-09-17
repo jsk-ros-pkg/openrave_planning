@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 from __future__ import with_statement # for python 2.5
+PKG = 'openrave_robot_control'
+import roslib; roslib.load_manifest(PKG)
+
 from openravepy import *
 from numpy import *
 import time
+import sys
+
 env = Environment() # create openrave environment
 env.SetViewer('qtcoin')
-env.Load('robots/barrettwam.robot.xml')
+env.Load(sys.argv[1])
 with env:
     robot = env.GetRobots()[0] # get the first robot
     manip = robot.GetManipulators()[0]

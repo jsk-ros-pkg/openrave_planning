@@ -1,10 +1,10 @@
 // Copyright (c) 2009 Rosen Diankov
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ protected:
     };
 
 public:
-    
+
     SimulationController(const string& robotfile, const string& manipname, const vector<string>& vjointnames, float fMaxVelMult) : OpenRAVEController(robotfile, manipname, vjointnames, fMaxVelMult), _armstate(Arm_Suspended) {
     }
 
@@ -47,9 +47,13 @@ public:
 
     virtual void init()
     {
-        if( !!_probot )
+        if( !!_probot ) {
             throw openrave_exception("robot is not initialized");
+        }
         OpenRAVEController::init();
+        if( _vActiveJointNames.size() == 0 ) {
+            throw openrave_exception("no joints to control");
+        }
         _threadControl = boost::thread(boost::bind(&SimulationController::_ControlThread,this));
     }
 
@@ -82,10 +86,10 @@ private:
                     vprevvalues = vnewvalues;
                     _mstate.header.stamp = starttime;
                 }
-            
+
                 _pubmstate.publish(_mstate);
                 _publishTF();
-            
+
                 // process commands
                 ArmStateType newstate = Arm_None;
                 {
@@ -102,7 +106,7 @@ private:
                             _conditionCommand.notify_all();
                         }
                     }
-                    
+
                     if( _listCommands.size() == 0 ) {
                         boost::mutex::scoped_lock lock(_mutexControl);
                         if( _state == State_Idle )
@@ -156,11 +160,11 @@ private:
             ptesttraj->AddPoint(Trajectory::TPOINT(vstartangles, 0));
             ptesttraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), true, true, _fMaxVelMult);
             dReal fTimeStampOffset = ptesttraj->GetTotalDuration();
-            
+
             //ROS_DEBUG("adding current angles to beginning of trajectory, offset=%f", fTimeStampOffset);
 
             FOREACH(itp, ptraj->GetPoints())
-                itp->time += fTimeStampOffset;
+            itp->time += fTimeStampOffset;
             Trajectory::TPOINT startpoint(vcurrentangles,0); startpoint.qdot.resize(GetDOF(),0);
             ptraj->GetPoints().insert(ptraj->GetPoints().begin(), startpoint); // add to front
             ptraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), false, true, _fMaxVelMult);
@@ -188,7 +192,7 @@ private:
                 break;
             }
         }
-        
+
         return (fCommandTime >= ptraj->GetTotalDuration()&&!bDifferent) ? Status_Finished : Status_Running;
     }
 
@@ -262,7 +266,7 @@ void SetViewer(EnvironmentBasePtr penv, const string& viewername)
 int main(int argc, char ** argv)
 {
     signal(SIGINT,sigint_handler); // control C
-        
+
     dReal fMaxVelMult = 1;
 
     // parse the command line options
@@ -278,7 +282,7 @@ int main(int argc, char ** argv)
             return 0;
         }
         if( strcmp(argv[i], "--robotfile") == 0 ) {
-           robotname = argv[i+1];
+            robotname = argv[i+1];
             i += 2;
         }
         else if( strcmp(argv[i], "--manipgripper") == 0 ) {
@@ -308,7 +312,7 @@ int main(int argc, char ** argv)
     ros::init(argc,argv,"simulationserver", ros::init_options::NoSigintHandler);
     if( !ros::master::check() )
         return 1;
-    
+
     RaveInitialize(true);
     s_pcontroller.reset(new SimulationController(robotname, manipname, vjointnames, fMaxVelMult));
     s_pcontroller->init();
@@ -317,7 +321,7 @@ int main(int argc, char ** argv)
     if( viewername.size() > 0 )
         thviewer.reset(new boost::thread(boost::bind(SetViewer,s_pcontroller->GetEnv(),viewername)));
     ros::spin();
-        
+
     s_pcontroller.reset();
     if( !!thviewer )
         thviewer->join();

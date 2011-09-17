@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Rosen Diankov
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/enable_shared_from_this.hpp> 
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/format.hpp>
 
 #include <sensor_msgs/JointState.h>
@@ -49,7 +49,7 @@
 
 #include <tf/transform_broadcaster.h>
 
-#define FOREACH(it, v) for(typeof((v).begin()) it = (v).begin(); it != (v).end(); (it)++)
+#define FOREACH(it, v) for(typeof((v).begin())it = (v).begin(); it != (v).end(); (it)++)
 #define FOREACHC FOREACH
 
 namespace openrave_robot_control {
@@ -86,10 +86,16 @@ inline uint64_t GetMicroTime()
 
 struct controller_exception : std::exception
 {
-    controller_exception() : std::exception(), _s("unknown exception") {}
-    controller_exception(const string& s) : std::exception() { _s = "Controller: " + s; }
-    virtual ~controller_exception() throw() {}
-    char const* what() const throw() { return _s.c_str(); }
+    controller_exception() : std::exception(), _s("unknown exception") {
+    }
+    controller_exception(const string& s) : std::exception() {
+        _s = "Controller: " + s;
+    }
+    virtual ~controller_exception() throw() {
+    }
+    char const* what() const throw() {
+        return _s.c_str();
+    }
     string _s;
 };
 
@@ -123,14 +129,16 @@ protected:
     };
 
     template <class T> boost::shared_ptr<T> as() {
-        return boost::dynamic_pointer_cast<T>(shared_from_this()); 
+        return boost::dynamic_pointer_cast<T>(shared_from_this());
     }
 
     class Command
     {
-    public:
-        Command(uint32_t commandid) : _commandid(commandid), _bExecuting(false) {}
-        virtual ~Command() {}
+public:
+        Command(uint32_t commandid) : _commandid(commandid), _bExecuting(false) {
+        }
+        virtual ~Command() {
+        }
 
         /// \return true if the command is done
         virtual CommandStatus run() {
@@ -140,17 +148,21 @@ protected:
         }
 
         //virtual CommandType getType() const = 0;
-        virtual float getCommandTime() { return _bExecuting ? (ros::Time::now()-_commandstart).toSec() : 0; }
-        virtual uint32_t getCommandId() { return _commandid; }
-        
-    protected:
+        virtual float getCommandTime() {
+            return _bExecuting ? (ros::Time::now()-_commandstart).toSec() : 0;
+        }
+        virtual uint32_t getCommandId() {
+            return _commandid;
+        }
+
+protected:
         /// sets up the robot to execute the command
         virtual void _start() {
             _commandstart = ros::Time::now();
             _bExecuting = true;
         }
 
-    protected:
+protected:
         uint32_t _commandid;
         ros::Time _commandstart;
         bool _bExecuting;
@@ -159,9 +171,10 @@ protected:
     template <class StartCommand, class RunCommand, class FinishCommand>
     class BindCommand : public Command
     {
-    public:
+public:
         BindCommand(uint32_t commandid, const StartCommand& startcommand, const RunCommand& runcommand, const FinishCommand& finishcommand)
-            : Command(commandid), _startcommand(startcommand), _runcommand(runcommand), _finishcommand(finishcommand) {}
+            : Command(commandid), _startcommand(startcommand), _runcommand(runcommand), _finishcommand(finishcommand) {
+        }
         virtual ~BindCommand() {
             if( _bExecuting )
                 _finishcommand();
@@ -172,8 +185,8 @@ protected:
             Command::run();
             return _runcommand(getCommandTime());
         }
-        
-    protected:
+
+protected:
         /// sets up the robot to execute the command
         virtual void _start() {
             _startcommand();
@@ -193,9 +206,11 @@ protected:
 
     class SessionState
     {
-    public:
-        SessionState(AccessType access) : _access(access) {}
-        virtual ~SessionState() {}
+public:
+        SessionState(AccessType access) : _access(access) {
+        }
+        virtual ~SessionState() {
+        }
         AccessType _access;
     };
 
@@ -282,7 +297,7 @@ public:
                 // destory the session
                 if( _mapsessions.find(req.sessionid) == _mapsessions.end() )
                     return false;
-                
+
                 if( _mapsessions[req.sessionid]->_access == Access_Control )
                     _clearCommands();
                 _mapsessions.erase(req.sessionid);
@@ -302,10 +317,10 @@ public:
         }
         else if( req.requestaccess == Access_Control ) {
             FOREACH(itsession, _mapsessions)
-                if( itsession->second->_access == Access_Control )
-                    return false;
+            if( itsession->second->_access == Access_Control )
+                return false;
         }
- 
+
         int id = rand();
         while(id == 0 || _mapsessions.find(id) != _mapsessions.end())
             id = rand();
@@ -316,7 +331,7 @@ public:
         ROS_INFO_STREAM(str(boost::format("started openrave session: %d, total: %d")%id%_mapsessions.size()));
         return true;
     }
-    
+
     virtual bool Query(openrave_robot_control::Query::Request& req, openrave_robot_control::Query::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, false);
@@ -465,15 +480,15 @@ public:
         if( req.requesttiming ) {
             res.timestamps.reserve(ptraj->GetPoints().size());
             FOREACH(itp, ptraj->GetPoints())
-                res.timestamps.push_back(itp->time);
+            res.timestamps.push_back(itp->time);
         }
 
         {
             boost::shared_ptr<Command>
-                cmd(CreateBindCommand(_GetNewCommandId()|Command_Trajectory,
-                                      boost::bind(&OpenRAVEController::_startTrajectoryCommand,this, ptraj),
-                                      boost::bind(&OpenRAVEController::_runTrajectoryCommand, this, ptraj,_1),
-                                      boost::bind(&OpenRAVEController::_finishTrajectoryCommand,this, ptraj)));
+            cmd(CreateBindCommand(_GetNewCommandId()|Command_Trajectory,
+                                  boost::bind(&OpenRAVEController::_startTrajectoryCommand,this, ptraj),
+                                  boost::bind(&OpenRAVEController::_runTrajectoryCommand, this, ptraj,_1),
+                                  boost::bind(&OpenRAVEController::_finishTrajectoryCommand,this, ptraj)));
             ROS_DEBUG("adding trajectory command 0x%x", cmd->getCommandId());
             boost::mutex::scoped_lock lock(_mutexCommands);
             res.commandid = cmd->getCommandId();
@@ -500,12 +515,12 @@ public:
         vector<dReal> vvelocities(req.velocities.size());
         for(size_t i = 0; i < vvelocities.size(); ++i)
             vvelocities[i] = req.velocities[i];
-        
+
         boost::shared_ptr<Command>
-            cmd(CreateBindCommand(_GetNewCommandId()|Command_Velocity,
-                                  boost::bind(&OpenRAVEController::_startVelocityCommand,this, vvelocities),
-                                  boost::bind(&OpenRAVEController::_runVelocityCommand, this, vvelocities,_1),
-                                  boost::bind(&OpenRAVEController::_finishVelocityCommand,this)));
+        cmd(CreateBindCommand(_GetNewCommandId()|Command_Velocity,
+                              boost::bind(&OpenRAVEController::_startVelocityCommand,this, vvelocities),
+                              boost::bind(&OpenRAVEController::_runVelocityCommand, this, vvelocities,_1),
+                              boost::bind(&OpenRAVEController::_finishVelocityCommand,this)));
         ROS_DEBUG("adding velocity command 0x%x", cmd->getCommandId());
         boost::mutex::scoped_lock lock(_mutexCommands);
         res.commandid = cmd->getCommandId();
@@ -531,12 +546,12 @@ public:
         vector<dReal> vtorques(req.torques.size());
         for(size_t i = 0; i < vtorques.size(); ++i)
             vtorques[i] = req.torques[i];
-        
+
         boost::shared_ptr<Command>
-            cmd(CreateBindCommand(_GetNewCommandId()|Command_Torque,
-                                  boost::bind(&OpenRAVEController::_startTorqueCommand,this, vtorques),
-                                  boost::bind(&OpenRAVEController::_runTorqueCommand, this, vtorques,_1),
-                                  boost::bind(&OpenRAVEController::_finishTorqueCommand,this)));
+        cmd(CreateBindCommand(_GetNewCommandId()|Command_Torque,
+                              boost::bind(&OpenRAVEController::_startTorqueCommand,this, vtorques),
+                              boost::bind(&OpenRAVEController::_runTorqueCommand, this, vtorques,_1),
+                              boost::bind(&OpenRAVEController::_finishTorqueCommand,this)));
         ROS_DEBUG("adding torque command 0x%x", cmd->getCommandId());
         boost::mutex::scoped_lock lock(_mutexCommands);
         res.commandid = cmd->getCommandId();
@@ -556,10 +571,10 @@ public:
         }
 
         boost::shared_ptr<Command>
-            cmd(CreateBindCommand(_GetNewCommandId()|Command_String,
-                                  boost::bind(&OpenRAVEController::_startCustomStringCommand,this, req.input),
-                                  boost::bind(&OpenRAVEController::_runCustomStringCommand, this, req.input,_1),
-                                  boost::bind(&OpenRAVEController::_finishCustomStringCommand,this)));
+        cmd(CreateBindCommand(_GetNewCommandId()|Command_String,
+                              boost::bind(&OpenRAVEController::_startCustomStringCommand,this, req.input),
+                              boost::bind(&OpenRAVEController::_runCustomStringCommand, this, req.input,_1),
+                              boost::bind(&OpenRAVEController::_finishCustomStringCommand,this)));
         ROS_DEBUG("adding torque command 0x%x", cmd->getCommandId());
 
         boost::mutex::scoped_lock lock(_mutexCommands);
@@ -571,8 +586,12 @@ public:
         return true;
     }
 
-    virtual int GetDOF() { return _vActiveJointNames.size(); }
-    virtual EnvironmentBasePtr GetEnv() { return _penv; }
+    virtual int GetDOF() {
+        return _vActiveJointNames.size();
+    }
+    virtual EnvironmentBasePtr GetEnv() {
+        return _penv;
+    }
 
 protected:
     template <class MReq>
@@ -601,7 +620,7 @@ protected:
         }
         return psession;
     }
-    
+
     virtual void _InitEnvironment()
     {
         _penv = RaveCreateEnvironment();
@@ -636,20 +655,21 @@ protected:
                     if( (*itmanip)->GetName() == manipname_only ) {
                         if( desc == "gripper" ) {
                             FOREACH(itind, (*itmanip)->GetGripperIndices())
-                                _vActiveJointNames.push_back(_probot->GetJointFromDOFIndex(*itind)->GetName());
+                            _vActiveJointNames.push_back(_probot->GetJointFromDOFIndex(*itind)->GetName());
                         }
                         else { // arm
                             FOREACH(itind, (*itmanip)->GetArmIndices())
-                                _vActiveJointNames.push_back(_probot->GetJointFromDOFIndex(*itind)->GetName());
+                            _vActiveJointNames.push_back(_probot->GetJointFromDOFIndex(*itind)->GetName());
                         }
                         break;
                     }
                 }
             }
 
-            if( _vActiveJointNames.size() == 0 )
+            if( _vActiveJointNames.size() == 0 ) {
                 throw controller_exception("no joint names specified");
-                
+            }
+
             // look for these joints:
             vector<int> vrobotjoints;
             FOREACH(itname, _vActiveJointNames) {
@@ -662,7 +682,7 @@ protected:
             }
 
             FOREACH(itlink, _probot->GetLinks())
-                _vlinknames.push_back((*itlink)->GetName());
+            _vlinknames.push_back((*itlink)->GetName());
 
             BOOST_ASSERT((int)vrobotjoints.size()==GetDOF());
             _probot->SetActiveDOFs(vrobotjoints);
@@ -704,7 +724,7 @@ protected:
                                 }
                             }
                         }
-                        
+
                         if( bFirstLinkIsChild )
                             _vPublishableLinks.push_back(make_pair((*itpassive)->GetSecondAttached()->GetIndex(), (*itpassive)->GetFirstAttached()->GetIndex()));
                         else
@@ -825,7 +845,7 @@ protected:
         }
 
         FOREACH(itstatic,_vStaticTransforms)
-            _tfbroadcaster->sendTransform(tf::StampedTransform(boost::get<0>(*itstatic), starttime, boost::get<1>(*itstatic), boost::get<2>(*itstatic)));
+        _tfbroadcaster->sendTransform(tf::StampedTransform(boost::get<0>(*itstatic), starttime, boost::get<1>(*itstatic), boost::get<2>(*itstatic)));
     }
     virtual void _clearCommands()
     {
@@ -834,27 +854,43 @@ protected:
         _conditionCommand.notify_all();
         _setIdle();
     }
-    
+
     virtual void _setIdle()
     {
         _state = State_Idle;
     }
 
-    virtual void _startTrajectoryCommand(TrajectoryBasePtr ptraj) {}
-    virtual CommandStatus _runTrajectoryCommand(TrajectoryBasePtr ptraj, float fCommandTime) { return Status_Finished; }
-    virtual void _finishTrajectoryCommand(TrajectoryBasePtr ptraj) {}
+    virtual void _startTrajectoryCommand(TrajectoryBasePtr ptraj) {
+    }
+    virtual CommandStatus _runTrajectoryCommand(TrajectoryBasePtr ptraj, float fCommandTime) {
+        return Status_Finished;
+    }
+    virtual void _finishTrajectoryCommand(TrajectoryBasePtr ptraj) {
+    }
 
-    virtual void _startVelocityCommand(vector<dReal> velocities) {}
-    virtual CommandStatus _runVelocityCommand(vector<dReal> velocities, float fCommandTime) { return Status_Finished; }
-    virtual void _finishVelocityCommand() {}
+    virtual void _startVelocityCommand(vector<dReal> velocities) {
+    }
+    virtual CommandStatus _runVelocityCommand(vector<dReal> velocities, float fCommandTime) {
+        return Status_Finished;
+    }
+    virtual void _finishVelocityCommand() {
+    }
 
-    virtual void _startTorqueCommand(vector<dReal> torques) {}
-    virtual CommandStatus _runTorqueCommand(vector<dReal> torques, float fCommandTime) { return Status_Finished; }
-    virtual void _finishTorqueCommand() {}
+    virtual void _startTorqueCommand(vector<dReal> torques) {
+    }
+    virtual CommandStatus _runTorqueCommand(vector<dReal> torques, float fCommandTime) {
+        return Status_Finished;
+    }
+    virtual void _finishTorqueCommand() {
+    }
 
-    virtual void _startCustomStringCommand(string command) {}
-    virtual CommandStatus _runCustomStringCommand(string command, float fCommandTime) { return Status_Finished; }
-    virtual void _finishCustomStringCommand() {}
+    virtual void _startCustomStringCommand(string command) {
+    }
+    virtual CommandStatus _runCustomStringCommand(string command, float fCommandTime) {
+        return Status_Finished;
+    }
+    virtual void _finishCustomStringCommand() {
+    }
 
     virtual uint32_t _GetNewCommandId() {
         uint32_t cmd = _nNextCommandId++;
