@@ -1,0 +1,15 @@
+# Starts a controller session on the controller server side. Once
+# a session is started, the server connects to the robot and client can start
+# sending any of the controller services.
+
+# if 0, creates an openrave session
+# if -1, destroys all other session instances
+# otherwise, destroy the sessionid
+int32 sessionid
+
+uint8 requestaccess # one of Access_ types if a session is requested to be created
+uint8 Access_Read = 0
+uint8 Access_Control = 1 # query for control of robot
+uint8 Access_ForceControl = 2 # overtake control of robot, force everyone else to have read access
+---
+int32 sessionid # if successful, the created session id, otherwise 0

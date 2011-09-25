@@ -1,0 +1,8 @@
+## waits for a command to finish or times out
+
+# if 0, waits for all trajectories, otherwise waits for the trajectory with the specified id
+# if no such trajectory exists return fail, if such a trajectory exists and is done already return immediately
+uint32 commandid
+float32 timeout # seconds to wait. if 0, waits indefinitely
+---
+uint8 timedout # 1 if timed out, 0 if any other error occurs

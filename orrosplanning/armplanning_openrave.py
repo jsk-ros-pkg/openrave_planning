@@ -151,7 +151,7 @@ if __name__ == "__main__":
                             if not ikmodel.load():
                                 ikmodel.autogenerate()
 
-                        Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetEndEffectorTransform()))
+                        Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetTransform()))
 
                         # debug for viewer
                         global handles,debugpoints

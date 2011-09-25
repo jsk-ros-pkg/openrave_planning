@@ -7,7 +7,7 @@
     - tfsender - given joint positions of the robot, sends the correct tf frames
 
     For more information on how to use this inside the openrave framework, see:
-    http://openrave.programmingvision.com/index.php/ROS:ControllingRobots
+    http://openrave.programmingvision.com/wiki/index.php/ROS:ControllingRobots
   </description>
   <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
   <license>Apache License, Version 2.0</license>

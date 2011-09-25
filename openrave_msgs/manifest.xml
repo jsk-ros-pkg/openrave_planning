@@ -1,0 +1,13 @@
+<package>
+  <description brief="Messages and Services for OpenRAVE Bindings">
+    Contains ROS messages and services that are commonly used in the openrave_planning stack.
+
+  </description>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
+  <license>Apache License, Version 2.0</license>
+  <url>http://www.ros.org/wiki/openrave_msgs</url>
+  <depend package="std_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="trajectory_msgs"/>
+</package>

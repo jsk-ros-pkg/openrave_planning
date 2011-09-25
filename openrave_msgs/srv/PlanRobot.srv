@@ -1,0 +1,5 @@
+openrave_msgs/TaskParameters task
+
+---
+
+openrave_msgs/JointTrajectory robottraj
