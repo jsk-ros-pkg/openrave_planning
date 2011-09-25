@@ -1,1 +1,1 @@
-float32[] discretization # X, Y, Z, angle
+float64[] discretization # X, Y, Z, angle

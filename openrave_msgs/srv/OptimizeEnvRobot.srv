@@ -1,7 +1,9 @@
+int32 id
 openrave_msgs/TaskParameters task
 openrave_msgs/EnvOptimizationParameters envoptimization
 
 ---
 
-geometry_msgs/Pose robotpose
 openrave_msgs/JointTrajectory robottraj
+geometry_msgs/Pose robotpose
+

@@ -1,19 +1,9 @@
 ## Starts a trajectory
-trajectory_msgs/JointTrajectory traj
+openrave_msgs/JointTrajectory traj
 uint8 hastiming # if 1, use timestamps of trajectory points, otherwise do internal retiming
-uint8 requesttiming # if 1, send back the timestamps for every trajectory point (first point starts at 0)
-
-# interpolation method to use for the trajectory points, one of Interp_ consts.
-# This parameter must be followed strictly if all collision obstacles are to be avoided.
-uint8 interpolation
-
-uint8 Interp_None = 0 # doesn't matter
-uint8 Interp_Linear = 1 # linear interpolation using velocities
-uint8 Interp_LinearBlend = 2 # linear with quadratic blends with accelerations
-uint8 Interp_Cubic = 3 # cubic spline interpolation
-uint8 Interp_Quintic = 4 # quintic min-jerk interpolation
+uint8 requestresult # if 1, send back the trajectory that the robot actually moved to, this makes the command blocking
 
 ---
-uint32 commandid # unique command id to be used for later referencing
-float32[] timestamps # trajectory timestamps if requested, trajectory starts at 0
-time stamp # expected time when robot will start trajectory
+openrave_msgs/JointTrajectory traj # returned trajectory if requested
+time stamp # expected time when robot will start trajectory (if non-blocking)
+
