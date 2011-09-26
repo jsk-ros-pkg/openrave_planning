@@ -7,7 +7,7 @@ add_definitions(-Wall)
 rosbuild_add_boost_directories()
 rosbuild_gensrv()
 
-rosbuild_add_library(orrosplanning src/orrosplanningmain.cpp)
+rosbuild_add_library(orrosplanning src/orrosplanningmain.cpp src/rospassivecontroller.cpp)
 rosbuild_link_boost(orrosplanning thread)
 
 rosbuild_find_ros_package("jsk_tools")

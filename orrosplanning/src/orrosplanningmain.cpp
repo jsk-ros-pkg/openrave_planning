@@ -31,6 +31,8 @@
 
 #include <rave/plugin.h>
 
+ControllerBasePtr CreateROSPassiveController(EnvironmentBasePtr penv, std::istream& sinput);
+
 static list< boost::shared_ptr<void> >* s_listRegisteredReaders = NULL;
 InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string& interfacename, std::istream& sinput, EnvironmentBasePtr penv)
 {
@@ -57,8 +59,15 @@ InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string&
         }
         break;
     case PT_ProblemInstance:
-        if( interfacename == "rosbindings" )
+        if( interfacename == "rosbindings" ) {
             return InterfaceBasePtr(new ROSBindings(penv));
+        }
+        break;
+    case PT_Controller:
+        if( interfacename == "rospassivecontroller" ) {
+            return CreateROSPassiveController(penv,sinput);
+        }
+        break;
     default:
         break;
     }
@@ -70,6 +79,7 @@ void GetPluginAttributesValidated(PLUGININFO& info)
     info.interfacenames[OpenRAVE::PT_SensorSystem].push_back("ObjectTransform");
     info.interfacenames[OpenRAVE::PT_SensorSystem].push_back("CollisionMap");
     info.interfacenames[OpenRAVE::PT_ProblemInstance].push_back("ROSBindings");
+    info.interfacenames[OpenRAVE::PT_Controller].push_back("ROSPassiveController");
 }
 
 RAVE_PLUGIN_API void DestroyPlugin()
