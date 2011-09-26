@@ -6,4 +6,3 @@ uint8 requestresult # if 1, send back the trajectory that the robot actually mov
 ---
 openrave_msgs/JointTrajectory traj # returned trajectory if requested
 time stamp # expected time when robot will start trajectory (if non-blocking)
-
