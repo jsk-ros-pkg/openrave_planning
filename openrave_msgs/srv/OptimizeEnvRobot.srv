@@ -7,3 +7,6 @@ openrave_msgs/EnvOptimizationParameters envoptimization
 openrave_msgs/JointTrajectory robottraj
 geometry_msgs/Pose robotpose
 
+string program # program that will move the robot, usually written in robot maker's specific language
+
+
