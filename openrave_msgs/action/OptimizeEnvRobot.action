@@ -9,3 +9,5 @@ float32 timeelapsed
 ---
 # feedback
 openrave_msgs/EnvOptimizationResults res
+uint32 workcomplete
+uint32 totalwork
