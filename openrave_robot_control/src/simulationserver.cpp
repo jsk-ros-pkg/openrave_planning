@@ -144,7 +144,7 @@ private:
         }
 
         bool bDifferent = false;
-        vector<dReal>& vstartangles = ptraj->GetPoints().front().q;
+        vector<dReal> vstartangles = ptraj->GetPoints().front().q;
         for(int i = 0; i < GetDOF(); ++i) {
             if( RaveFabs(vcurrentangles[i]-vstartangles[i]) > 0.01f ) {
                 bDifferent = true;
@@ -153,21 +153,23 @@ private:
         }
 
         if( bDifferent ) {
+            ROS_WARN("different!!");
             // have to add the current angles in the beginning, create a new trajectory
-            EnvironmentMutex::scoped_lock lock(_penv->GetMutex());
-            TrajectoryBasePtr ptesttraj = RaveCreateTrajectory(_penv,GetDOF());
-            ptesttraj->AddPoint(Trajectory::TPOINT(vcurrentangles, 0));
-            ptesttraj->AddPoint(Trajectory::TPOINT(vstartangles, 0));
-            ptesttraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), true, true, _fMaxVelMult);
-            dReal fTimeStampOffset = ptesttraj->GetTotalDuration();
-
-            //ROS_DEBUG("adding current angles to beginning of trajectory, offset=%f", fTimeStampOffset);
-
-            FOREACH(itp, ptraj->GetPoints())
-            itp->time += fTimeStampOffset;
-            Trajectory::TPOINT startpoint(vcurrentangles,0); startpoint.qdot.resize(GetDOF(),0);
-            ptraj->GetPoints().insert(ptraj->GetPoints().begin(), startpoint); // add to front
-            ptraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), false, true, _fMaxVelMult);
+//            EnvironmentMutex::scoped_lock lock(_penv->GetMutex());
+//            TrajectoryBasePtr ptesttraj = RaveCreateTrajectory(_penv,GetDOF());
+//            ptesttraj->AddPoint(Trajectory::TPOINT(vcurrentangles, 0));
+//            ptesttraj->AddPoint(Trajectory::TPOINT(vstartangles, 0));
+//            ptesttraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), true, true, _fMaxVelMult);
+//            dReal fTimeStampOffset = ptesttraj->GetTotalDuration();
+//
+//            //ROS_DEBUG("adding current angles to beginning of trajectory, offset=%f", fTimeStampOffset);
+//
+//            FOREACH(itp, ptraj->GetPoints()) {
+//                itp->time += fTimeStampOffset;
+//            }
+//            Trajectory::TPOINT startpoint(vcurrentangles,0); startpoint.qdot.resize(GetDOF(),0);
+//            ptraj->GetPoints().insert(ptraj->GetPoints().begin(), startpoint); // add to front
+//            ptraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), false, true, _fMaxVelMult);
         }
 
         boost::mutex::scoped_lock lock(_mutexControl);

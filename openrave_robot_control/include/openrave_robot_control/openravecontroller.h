@@ -470,7 +470,7 @@ public:
 
         {
             EnvironmentMutex::scoped_lock lockenv(_penv->GetMutex());
-            if( !ptraj->CalcTrajTiming(_probot, (Trajectory::InterpEnum)req.interpolation, !req.hastiming, true, _fMaxVelMult) ) {
+            if( !ptraj->CalcTrajTiming(_probot, (int)req.interpolation, !req.hastiming, true, _fMaxVelMult) ) {
                 ROS_ERROR("failed to compute trajectory timing");
                 return false;
             }

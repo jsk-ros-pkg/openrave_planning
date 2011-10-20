@@ -34,7 +34,7 @@ assimp2:
      sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 58E6B835EDC85D09
      sudo apt-get -y update
    fi
-   sudo apt-get -y --force-yes install assimp-dev
+   sudo apt-get -y --force-yes install assimp-dev libassimp2
 collada-dom:
   ubuntu: |
    #!/bin/bash
@@ -43,4 +43,4 @@ collada-dom:
      sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 58E6B835EDC85D09
      sudo apt-get -y update
    fi
-   sudo apt-get -y --force-yes install libcollada15dom-dev
+   sudo apt-get -y --force-yes install libcollada15dom-dev libcollada15dom libcolladadom-dev

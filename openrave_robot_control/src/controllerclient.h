@@ -1,10 +1,10 @@
 // Copyright (C) 2008-2009 Rosen Diankov
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include <boost/enable_shared_from_this.hpp> 
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/format.hpp>
 
 #include <rave/rave.h>
@@ -51,8 +51,9 @@ class OpenRAVEClientController : public ControllerBase
 
     class TrajectoryController : public boost::enable_shared_from_this<TrajectoryController>
     {
-    public:
-        TrajectoryController(const string& strTrajectorySession) : _fCommandTime(0), _strTrajectorySession(strTrajectorySession) {}
+public:
+        TrajectoryController(const string& strTrajectorySession) : _fCommandTime(0), _strTrajectorySession(strTrajectorySession) {
+        }
         virtual ~TrajectoryController() {
             Destroy();
         }
@@ -62,7 +63,7 @@ class OpenRAVEClientController : public ControllerBase
             Destroy();
             _probot = probot;
             _node.reset(new ros::NodeHandle());
-            
+
             {
                 controller_session::Request req;
                 controller_session::Response res;
@@ -88,7 +89,7 @@ class OpenRAVEClientController : public ControllerBase
             ss << "roscontroller: " << _strTrajectorySession;
             FOREACH(itname, res.jointnames) {
                 vector<string>::iterator itindex = find(vrobotjoints.begin(), vrobotjoints.end(), *itname);
-                if( itindex == vrobotjoints.end() ) {            
+                if( itindex == vrobotjoints.end() ) {
                     RAVELOG_ERROR("failed to find joint %s\n", itname->c_str());
                     _vjointmap.push_back(-1);
                 }
@@ -143,7 +144,7 @@ class OpenRAVEClientController : public ControllerBase
             boost::mutex::scoped_lock lock(_mutex);
             if( _vjointmap.size() != _mstate.position.size() )
                 return;
-            
+
             for(size_t i = 0; i < _vjointmap.size(); ++i) {
                 if( _vjointmap[i] >= 0 ) {
                     dReal flower = vlower[_vjointmap[i]], fupper = vupper[_vjointmap[i]];
@@ -204,7 +205,7 @@ class OpenRAVEClientController : public ControllerBase
         list<uint32_t> _listTrajectories; ///< trajectories currently pending for completion
         dReal _fCommandTime;
 
-    private:
+private:
         RobotBasePtr _probot;
         string _strTrajectorySession;
         boost::shared_ptr<ros::NodeHandle> _node;
@@ -215,12 +216,12 @@ class OpenRAVEClientController : public ControllerBase
     };
 
 public:
- OpenRAVEClientController(EnvironmentBasePtr penv, std::istream& ss) : ControllerBase(penv),
+    OpenRAVEClientController(EnvironmentBasePtr penv, std::istream& ss) : ControllerBase(penv),
         _fCommandTime(0), _bIsDone(false), _bSendTimestamps(false), _bDestroyThread(false) {
         __description = ":Interface Author: Rosen Diankov\n\nA simple controller interface using ROS. See openrave_robot_control ROS package.";
         _iController = -1;
         _bSyncControllers = true;
-        
+
         string cmd;
         while(!ss.eof()) {
             ss >> cmd;
@@ -378,9 +379,9 @@ public:
         bool bSuccess = true;
         StartTrajectory::Request req;
         StartTrajectory::Response res;
-        
+
         vector<dReal> vnewvalues;
-        
+
         {
             RobotBase::RobotStateSaver saver(_probot);
             _SetDOFValues(values);
@@ -446,7 +447,7 @@ public:
         bool bSuccess = true;
         StartTrajectory::Request req;
         StartTrajectory::Response res;
-        
+
         int controllerindex = 0;
         int commandid = 0;
         FOREACH(ittrajcontroller, _listControllers) {
@@ -477,7 +478,7 @@ public:
             else {
                 req.interpolation = StartTrajectory::Request::Interp_Linear;
                 req.traj.points.resize(ptraj->GetPoints().size());
-                typeof(req.traj.points.begin()) ittraj = req.traj.points.begin(); 
+                typeof(req.traj.points.begin())ittraj = req.traj.points.begin();
                 FOREACHC(itpoint, ptraj->GetPoints()) {
                     ittraj->time = itpoint->time;
                     (*ittrajcontroller)->ExtractControllerValues(ittraj->positions, itpoint->q);
@@ -529,7 +530,7 @@ public:
             if( (*ittrajcontroller)->_session->call("StartTorque", req,res) ) {
                 (*ittrajcontroller)->_listTrajectories.push_back(res.commandid);
                 RAVELOG_DEBUG(str(boost::format("started torque cmd %d on %s\n")%res.commandid%(*ittrajcontroller)->_session->GetSessionName()));
-        }
+            }
             else {
                 RAVELOG_ERROR("failed to start torque\n");
                 bSuccess = false;
@@ -559,7 +560,7 @@ public:
             if( (*ittrajcontroller)->_session->call("StartVelocity", req,res) ) {
                 (*ittrajcontroller)->_listTrajectories.push_back(res.commandid);
                 RAVELOG_DEBUG(str(boost::format("started velocity cmd %d on %s\n")%res.commandid%(*ittrajcontroller)->_session->GetSessionName()));
-        }
+            }
             else {
                 RAVELOG_ERROR("failed to start torque\n");
                 bSuccess = false;
@@ -594,10 +595,10 @@ public:
                 bSuccess = false;
             }
         }
-        
+
         return bSuccess;
     }
-    
+
     /// cancel a command
     virtual bool Cancel(int commandid=0)
     {
@@ -715,13 +716,17 @@ public:
         return false;
     }
 
-    virtual bool IsDone() { return _bIsDone; }
+    virtual bool IsDone() {
+        return _bIsDone;
+    }
 
     virtual dReal GetTime() const
     {
         return _fCommandTime;
     }
-    virtual RobotBasePtr GetRobot() const { return _probot; }
+    virtual RobotBasePtr GetRobot() const {
+        return _probot;
+    }
 
     virtual void GetVelocity(std::vector<dReal>& vel) const
     {
@@ -736,7 +741,7 @@ public:
             vel[i++] = vall.at(*it);
         }
     }
-    
+
     virtual void GetTorque(std::vector<dReal>& torque) const
     {
         ReadLock lock(_mutexControllers);
@@ -751,8 +756,12 @@ public:
         }
     }
 
-    virtual const std::vector<int>& GetControlDOFIndices() const { return _dofindices; }
-    virtual int IsControlTransformation() const { return 0; }
+    virtual const std::vector<int>& GetControlDOFIndices() const {
+        return _dofindices;
+    }
+    virtual int IsControlTransformation() const {
+        return 0;
+    }
 
 private:
     void _TrajectoryThread()
@@ -885,7 +894,7 @@ private:
     ofstream flog;
     int logid;
     float _fCommandTime; // time of the current command
-    
+
     list<boost::shared_ptr<TrajectoryController> > _listControllers;
 
     mutable boost::mutex _mutexTrajectories;
