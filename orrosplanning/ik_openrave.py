@@ -34,6 +34,7 @@ import sensor_msgs.msg
 import arm_navigation_msgs.msg
 from arm_navigation_msgs.msg import ArmNavigationErrorCodes
 import geometry_msgs.msg
+import trajectory_msgs.msg
 import kinematics_msgs.srv
 
 if __name__ == "__main__":
