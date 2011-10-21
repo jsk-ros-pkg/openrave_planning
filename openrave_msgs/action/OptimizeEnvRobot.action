@@ -11,3 +11,4 @@ float32 timeelapsed
 openrave_msgs/EnvOptimizationResults res
 int32 workcomplete
 int32 totalwork
+float64 cost # the cost of the returned solution (can be in time)
