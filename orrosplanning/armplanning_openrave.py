@@ -48,6 +48,8 @@ if __name__ == "__main__":
                       help='The jitter to use when moving robot out of collision')
     parser.add_option('--maxvelmult',action='store',type='float',dest='maxvelmult',default=1.0,
                       help='The maximum velocity multiplier when timing the trajectories (default=%default)')
+    parser.add_option('--wait-for-collisionmap',action='store',type='float',dest='wait_for_collisionmap',default=None,
+                      help='Time (seconds) to set. Will wait for the collision map time stamp to reach the same time as the service being called. If 0, will wait indefinitely.')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -106,9 +108,24 @@ if __name__ == "__main__":
             global options
             rospy.loginfo("MoveToHandPosition")
             try:
-                collisionmap.SendCommand("collisionstream 0")
                 with envlock:
                     with env:
+                        if options.wait_for_collisionmap is not None:
+                            starttime=time.time()
+                            handgoalstamp = int64(req.hand_goal.header.stamp.to_nsec())
+                            while True:
+                                timepassed = time.time()-starttime
+                                collisionstamp = collisionmap.SendCommand("gettimestamp")
+                                if collisionstamp is not None:
+                                    if int64(collisionstamp)-handgoalstamp >= 0:
+                                         break
+
+                                if options.wait_for_collisionmap > 0 and timepassed > options.wait_for_collisionmap:
+                                    raise ValueError('failed to acquire new collision map, collision timestamp is %s, service timestamp is %s'%(collisionstamp,handgoalstamp))
+                                time.sleep(0.01) # wait
+
+                        collisionmap.SendCommand("collisionstream 0")
+
                         basemanip = interfaces.BaseManipulation(robot,plannername=None if len(req.planner)==0 else req.planner,maxvelmult=options.maxvelmult)
                         rospy.loginfo("MoveToHandPosition2")
                         if len(options.mapframe) > 0:
@@ -137,6 +154,7 @@ if __name__ == "__main__":
                             manip = manips[0]
 
                         robot.SetActiveManipulator(manip)
+                        robot.SetActiveDOFs(manip.GetArmIndices())
                         if len(req.hand_frame_id) > 0:
                             handlink = robot.GetLink(req.hand_frame_id)
                             if handlink is None:
@@ -154,10 +172,10 @@ if __name__ == "__main__":
                         Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetTransform()))
 
                         # debug for viewer
-                        global handles,debugpoints
-                        debugpoints = Tgoalee[0:3,3]
-                        handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
-                        time.sleep(1)
+                        #global handles,debugpoints
+                        #debugpoints = Tgoalee[0:3,3]
+                        #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
+                        #time.sleep(1)
 
                         try:
                             starttime = time.time()
@@ -171,36 +189,24 @@ if __name__ == "__main__":
                             return None
                         # parse trajectory data into the ROS structure
                         res = orrosplanning.srv.MoveToHandPositionResponse()
-                        tokens = trajdata.split()
-                        numpoints = int(tokens[0])
-                        dof = int(tokens[1])
-                        trajoptions = int(tokens[2])
-                        numvalues = dof
-                        offset = 0
-                        if trajoptions & 4:
-                            numvalues += 1
-                            offset += 1
-                        if trajoptions & 8:
-                            numvalues += 7
-                        if trajoptions & 16:
-                            numvalues += dof
-                        if trajoptions & 32:
-                            numvalues += dof
+                        traj = RaveCreateTrajectory(env,'')
+                        traj.deserialize(trajdata)
+                        spec = traj.GetConfigurationSpecification()
                         res.traj.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
-                        for i in range(numpoints):
-                            start = 3+numvalues*i
+                        starttime = 0.0
+                        for i in range(traj.GetNumWaypoints()):
                             pt=trajectory_msgs.msg.JointTrajectoryPoint()
-                            for j in robot.GetJoints(manip.GetArmIndices()):
-                                pt.positions.append(float(tokens[start+offset+j.GetDOFIndex()]))
-                            if trajoptions & 4:
-                                pt.time_from_start = rospy.Duration(float(tokens[start]))
+                            data = traj.GetWaypoint(i)
+                            pt.positions = spec.ExtractJointValues(data,robot,manip.GetArmIndices(),0)
+                            starttime += spec.ExtractDeltaTime(data)
+                            pt.time_from_start = rospy.Duration(starttime)
                             res.traj.points.append(pt)
                         return res
 
             finally:
                 collisionmap.SendCommand("collisionstream 1")
-                global handles,debugpoints
-                handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
+                #global handles,debugpoints
+                #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
 
         sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)

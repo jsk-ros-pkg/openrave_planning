@@ -43,6 +43,8 @@ public:
         __description = ":Interface Author: Rosen Diankov\n\nListens to ROS arm_navigation_msgs/CollisionMap and dynamically updates an environment collision map.";
         RegisterCommand("collisionstream",boost::bind(&CollisionMapSystem::collisionstream,this,_1,_2),
                         "ROS stream");
+        RegisterCommand("GetTimeStamp",boost::bind(&CollisionMapSystem::GetTimeStamp,this,_1,_2),
+                        "Gets the time-stamp of the current collision map ");
     }
     virtual ~CollisionMapSystem() {
     }
@@ -50,6 +52,7 @@ public:
     virtual bool Init(istream& sinput)
     {
         _bCollisionStream = true;
+        _bHasCollisionMap = false;
         _listtopics.clear();
         string cmd;
         while(!sinput.eof()) {
@@ -97,6 +100,16 @@ public:
     {
         is >> _bCollisionStream;
         RAVELOG_INFO("collisionstream: %d\n",(int)_bCollisionStream);
+        return true;
+    }
+
+    virtual bool GetTimeStamp(std::ostream& os, std::istream& is)
+    {
+        EnvironmentMutex::scoped_lock envlock(GetEnv()->GetMutex());
+        if( !_bHasCollisionMap ) {
+            return false;
+        }
+        os << _collisionstamp.toNSec();
         return true;
     }
 
@@ -229,6 +242,8 @@ private:
             // add the new kinbody
             GetEnv()->AddKinBody(pbody, true);
             pbody->SetTransform(tcollision);
+            _collisionstamp = topicmsg->header.stamp;
+            _bHasCollisionMap = true;
         }
 
         {
@@ -268,9 +283,11 @@ private:
     KinBodyPtr _pbodyoffset, _pbodytestbox;
     dReal _fPrunePadding;
     vector<OBB> _vobbs;
+    ros::Time _collisionstamp;
     int _nNextId;
     bool _bPruneCollisions;
     bool _bCollisionStream;
+    bool _bHasCollisionMap;
 };
 
 #endif

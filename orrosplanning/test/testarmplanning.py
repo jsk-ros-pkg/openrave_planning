@@ -26,6 +26,7 @@ if __name__=='__main__':
     req.hand_goal.pose.position = geometry_msgs.msg.Point(0.6,-0.189,0.8)
     req.hand_goal.pose.orientation = geometry_msgs.msg.Quaternion(0,0,0,1)
     req.hand_goal.header.frame_id = 'base_footprint'
+    req.hand_goal.header.stamp = rospy.Time.now()
     req.manip_name = 'rightarm'
     res=MoveToHandPositionFn(req)
     print res
