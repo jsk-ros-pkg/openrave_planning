@@ -109,23 +109,23 @@ if __name__ == "__main__":
             rospy.loginfo("MoveToHandPosition")
             try:
                 with envlock:
+                    if options.wait_for_collisionmap is not None:
+                        starttime=time.time()
+                        handgoalstamp = int64(req.hand_goal.header.stamp.to_nsec())
+                        while True:
+                            timepassed = time.time()-starttime
+                            collisionstamp = collisionmap.SendCommand("gettimestamp")
+                            if collisionstamp is not None:
+                                if int64(collisionstamp)-handgoalstamp >= 0:
+                                     break
+
+                            if options.wait_for_collisionmap > 0 and timepassed > options.wait_for_collisionmap:
+                                raise ValueError('failed to acquire new collision map, collision timestamp is %s, service timestamp is %s'%(collisionstamp,handgoalstamp))
+                            time.sleep(0.01) # wait
+
+                    collisionmap.SendCommand("collisionstream 0")
+
                     with env:
-                        if options.wait_for_collisionmap is not None:
-                            starttime=time.time()
-                            handgoalstamp = int64(req.hand_goal.header.stamp.to_nsec())
-                            while True:
-                                timepassed = time.time()-starttime
-                                collisionstamp = collisionmap.SendCommand("gettimestamp")
-                                if collisionstamp is not None:
-                                    if int64(collisionstamp)-handgoalstamp >= 0:
-                                         break
-
-                                if options.wait_for_collisionmap > 0 and timepassed > options.wait_for_collisionmap:
-                                    raise ValueError('failed to acquire new collision map, collision timestamp is %s, service timestamp is %s'%(collisionstamp,handgoalstamp))
-                                time.sleep(0.01) # wait
-
-                        collisionmap.SendCommand("collisionstream 0")
-
                         basemanip = interfaces.BaseManipulation(robot,plannername=None if len(req.planner)==0 else req.planner,maxvelmult=options.maxvelmult)
                         rospy.loginfo("MoveToHandPosition2")
                         if len(options.mapframe) > 0:
