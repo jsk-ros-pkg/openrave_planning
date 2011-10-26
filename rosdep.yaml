@@ -17,6 +17,10 @@ qhull:
   arch: qhull
   macports: qhull
   gentoo: qhull
+qt4:
+  ubuntu: libqt4-dev qt4-dev-tools
+autoconf:
+  ubuntu: autoconf
 qt4gl:
   ubuntu: libqt4-opengl-dev
   debian: libqt4-opengl-dev
