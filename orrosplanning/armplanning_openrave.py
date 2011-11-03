@@ -50,6 +50,8 @@ if __name__ == "__main__":
                       help='The maximum velocity multiplier when timing the trajectories (default=%default)')
     parser.add_option('--wait-for-collisionmap',action='store',type='float',dest='wait_for_collisionmap',default=None,
                       help='Time (seconds) to set. Will wait for the collision map time stamp to reach the same time as the service being called. If 0, will wait indefinitely.')
+    parser.add_option('--request-for-joint_states',action='store',type='string',dest='request_for_joint_states',default='topic',
+                      help='whether to get joint states from topic or service. If ="service", will not update robot joint states until receiving service call.')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -104,6 +106,10 @@ if __name__ == "__main__":
                             values[j.GetDOFIndex()] = pos
                     robot.SetDOFValues(values)
 
+        def UpdateRobotJointsFn(req):
+            rospy.loginfo("Update joint states")
+            UpdateRobotJoints(req.jointstate)
+            return True
         def MoveToHandPositionFn(req):
             global options
             rospy.loginfo("MoveToHandPosition")
@@ -121,7 +127,7 @@ if __name__ == "__main__":
 
                             if options.wait_for_collisionmap > 0 and timepassed > options.wait_for_collisionmap:
                                 raise ValueError('failed to acquire new collision map, collision timestamp is %s, service timestamp is %s'%(collisionstamp,handgoalstamp))
-                            time.sleep(0.01) # wait
+                            time.sleep(0.1) # wait
 
                     collisionmap.SendCommand("collisionstream 0")
 
@@ -208,7 +214,11 @@ if __name__ == "__main__":
                 #global handles,debugpoints
                 #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
 
-        sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
+        if options.request_for_joint_states == 'topic':
+            sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
+        elif options.request_for_joint_states == 'service':
+            js = rospy.Service('SetJointState', orrosplanning.srv.SetJointState, UpdateRobotJointsFn)
+
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
         RaveSetDebugLevel(DebugLevel.Debug)
         rospy.loginfo('openrave %s service ready'%s.resolved_name)

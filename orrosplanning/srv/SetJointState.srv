@@ -1,0 +1,3 @@
+sensor_msgs/JointState  jointstate # The joint_states to store
+---
+bool success # True if the call succeeded
