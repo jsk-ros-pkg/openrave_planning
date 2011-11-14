@@ -92,8 +92,8 @@ if __name__ == "__main__":
             env.SetViewer('qtcoin')
         elif len(options._viewer) > 0:
             env.SetViewer(options._viewer)
-
-        listener = tf.TransformListener()
+        if len(options.mapframe) > 0:
+            listener = tf.TransformListener()
         values = robot.GetDOFValues()
         envlock = threading.Lock()
         def UpdateRobotJoints(msg):
