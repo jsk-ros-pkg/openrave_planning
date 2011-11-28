@@ -182,10 +182,10 @@ if __name__ == "__main__":
                         #debugpoints = Tgoalee[0:3,3]
                         #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
                         #time.sleep(1)
-
+                        postprocessing = ['shortcut_linear','<_nmaxiterations>20</_nmaxiterations><_postprocessing planner=\"parabolicsmoother\"><_nmaxiterations>200</_nmaxiterations></_postprocessing>']
                         try:
                             starttime = time.time()
-                            trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter)
+                            trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter,postprocessing=postprocessing)
                             rospy.loginfo('total planning time: %fs'%(time.time()-starttime))
                         except:
                             rospy.logerr('failed to solve for T=%s, error messages are:'%repr(Tgoalee))
