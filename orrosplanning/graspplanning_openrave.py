@@ -292,10 +292,11 @@ if __name__ == "__main__":
         print 'openrave %s service ready'%s.resolved_name
 
         # have to do this manually because running linkstatistics when viewer is enabled segfaults things
-        if options._viewer is None:
-            env.SetViewer('qtcoin')
-        elif len(options._viewer) > 0:
-            env.SetViewer(options._viewer)
+        if env.GetViewer() is None:
+            if options._viewer is None:
+                env.SetViewer('qtcoin')
+            elif len(options._viewer) > 0:
+                env.SetViewer(options._viewer)
 
         if options.ipython:
             from IPython.Shell import IPShellEmbed
