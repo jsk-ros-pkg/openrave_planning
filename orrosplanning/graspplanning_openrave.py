@@ -85,9 +85,10 @@ class FastGrasping:
             approachrays = reshape(graspparameters.approachrays,[len(graspparameters.approachrays)/6,6])
 
         Ttarget = self.gmodel.target.GetTransform()
+        N = len(approachrays)
         gapproachrays = c_[dot(approachrays[:,0:3],transpose(Ttarget[0:3,0:3]))+tile(Ttarget[0:3,3],(N,1)),dot(approachrays[:,3:6],transpose(Ttarget[0:3,0:3]))]
-        self.approachgraphs = [self.env.plot3(points=gapproachrays[:,0:3],pointsize=5,colors=array((1,0,0))),
-                               self.env.drawlinelist(points=reshape(c_[gapproachrays[:,0:3],gapproachrays[:,0:3]+0.005*gapproachrays[:,3:6]],(2*N,3)),linewidth=4,colors=array((1,0,0,1)))]
+        self.approachgraphs = [env.plot3(points=gapproachrays[:,0:3],pointsize=5,colors=array((1,0,0))),
+                               env.drawlinelist(points=reshape(c_[gapproachrays[:,0:3],gapproachrays[:,0:3]+0.005*gapproachrays[:,3:6]],(2*N,3)),linewidth=4,colors=array((1,0,0,1)))]
 
         if len(graspparameters.standoffs) == 0:
             standoffs = [0]
