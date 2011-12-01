@@ -86,6 +86,12 @@ if __name__ == "__main__":
                 options.mapframe = robot.GetLinks()[0].GetName()
                 print 'setting map frame to %s'%options.mapframe
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap expirationtime 20 bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
+            if options.request_for_joint_states == 'topic':
+                joint_states = '/joint_states'
+                for a in args:
+                    if a.startswith('%s:='%joint_states):
+                        joint_states = a[len(joint_states)+2:]
+                robot.SetController(RaveCreateController(env,'ROSPassiveController jointstate %s'%joint_states),range(robot.GetDOF()),False)
         
         # have to do this manually because running linkstatistics when viewer is enabled segfaults things
         if options._viewer is None:
@@ -214,9 +220,7 @@ if __name__ == "__main__":
                 #global handles,debugpoints
                 #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
 
-        if options.request_for_joint_states == 'topic':
-            sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
-        elif options.request_for_joint_states == 'service':
+        if options.request_for_joint_states == 'service':
             js = rospy.Service('SetJointState', orrosplanning.srv.SetJointState, UpdateRobotJointsFn)
 
         s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
