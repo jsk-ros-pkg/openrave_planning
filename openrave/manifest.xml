@@ -9,7 +9,6 @@
     <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave-config --libs` `${prefix}/bin/openrave-config --libs-core`" cflags="`${prefix}/bin/openrave-config --cflags`"/>
     <python path="${prefix}/src"/>
   </export>
-  <depend package="soqt"/>
   <depend package="opende"/>
   <depend package="bullet"/>
   <depend package="std_msgs"/>
@@ -20,6 +19,10 @@
   <rosdep name="python-sympy"/>
   <rosdep name="assimp2"/>
   <rosdep name="collada-dom"/>
+  <rosdep name="qt4"/>
+  <rosdep name="qt4gl"/>
+  <rosdep name="coin"/>
+  <rosdep name="soqt"/>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>

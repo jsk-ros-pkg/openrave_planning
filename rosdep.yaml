@@ -12,6 +12,10 @@ coin:
   arch: coin
   macports: coin
   gentoo: coin
+soqt:
+  ubuntu: libsoqt4-dev
+  debian: libsoqt4-dev
+  fedora: soqt-devel
 qhull:
   ubuntu: libqhull-dev
   debian: libqhull-dev
