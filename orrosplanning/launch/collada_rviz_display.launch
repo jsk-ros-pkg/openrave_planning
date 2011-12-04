@@ -2,7 +2,7 @@
   <arg name="model" />
   <param name="robot_description" textfile="$(arg model)" />
   <node name="collada_joint_publisher" pkg="orrosplanning" type="collada_joint_publisher.py" ></node>
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find orrosplanning)/urdf.vcg" output="screen"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="--sync -d $(find orrosplanning)/urdf.vcg" output="screen"/>
   <sphinxdoc><![CDATA[
 Loads a collada model onto the parameter server and publishes joint state information. The collada filename is passed as an argument to the launch script.
 

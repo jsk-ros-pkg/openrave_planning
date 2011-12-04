@@ -33,7 +33,7 @@ class ColladaJointPublisher():
         self.pub_tf = rospy.Publisher("/tf", tf.msg.tfMessage)
 
     def loop(self):
-        hz = rospy.get_param("rate", 10) # 10hz
+        hz = rospy.get_param("rate", 100) # 10hz
         r = rospy.Rate(hz) 
 
         # Publish Joint States
