@@ -7,7 +7,6 @@ coin:
     10.04: libcoin60-dev
     10.10: libcoin60-dev
     11.04: libcoin60-dev
-    oneiric: libcoin60-dev
   debian: libcoin40-dev
   arch: coin
   macports: coin
