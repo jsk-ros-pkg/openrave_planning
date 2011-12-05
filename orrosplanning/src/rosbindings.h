@@ -41,7 +41,7 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 class ROSBindings : public ProblemInstance
 {
 public:
- ROSBindings(EnvironmentBasePtr penv) : ProblemInstance(penv), _bDestroyThread(true) {
+    ROSBindings(EnvironmentBasePtr penv) : ProblemInstance(penv), _bDestroyThread(true) {
         __description = ":Interface Author: Rosen Diankov\n\nBindings Simplifying integration with ROS";
         RegisterCommand("SetLocalizationFromTF",boost::bind(&ROSBindings::SetLocalizationFromTF,this,_1,_2),
                         "Set a robot's navigation from a published tf frame");
@@ -52,7 +52,9 @@ public:
 //        RegisterCommand("MoveBase",boost::bind(&ROSBindings::ShowPointCloud,this,_1,_2),
 //                        "Uses ROS's navigation stack to move the base");
     }
-    virtual ~ROSBindings() { Destroy(); }
+    virtual ~ROSBindings() {
+        Destroy();
+    }
 
     virtual void Destroy()
     {
@@ -101,7 +103,7 @@ public:
     {
         boost::mutex::scoped_lock lock(_mutexrobots);
         FOREACH(it,_listUpdatedRobots)
-            it->first->SetTransform(it->second);
+        it->first->SetTransform(it->second);
         _listUpdatedRobots.clear();
         return false;
     }
@@ -112,8 +114,12 @@ public:
         return ProblemInstance::SendCommand(sout,sinput);
     }
 protected:
-    inline boost::shared_ptr<ROSBindings> shared_problem() { return boost::static_pointer_cast<ROSBindings>(shared_from_this()); }
-    inline boost::shared_ptr<ROSBindings const> shared_problem_const() const { return boost::static_pointer_cast<ROSBindings const>(shared_from_this()); }
+    inline boost::shared_ptr<ROSBindings> shared_problem() {
+        return boost::static_pointer_cast<ROSBindings>(shared_from_this());
+    }
+    inline boost::shared_ptr<ROSBindings const> shared_problem_const() const {
+        return boost::static_pointer_cast<ROSBindings const>(shared_from_this());
+    }
 
     virtual void _threadrosfn()
     {
@@ -126,7 +132,7 @@ protected:
     void UpdateRobotFromTF(const ros::WallTimerEvent& event, RobotBasePtr probot, string mapframe, geometry_msgs::PoseStamped posestamped)
     {
         //RAVELOG_INFO(str(boost::format("updating robot %s\n")%probot->GetName()));
-        geometry_msgs::PoseStamped poseout;    
+        geometry_msgs::PoseStamped poseout;
         try {
             //posestamped.header.stamp = ros::Time();
             _tflistener->transformPose(mapframe, posestamped, poseout);
@@ -171,13 +177,13 @@ protected:
                 return false;
             }
         }
-        
+
         BOOST_ASSERT(!!probot);
         posestamped.header.frame_id = probot->GetLinks().at(0)->GetName();
         _localizingrobots[probot] = boost::shared_ptr<ros::WallTimer>(new ros::WallTimer(_ros->createWallTimer(ros::WallDuration(0.01), boost::bind(&ROSBindings::UpdateRobotFromTF,this,_1,probot,mapframe,posestamped))));
         return true;
     }
-    
+
     virtual void UpdateRobotFromDetection(const boost::shared_ptr<posedetection_msgs::ObjectDetection const>& topicmsg, RobotBasePtr probot, bool b2DLocalization)
     {
         if( topicmsg->objects.size() == 0 )
@@ -188,13 +194,13 @@ protected:
         Transform tnew;
         string strrobotbaselink = probot->GetLinks().at(0)->GetName();
         vector<KinBodyPtr> vbodies;
-        GetEnv()->GetBodies(vbodies);        
+        GetEnv()->GetBodies(vbodies);
         FOREACHC(itobj,topicmsg->objects) {
             string objfilename = resolveName(itobj->type);
             if( objfilename.size() > 0 ) {
-                boost::filesystem::path absfilename = boost::filesystem::path(objfilename,boost::filesystem::native);
+                boost::filesystem::path absfilename = boost::filesystem::path(objfilename);
                 FOREACH(itbody,vbodies) {
-                    if( boost::filesystem::equivalent(absfilename, boost::filesystem::path((*itbody)->GetXMLFilename(),boost::filesystem::native)) ) {
+                    if( boost::filesystem::equivalent(absfilename, boost::filesystem::path((*itbody)->GetXMLFilename())) ) {
                         posestamped.pose = GetPose(GetTransform(itobj->pose));
                         posestamped.header = topicmsg->header;
 
@@ -211,7 +217,7 @@ protected:
                             }
                             catch(std::runtime_error& ex) {
                                 RAVELOG_WARNA("failed to get tf frames %s (body link:%s) for object %s\n",posestamped.header.frame_id.c_str(), strrobotbaselink.c_str(), itobj->type.c_str());
-                                continue;//tnew = GetTransform(itobj->pose);
+                                continue; //tnew = GetTransform(itobj->pose);
                             }
                         }
 
@@ -323,7 +329,7 @@ protected:
         MoveBaseClient ac(action, true);
 
         //wait for the action server to come up
-        if(!ac.waitForServer(ros::Duration(5.0))){ 
+        if(!ac.waitForServer(ros::Duration(5.0))) {
             ROS_INFO("could not start action server");
             return false;
         }
