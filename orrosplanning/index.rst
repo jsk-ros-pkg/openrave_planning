@@ -3,6 +3,10 @@ orrosplanning ROS Launch Files
 
 **Description:** OpenRAVE Plugin for ROS Planning
 
+  
+      Contains robot ik solvers, planners, and commonly used functions that integrate with the ROS framework.
+    
+
 **License:** BSD
 
 collada_rviz_display.launch
