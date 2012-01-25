@@ -41,20 +41,20 @@ class ColladaJointPublisher():
             msg = sensor_msgs.msg.JointState()
             msg.header.stamp = rospy.Time.now()
             for j in self.robot.GetJoints():
-                msg.name.append(j.GetName())
+                msg.name.append(str(j.GetName()))
                 msg.position.append(j.GetValues()[0])
             self.pub.publish(msg)
             transforms = []
             for link in self.robot.GetLinks():
                 t = geometry_msgs.msg.TransformStamped()
                 t.header.stamp = msg.header.stamp
-                t.child_frame_id = link.GetName()
+                t.child_frame_id = str(link.GetName())
                 T = link.GetTransform()
                 if len(link.GetParentLinks()) == 0:
                     t.header.frame_id = '/map'
                     Tparent = numpy.eye(4)
                 else:
-                    t.header.frame_id = link.GetParentLinks()[0].GetName()
+                    t.header.frame_id = str(link.GetParentLinks()[0].GetName())
                     Tparent = link.GetParentLinks()[0].GetTransform()
                 T = numpy.dot(numpy.linalg.inv(Tparent),T)
                 q = quatFromRotationMatrix(T[0:3,0:3])
