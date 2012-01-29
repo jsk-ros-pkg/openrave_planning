@@ -272,10 +272,10 @@ private:
         }
     }
 
-    Transform GetTransform(const btTransform& bt)
+    Transform GetTransform(const tf::Transform& bt)
     {
-        btQuaternion q = bt.getRotation();
-        btVector3 o = bt.getOrigin();
+        tf::Quaternion q = bt.getRotation();
+        tf::Vector3 o = bt.getOrigin();
         return Transform(Vector(q.w(),q.x(),q.y(),q.z()),Vector(o.x(),o.y(),o.z()));
     }
 

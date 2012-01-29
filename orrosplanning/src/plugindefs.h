@@ -120,10 +120,10 @@ inline Transform GetTransform(const geometry_msgs::Pose& pose)
 {
     return Transform(Vector(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z), Vector(pose.position.x, pose.position.y, pose.position.z));
 }
-inline Transform GetTransform(const btTransform& bt)
+inline Transform GetTransform(const tf::Transform& bt)
 {
-    btQuaternion q = bt.getRotation();
-    btVector3 o = bt.getOrigin();
+    tf::Quaternion q = bt.getRotation();
+    tf::Vector3 o = bt.getOrigin();
     return Transform(Vector(q.w(),q.x(),q.y(),q.z()),Vector(o.x(),o.y(),o.z()));
 }
 inline geometry_msgs::Pose GetPose(const Transform& t) {
