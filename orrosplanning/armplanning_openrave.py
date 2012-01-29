@@ -204,7 +204,7 @@ if __name__ == "__main__":
                         traj = RaveCreateTrajectory(env,'')
                         traj.deserialize(trajdata)
                         spec = traj.GetConfigurationSpecification()
-                        res.traj.joint_names = [j.GetName() for j in robot.GetJoints(manip.GetArmIndices())]
+                        res.traj.joint_names = [str(j.GetName()) for j in robot.GetJoints(manip.GetArmIndices())]
                         starttime = 0.0
                         for i in range(traj.GetNumWaypoints()):
                             pt=trajectory_msgs.msg.JointTrajectoryPoint()
