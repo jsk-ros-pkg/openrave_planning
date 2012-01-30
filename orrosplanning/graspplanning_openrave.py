@@ -19,6 +19,7 @@ __license__ = 'Apache License, Version 2.0'
 import roslib; roslib.load_manifest('orrosplanning')
 import rospy
 
+roslib.load_manifest('object_manipulation_msgs')
 from optparse import OptionParser
 from openravepy import *
 from openravepy.misc import OpenRAVEGlobalArguments
@@ -264,6 +265,8 @@ if __name__ == "__main__":
                                 rosgrasp.grasp_posture.header = rosgrasp.pre_grasp_posture.header
                                 rosgrasp.grasp_posture.name = rosgrasp.pre_grasp_posture.name + [robot.GetJointFromDOFIndex(index).GetName() for index in fastgrasping.gmodel.manip.GetArmIndices()]
                                 rosgrasp.grasp_posture.position = jointvalues[r_[fastgrasping.gmodel.manip.GetGripperIndices(),fastgrasping.gmodel.manip.GetArmIndices()]]
+                                rosgrasp.pre_grasp_posture.name = str(rosgrasp.pre_grasp_posture.name)
+                                rosgrasp.grasp_posture.name = str(rosgrasp.grasp_posture.name)
                                 T = fastgrasping.gmodel.getGlobalGraspTransform(grasp,collisionfree=True)
                                 q = quatFromRotationMatrix(T[0:3,0:3])
                                 rosgrasp.grasp_pose.position = geometry_msgs.msg.Point(T[0,3],T[1,3],T[2,3])
