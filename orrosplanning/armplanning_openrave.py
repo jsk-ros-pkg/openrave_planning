@@ -52,6 +52,8 @@ if __name__ == "__main__":
                       help='Time (seconds) to set. Will wait for the collision map time stamp to reach the same time as the service being called. If 0, will wait indefinitely.')
     parser.add_option('--request-for-joint_states',action='store',type='string',dest='request_for_joint_states',default='topic',
                       help='whether to get joint states from topic or service. If ="service", will not update robot joint states until receiving service call.')
+    parser.add_option('--use-simulation',action='store',type='string',dest='simulation',default=None,
+                      help='if use-simulation is set, we dismiss timestamp of collisionmap.')
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
@@ -127,6 +129,8 @@ if __name__ == "__main__":
                         while True:
                             timepassed = time.time()-starttime
                             collisionstamp = collisionmap.SendCommand("gettimestamp")
+                            if options.simulation is not None:
+                                break;
                             if collisionstamp is not None:
                                 if int64(collisionstamp)-handgoalstamp >= 0:
                                      break
@@ -188,7 +192,7 @@ if __name__ == "__main__":
                         #debugpoints = Tgoalee[0:3,3]
                         #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
                         #time.sleep(1)
-                        postprocessing = ['shortcut_linear','<_nmaxiterations>20</_nmaxiterations><_postprocessing planner=\"parabolicsmoother\"><_nmaxiterations>50</_nmaxiterations></_postprocessing>']
+                        postprocessing = ['shortcut_linear','<_nmaxiterations>1</_nmaxiterations><_postprocessing planner=\"parabolicsmoother\"><_nmaxiterations>1</_nmaxiterations></_postprocessing>']
                         try:
                             starttime = time.time()
                             trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter,postprocessing=postprocessing)
