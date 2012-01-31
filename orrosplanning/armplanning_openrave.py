@@ -58,13 +58,26 @@ if __name__ == "__main__":
     env.LoadProblem(RaveCreateModule(env,"textserver"),"")
     rospy.loginfo('initializing, please wait for ready signal...')
     handles = [] # for viewer
+    def UpdateRobotJoints(msg):
+        global options
+        with envlock:
+            with env:
+                for name,pos in izip(msg.name,msg.position):
+                    j = robot.GetJoint(name)
+                    if j is not None:
+                        values[j.GetDOFIndex()] = pos
+                    robot.SetDOFValues(values)
+    def UpdateRobotJointsFn(req):
+        rospy.loginfo("Update joint states")
+        UpdateRobotJoints(req.jointstate)
+        return True
     try:
         rospy.init_node('armplanning_openrave',disable_signals=False)
         with env:
             env.Load(options.scene)
             robot = env.GetRobots()[0]
 
-            # set robot weights/resolutions (without this planning will be slow)
+            #set robot weights/resolutions (without this planning will be slow)
             if 1:
                 lmodel = databases.linkstatistics.LinkStatisticsModel(robot)
                 if not lmodel.load():
@@ -87,12 +100,13 @@ if __name__ == "__main__":
                 print 'setting map frame to %s'%options.mapframe
             collisionmap = RaveCreateSensorSystem(env,'CollisionMap expirationtime 20 bodyoffset %s topic %s'%(robot.GetName(),options.collision_map))
             if options.request_for_joint_states == 'topic':
-                joint_states = '/joint_states'
-                for a in args:
-                    if a.startswith('%s:='%joint_states):
-                        joint_states = a[len(joint_states)+2:]
-                robot.SetController(RaveCreateController(env,'ROSPassiveController jointstate %s'%joint_states),range(robot.GetDOF()),False)
-        
+                sub = rospy.Subscriber("/joint_states", sensor_msgs.msg.JointState, UpdateRobotJoints,queue_size=1)
+                # joint_states = '/joint_states'
+                # for a in args:
+                #     if a.startswith('%s:='%joint_states):
+                #         joint_states = a[len(joint_states)+2:]
+                # robot.SetController(RaveCreateController(env,'ROSPassiveController jointstate %s'%joint_states),range(robot.GetDOF()),False)
+
         # have to do this manually because running linkstatistics when viewer is enabled segfaults things
         if options._viewer is None:
             env.SetViewer('qtcoin')
@@ -102,20 +116,6 @@ if __name__ == "__main__":
             listener = tf.TransformListener()
         values = robot.GetDOFValues()
         envlock = threading.Lock()
-        def UpdateRobotJoints(msg):
-            global options
-            with envlock:
-                with env:
-                    for name,pos in izip(msg.name,msg.position):
-                        j = robot.GetJoint(name)
-                        if j is not None:
-                            values[j.GetDOFIndex()] = pos
-                    robot.SetDOFValues(values)
-
-        def UpdateRobotJointsFn(req):
-            rospy.loginfo("Update joint states")
-            UpdateRobotJoints(req.jointstate)
-            return True
         def MoveToHandPositionFn(req):
             global options
             rospy.loginfo("MoveToHandPosition")
@@ -188,7 +188,7 @@ if __name__ == "__main__":
                         #debugpoints = Tgoalee[0:3,3]
                         #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
                         #time.sleep(1)
-                        postprocessing = ['shortcut_linear','<_nmaxiterations>20</_nmaxiterations><_postprocessing planner=\"parabolicsmoother\"><_nmaxiterations>200</_nmaxiterations></_postprocessing>']
+                        postprocessing = ['shortcut_linear','<_nmaxiterations>20</_nmaxiterations><_postprocessing planner=\"parabolicsmoother\"><_nmaxiterations>50</_nmaxiterations></_postprocessing>']
                         try:
                             starttime = time.time()
                             trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter,postprocessing=postprocessing)
