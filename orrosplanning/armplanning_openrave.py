@@ -129,13 +129,12 @@ if __name__ == "__main__":
                         while True:
                             timepassed = time.time()-starttime
                             collisionstamp = collisionmap.SendCommand("gettimestamp")
-                            if options.simulation is not None:
-                                break;
                             if collisionstamp is not None:
                                 if int64(collisionstamp)-handgoalstamp >= 0:
                                      break
-
                             if options.wait_for_collisionmap > 0 and timepassed > options.wait_for_collisionmap:
+                                if options.simulation is not None:
+                                    break;
                                 raise ValueError('failed to acquire new collision map, collision timestamp is %s, service timestamp is %s'%(collisionstamp,handgoalstamp))
                             time.sleep(0.1) # wait
 
