@@ -33,8 +33,6 @@ qt4gl:
 python-sympy:
   ubuntu: python-sympy
   debian: python-sympy
-mayavi2:
-  ubuntu: mayavi2
 assimp2:
   ubuntu: |
    #!/bin/bash
