@@ -71,14 +71,9 @@ public:
     virtual int main(const std::string& args)
     {
         stringstream ss(args);
-
         _bDestroyThread = false;
-        vector<string> vargs = vector<string>((istream_iterator<string>(ss)), istream_iterator<string>());
-        vector<char*> pargs(vargs.size());
-        for(size_t i = 0; i < vargs.size(); ++i)
-            pargs[i] = &vargs[i][0];
-        int argc=vargs.size();
-        ros::init(argc,pargs.size() > 0 ? &pargs[0] : NULL,"openrave", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
+        int argc=0;
+        ros::init(argc,NULL,"openrave", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
 
         if( !ros::master::check() ) {
             RAVELOG_WARN("failed to create ros\n");

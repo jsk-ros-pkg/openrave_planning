@@ -1,6 +1,6 @@
 # gets the active dof values of the robot
 
-int32 bodyid
+int32 robotid
 
 # specifies indices into the active dofs to get. if empty, returns all active dof values
 uint8[] indices

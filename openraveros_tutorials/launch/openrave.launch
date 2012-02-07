@@ -1,0 +1,4 @@
+<launch>
+  <env name="OPENRAVE_PLUGINS" value="$(optenv OPENRAVE_PLUGINS):$(find openraveros)/lib"/>
+  <node pkg="openrave" type="openrave" name="openraveserver" args="--module ROSServer ''" output="screen"/>
+</launch>

@@ -29,7 +29,7 @@
 #include "rosbindings.h"
 #include "collisionmapsystem.h"
 
-#include <rave/plugin.h>
+#include <openrave/plugin.h>
 
 ControllerBasePtr CreateROSPassiveController(EnvironmentBasePtr penv, std::istream& sinput);
 
@@ -82,7 +82,7 @@ void GetPluginAttributesValidated(PLUGININFO& info)
     info.interfacenames[OpenRAVE::PT_Controller].push_back("ROSPassiveController");
 }
 
-RAVE_PLUGIN_API void DestroyPlugin()
+OPENRAVE_PLUGIN_API void DestroyPlugin()
 {
     delete s_listRegisteredReaders;
     s_listRegisteredReaders = NULL;

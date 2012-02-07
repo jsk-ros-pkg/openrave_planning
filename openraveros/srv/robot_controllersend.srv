@@ -2,7 +2,7 @@
 # OpenRAVE sends directly to ControllerBase::SendCmd,
 # ControllerBase::SupportsCmd is also used to check for support.
 
-int32 bodyid
+int32 robotid
 string cmd
 ---
 string output

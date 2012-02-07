@@ -1,2 +1,3 @@
-TrajectoryPoint[] points
-ActiveDOFs active
+ConfigurationSpecification spec
+float64[] points
+string xmlid

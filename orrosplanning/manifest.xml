@@ -9,6 +9,7 @@
   </export>
   <depend package="roscpp"/>
   <depend package="openrave"/>
+  <depend package="openraveros"/>
   <depend package="posedetection_msgs"/>
   <depend package="tf"/>
   <depend package="arm_navigation_msgs"/>
@@ -20,5 +21,4 @@
   <depend package="actionlib"/>
   <depend package="move_base_msgs"/>
   <depend package="std_msgs"/>
-  <rosdep name="mayavi2"/>
 </package>

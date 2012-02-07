@@ -2,7 +2,7 @@
 # OpenRAVE sends directly to SensorBase::SendCmd,
 # SensorBase::SupportsCmd is used to check for command support.
 
-int32 bodyid
+int32 robotid
 
 # zero-based index of sensor into robot's attached sensor array
 uint8 sensorindex

@@ -1,10 +1,10 @@
 # specifies the active degrees of freedom of the robot
 
 # mask of active base degrees of freedom
-uint8 affine
+uint32 affine
 
 # active joints
-uint8[] joints
+int32[] indices
 
 float32[3] rotationaxis
 

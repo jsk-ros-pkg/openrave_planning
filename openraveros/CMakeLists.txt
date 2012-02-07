@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 2.4.6)
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 add_definitions(-Wall)
-set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE Debug)#RelWithDebInfo)
 rosbuild_init()
 rosbuild_genmsg()
 rosbuild_gensrv()
 
 rosbuild_add_boost_directories()
 
-rosbuild_add_executable(openraveros src/openraveros.cpp)
+rosbuild_add_library(openraveros src/rosserver.cpp src/openraveros.cpp)
 rosbuild_link_boost(openraveros thread)
 
 # add sessions dependency

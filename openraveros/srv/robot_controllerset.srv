@@ -1,10 +1,11 @@
 # Sets a new robot controller and destroys the old.
 
-int32 bodyid
+int32 robotid
 
 # name used to query a controller
 string controllername
 
-# the arguments to ControllerBase::Init
-string controllerargs
+int32[] indices
+int32 controltransformation
+
 ---

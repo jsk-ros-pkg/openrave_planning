@@ -1,6 +1,6 @@
 # Gets the sensor data. The format returned is dependent on the type of sensor. 
 
-int32 bodyid
+int32 robotid
 uint32 sensorindex
 ---
 

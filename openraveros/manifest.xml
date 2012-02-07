@@ -1,19 +1,16 @@
 <package>
-  <description brief="OpenRAVE Session for ROS">
+  <description brief="OpenRAVE Services through ROS">
     Main openrave server that provides a session interface.
   </description>
-  <author>Rosen Diankov (rdiankov@cs.cmu.edu)</author>
-  <license>BSD</license>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
+  <license>Apache License, Version 2.0</license>
   <export>
-    <cpp cflags="-I${prefix}/msg/cpp -I${prefix}/srv/cpp"/>
+    <openrave pluginpath="${prefix}/lib"/>
   </export>
   <depend package="roscpp"/>
-  <depend package="roscpp_sessions"/>
+<!--  <depend package="roscpp_sessions"/> -->
   <depend package="openrave"/>
   <depend package="std_msgs"/>
   <depend package="sensor_msgs"/>
-  <url>http://pr.willowgarage.com/wiki/openrave</url>
-  <platform os="ubuntu" version="9.04"/>
-  <platform os="ubuntu" version="9.10"/>
-  <platform os="ubuntu" version="10.04"/>
+  <url>http://www.ros.org/wiki/openraveros</url>
 </package>

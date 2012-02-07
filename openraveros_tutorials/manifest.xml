@@ -1,0 +1,31 @@
+<package>
+  <description brief="Tutorials on commanding OpenRAVE through ROS"><![CDATA[
+    There are two ways to start the server.
+
+1. Through the command line:
+
+roslaunch openraveros_tutorials openrave.launch
+
+2. Through python code shown in openraverosserver.py
+
+rosrun openraveros_tutorials openraverosserver.py
+
+Once the ROSServer is started, veriy that the services are indeed advertised:
+
+rosservice list
+
+Then either launch the C++ or python code to tell openrave to load a scene:
+
+rosrun openraveros_tutorials loadscene
+
+rosrun openraveros_tutorials loadscene.py
+
+  ]]></description>
+  <author>Rosen Diankov</author>
+  <license>Apache License, Version 2.0</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/openraveros</url>
+  <depend package="openraveros"/>
+  <depend package="rospy"/>
+
+</package>
