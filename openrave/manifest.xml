@@ -1,10 +1,10 @@
 <package>
-  <description brief="Open Robotics Automation Virtual Environment"><![CDATA[
+  <description brief="Open Robotics Automation Virtual Environment">
 In order to use, please add the following line in your bashrc:<br/>
 
 <b>source `rospack find openrave`/openrave.bash</b>
 
-  ]]></description>
+  </description>
   <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
   <license>Lesser GPL and Apache License, Version 2.0</license>
   <review status="3rdparty" notes=""/>
