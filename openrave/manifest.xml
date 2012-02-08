@@ -1,7 +1,10 @@
 <package>
-  <description brief="Open Robotics Automation Virtual Environment">
-    For successful compilation, remove Qt3 development tools (qt3-dev-tools,libqt3-headers) to prevent conflict with Qt4.
-  </description>
+  <description brief="Open Robotics Automation Virtual Environment"><![CDATA[
+In order to use, please add the following line in your bashrc:<br/>
+
+<b>source `rospack find openrave`/openrave.bash</b>
+
+  ]]></description>
   <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
   <license>Lesser GPL and Apache License, Version 2.0</license>
   <review status="3rdparty" notes=""/>
