@@ -8,17 +8,17 @@
 
 <p>2. Through python code shown in openraverosserver.py</p>
 
-<b>rosrun openraveros_tutorials openraverosserver.py<b>
+<b>rosrun openraveros_tutorials openraverosserver.py</b>
 
 <p>Once the ROSServer is started, veriy that the services are indeed advertised:</p>
 
-<b>rosservice list<b>
+<b>rosservice list</b>
 
 <p>Then either launch the C++ or python code to tell openrave to load a scene:</p>
 
-<b>rosrun openraveros_tutorials loadscene<b><br/>
+<b>rosrun openraveros_tutorials loadscene</b><br/>
 
-<b>rosrun openraveros_tutorials loadscene.py<b>
+<b>rosrun openraveros_tutorials loadscene.py</b>
 
   </description>
   <author>Rosen Diankov</author>
