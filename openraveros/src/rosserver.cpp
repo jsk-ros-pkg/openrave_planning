@@ -24,7 +24,7 @@ class ROSServer : public ModuleBase
 
 public:
     ROSServer(EnvironmentBasePtr penv, std::istream& sinput) : ModuleBase(penv), _nNextFigureId(1), _nNextPlannerId(1), _nNextModuleId(1), _iWorkerId(0) {
-        __description = ":Interface Author: Rosen Diankov\n\nOffers many services that can control this environment through ROS. When calling Environment::AddModule, can pass in the namespace to advertise the services on. Note that these are services just for the environment that instantiates this module!";
+        __description = ":Interface Author: Rosen Diankov\n\nOffers many services that can control this environment through ROS. When calling Environment::AddModule, can pass in the namespace to advertise the services on. Note that these are services just for the environment that instantiates this module! Check out the openraveros_tutorials package for how to use it (http://www.ros.org/wiki/openraveros_tutorials)";
         _bDestroyThreads = false;
         _bWorking = false;
         _fSimulationTimestep = 0.01;

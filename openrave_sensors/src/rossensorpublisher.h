@@ -560,12 +560,14 @@ public:
                 }
 
                 _robot->GetDOFVelocities(vjointvalues);
-                _jointstate.velocity.insert(_jointstate.velocity.end(),vjointvalues.begin(),vjointvalues.end());
+                _jointstate.velocity.resize(vjointvalues.size());
+                std::copy(vjointvalues.begin(),vjointvalues.end(),_jointstate.velocity.begin());
                 _jointstate.effort.resize(0);
                 if( !!_robot->GetController() ) {
                     try {
                         _robot->GetController()->GetTorque(vjointvalues);
-                        _jointstate.effort.insert(_jointstate.effort.end(),vjointvalues.begin(),vjointvalues.end());
+                        _jointstate.effort.resize(vjointvalues.size());
+                        std::copy(vjointvalues.begin(),vjointvalues.end(),_jointstate.effort.begin());
                     }
                     catch(...) { //const openrave_exception& ex) {
                     }
