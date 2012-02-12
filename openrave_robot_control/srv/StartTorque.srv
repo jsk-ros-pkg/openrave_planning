@@ -1,4 +1,0 @@
-float32[] torques # the torque to give for each of the joints
----
-uint32 commandid # unique command id to be used for later referencing
-time stamp # expected time when robot will start giving torque

@@ -10,8 +10,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#ifndef RAVE_ROS_ROBOT_CONTROLLER
-#define RAVE_ROS_ROBOT_CONTROLLER
+#ifndef OPENRAVE_ROS_ROBOT_CONTROLLER
+#define OPENRAVE_ROS_ROBOT_CONTROLLER
 #include <openrave_robot_control/openravecontroller.h>
 
 #include <ros/node_handle.h>
@@ -28,17 +28,19 @@
 #include <rave/rave.h>
 
 #include <sensor_msgs/JointState.h>
-#include <openrave_robot_control/controller_session.h>
-#include <openrave_robot_control/Query.h>
-#include <openrave_robot_control/Wait.h>
-#include <openrave_robot_control/Cancel.h>
-#include <openrave_robot_control/Brake.h>
-#include <openrave_robot_control/StartTrajectory.h>
-#include <openrave_robot_control/StartVelocity.h>
-#include <openrave_robot_control/StartCustomString.h>
+#include <openrave_msgs/controller_session.h>
+#include <openrave_msgs/Query.h>
+#include <openrave_msgs/Wait.h>
+#include <openrave_msgs/Cancel.h>
+#include <openrave_msgs/Brake.h>
+#include <openrave_msgs/StartTrajectory.h>
+#include <openrave_msgs/StartVelocity.h>
+#include <openrave_msgs/StartCustomString.h>
+#include <openrave_msgs/StartTorque.h>
 
 using namespace OpenRAVE;
 using namespace openrave_robot_control;
+using namespace openrave_msgs;
 
 class OpenRAVEClientController : public ControllerBase
 {
@@ -82,8 +84,9 @@ public:
                 throw controller_exception(str(boost::format("no joint names controller of session %s")%_strTrajectorySession));
             }
             vector<string> vrobotjoints(_probot->GetJoints().size());
-            for(size_t i = 0; i < _probot->GetJoints().size(); ++i)
+            for(size_t i = 0; i < _probot->GetJoints().size(); ++i) {
                 vrobotjoints[i] = _probot->GetJoints().at(i)->GetName();
+            }
 
             stringstream ss;
             ss << "roscontroller: " << _strTrajectorySession;
@@ -95,7 +98,7 @@ public:
                 }
                 else {
                     size_t index = itindex-vrobotjoints.begin();
-                    _vjointmap.push_back(index);
+                    _vjointmap.push_back(_probot->GetJoints().at(index)->GetDOFIndex());
                 }
                 ss << " " << *itname << " (" << _vjointmap.back() << ")";
             }
@@ -103,16 +106,22 @@ public:
             ss << endl;
             RAVELOG_DEBUG(ss.str().c_str());
 
+            _vjointnames = res.jointnames;
+            _spec = _probot->GetConfigurationSpecificationIndices(_vjointmap);
+
             size_t pos = _strTrajectorySession.rfind('/');
             string mechstatetopic;
-            if( pos == std::string::npos )
+            if( pos == std::string::npos ) {
                 mechstatetopic = "mechanism_state";
-            else
+            }
+            else {
                 mechstatetopic = _strTrajectorySession.substr(0,pos+1)+string("mechanism_state");
+            }
 
             _submstate = _node->subscribe(mechstatetopic, 10, &TrajectoryController::mechanismstatecb, shared_from_this());
-            if( !_submstate )
+            if( !_submstate ) {
                 RAVELOG_ERROR("failed to subscribe to %s\n", mechstatetopic.c_str());
+            }
         }
 
         bool Destroy()
@@ -142,24 +151,27 @@ public:
             vector<dReal> vlower, vupper;
             _probot->GetDOFLimits(vlower,vupper);
             boost::mutex::scoped_lock lock(_mutex);
-            if( _vjointmap.size() != _mstate.position.size() )
+            if( _vjointmap.size() != _mstate.position.size() ) {
                 return;
+            }
 
             for(size_t i = 0; i < _vjointmap.size(); ++i) {
                 if( _vjointmap[i] >= 0 ) {
                     dReal flower = vlower[_vjointmap[i]], fupper = vupper[_vjointmap[i]];
                     dReal pos = _mstate.position[i];
                     while(pos > fupper ) {
-                        if( pos-2*PI >= flower )
+                        if( pos-2*PI >= flower ) {
                             pos -= 2*PI;
+                        }
                         else {
                             pos = fupper;
                             break;
                         }
                     }
                     while(pos < flower) {
-                        if( pos+2*PI <= fupper )
+                        if( pos+2*PI <= fupper ) {
                             pos += 2*PI;
+                        }
                         else {
                             pos = flower;
                             break;
@@ -200,6 +212,17 @@ public:
             }
         }
 
+        const ConfigurationSpecification& GetConfigurationSpecification() {
+            return _spec;
+        }
+
+        int GetDOF() const {
+            return (int)_vjointmap.size();
+        }
+
+        std::vector<string> GetJointNames() const {
+            return _vjointnames;
+        }
         // trajectory services
         ros::session::abstractSessionHandle _session;
         list<uint32_t> _listTrajectories; ///< trajectories currently pending for completion
@@ -210,14 +233,16 @@ private:
         string _strTrajectorySession;
         boost::shared_ptr<ros::NodeHandle> _node;
         vector<int> _vjointmap;
+        vector<string> _vjointnames;
         ros::Subscriber _submstate;
         sensor_msgs::JointState _mstate;
+        ConfigurationSpecification _spec;
         mutable boost::mutex _mutex;
     };
 
 public:
     OpenRAVEClientController(EnvironmentBasePtr penv, std::istream& ss) : ControllerBase(penv),
-        _fCommandTime(0), _bIsDone(false), _bSendTimestamps(false), _bDestroyThread(false) {
+        _fCommandTime(0), _bIsDone(false), _bSendTiming(true), _bDestroyThread(false) {
         __description = ":Interface Author: Rosen Diankov\n\nA simple controller interface using ROS. See openrave_robot_control ROS package.";
         _iController = -1;
         _bSyncControllers = true;
@@ -416,13 +441,15 @@ public:
             //req.requesttiming = 1; // request back the timestamps
             _bIsDone = false;
             req.hastiming = 0;
-            req.interpolation = StartTrajectory::Request::Interp_Linear;
             // do not add the current position, this will be done inside the controller when the right time comes
-            req.traj.points.resize(1);
-            (*ittrajcontroller)->ExtractControllerValues(req.traj.points.at(0).positions, vnewvalues);
+            req.traj.traj.points.resize(2);
+            req.traj.traj.joint_names = (*ittrajcontroller)->GetJointNames();
+            (*ittrajcontroller)->ExtractControllerValues(req.traj.traj.points.at(0).positions, _vcurvalues);
+            (*ittrajcontroller)->ExtractControllerValues(req.traj.traj.points.at(1).positions, vnewvalues);
 
-            if( (*ittrajcontroller)->_session->call("StartTrajectory", req,res) )
+            if( (*ittrajcontroller)->_session->call("StartTrajectory", req,res) ) {
                 (*ittrajcontroller)->_listTrajectories.push_back(res.commandid);
+            }
             else {
                 RAVELOG_ERROR("failed to start trajectory\n");
                 bSuccess = false;
@@ -450,47 +477,51 @@ public:
 
         int controllerindex = 0;
         int commandid = 0;
+        vector<dReal> vpointdata;
         FOREACH(ittrajcontroller, _listControllers) {
-            if( _iController != controllerindex++ && _iController >= 0 )
+            if( _iController != controllerindex++ && _iController >= 0 ) {
                 continue;
-            if( !(*ittrajcontroller)->_session )
+            }
+            if( !(*ittrajcontroller)->_session ) {
                 continue;
+            }
 
-            //req.requesttiming = 1; // request back the timestamps
             _bIsDone = false;
-            req.hastiming = _bSendTiming && ptraj->GetTotalDuration()>0;
-            if( ptraj->GetTotalDuration()>0 ) {
+            req.hastiming = _bSendTiming && ptraj->GetDuration()>0;
+            ConfigurationSpecification spec = (*ittrajcontroller)->GetConfigurationSpecification();
+            int dof = spec.GetDOF();
+            req.traj.traj.joint_names = (*ittrajcontroller)->GetJointNames();
+
+            RAVELOG_INFO("traj points: %d\n", ptraj->GetNumWaypoints());
+            if( req.hastiming ) {
+                spec.AddVelocityGroups(false);
+                int veloffset = spec.GetGroupFromName("joint_velocities").offset;
                 // resample every 0.01s
                 dReal ftime = 0, sampletime = 0.01f;
-                Trajectory::TPOINT tp;
-                req.interpolation = StartTrajectory::Request::Interp_Cubic;
-                req.traj.points.resize((ptraj->GetTotalDuration()/sampletime)+1);
-                FOREACH(ittraj,req.traj.points) {
-                    ptraj->SampleTrajectory(ftime,tp);
-                    ittraj->time = tp.time;
-                    (*ittrajcontroller)->ExtractControllerValues(ittraj->positions, tp.q);
-                    if( (int)tp.qtorque.size() == ptraj->GetDOF() ) {
-                        (*ittrajcontroller)->ExtractControllerValues(ittraj->torques, tp.qtorque);
-                    }
+                req.traj.traj.points.resize((ptraj->GetDuration()/sampletime)+1);
+                req.traj.interpolation = spec.GetGroupFromName("joint_values").interpolation;
+                FOREACH(itpoint,req.traj.traj.points) {
+                    ptraj->Sample(vpointdata,ftime,spec);
+                    itpoint->time_from_start = ros::Duration(ftime);
+                    itpoint->positions.resize(dof);
+                    itpoint->velocities.resize(dof);
+                    std::copy(vpointdata.begin(),vpointdata.begin()+dof, itpoint->positions.begin());
+                    std::copy(vpointdata.begin()+veloffset,vpointdata.begin()+veloffset+dof, itpoint->velocities.begin());
                     ftime += sampletime;
                 }
             }
             else {
-                req.interpolation = StartTrajectory::Request::Interp_Linear;
-                req.traj.points.resize(ptraj->GetPoints().size());
-                typeof(req.traj.points.begin())ittraj = req.traj.points.begin();
-                FOREACHC(itpoint, ptraj->GetPoints()) {
-                    ittraj->time = itpoint->time;
-                    (*ittrajcontroller)->ExtractControllerValues(ittraj->positions, itpoint->q);
-                    if( (int)itpoint->qtorque.size() == ptraj->GetDOF() ) {
-                        (*ittrajcontroller)->ExtractControllerValues(ittraj->torques, itpoint->qtorque);
-                    }
-                    ++ittraj;
+                req.traj.traj.points.resize(ptraj->GetNumWaypoints());
+                for(size_t i = 0; i < ptraj->GetNumWaypoints(); ++i) {
+                    ptraj->GetWaypoint(i,vpointdata,spec);
+                    req.traj.traj.points[i].positions.resize(dof);
+                    std::copy(vpointdata.begin(),vpointdata.end(), req.traj.traj.points[i].positions.begin());
                 }
             }
 
-            if( (*ittrajcontroller)->_session->call("StartTrajectory", req,res) )
+            if( (*ittrajcontroller)->_session->call("StartTrajectory", req,res) ) {
                 (*ittrajcontroller)->_listTrajectories.push_back(res.commandid);
+            }
             else {
                 RAVELOG_ERROR("failed to start trajectory\n");
                 bSuccess = false;
@@ -504,7 +535,7 @@ public:
 
         if( !!flog ) {
             flog << endl << "trajectory: " << commandid << endl;
-            ptraj->Write(flog, Trajectory::TO_IncludeTimestamps|Trajectory::TO_IncludeBaseTransformation);
+            ptraj->serialize(flog,0);
         }
 
         return bSuccess;
@@ -520,10 +551,12 @@ public:
         StartTorque::Response res;
         int controllerindex = 0;
         FOREACH(ittrajcontroller, _listControllers) {
-            if( _iController != controllerindex++ && _iController >= 0 )
+            if( _iController != controllerindex++ && _iController >= 0 ) {
                 continue;
-            if( !(*ittrajcontroller)->_session )
+            }
+            if( !(*ittrajcontroller)->_session ) {
                 continue;
+            }
 
             (*ittrajcontroller)->ExtractControllerValues(req.torques, vtorques);
 
@@ -550,10 +583,12 @@ public:
         StartVelocity::Response res;
         int controllerindex = 0;
         FOREACH(ittrajcontroller, _listControllers) {
-            if( _iController != controllerindex++ && _iController >= 0 )
+            if( _iController != controllerindex++ && _iController >= 0 ) {
                 continue;
-            if( !(*ittrajcontroller)->_session )
+            }
+            if( !(*ittrajcontroller)->_session ) {
                 continue;
+            }
 
             (*ittrajcontroller)->ExtractControllerValues(req.velocities, vvelocities);
 
@@ -581,10 +616,12 @@ public:
         StartCustomString::Response res;
         int controllerindex = 0;
         FOREACH(ittrajcontroller, _listControllers) {
-            if( _iController != controllerindex++ && _iController >= 0 )
+            if( _iController != controllerindex++ && _iController >= 0 ) {
                 continue;
-            if( !(*ittrajcontroller)->_session )
+            }
+            if( !(*ittrajcontroller)->_session ) {
                 continue;
+            }
 
             if( (*ittrajcontroller)->_session->call("StartCustomString", req,res) ) {
                 (*ittrajcontroller)->_listTrajectories.push_back(res.commandid);
@@ -610,20 +647,24 @@ public:
         bool bSuccess = true;
         int controllerindex = 0;
         FOREACH(ittrajcontroller, _listControllers) {
-            if( _iController != controllerindex++ && _iController >= 0 )
+            if( _iController != controllerindex++ && _iController >= 0 ) {
                 continue;
-            if( !(*ittrajcontroller)->_session )
+            }
+            if( !(*ittrajcontroller)->_session ) {
                 continue;
+            }
 
             if( !(*ittrajcontroller)->_session->call("Cancel", req,res) ) {
                 RAVELOG_WARN("controller failed to cancel for %s\n",(*ittrajcontroller)->_session->GetSessionName().c_str());
                 bSuccess = false;
             }
 
-            if( commandid == 0 )
+            if( commandid == 0 ) {
                 (*ittrajcontroller)->_listTrajectories.clear();
-            else
+            }
+            else {
                 (*ittrajcontroller)->_listTrajectories.remove(commandid);
+            }
         }
 
         return bSuccess;
@@ -659,8 +700,9 @@ public:
             while(!is.eof()) {
                 int index=-1;
                 is >> index;
-                if( !is )
+                if( !is ) {
                     break;
+                }
                 if( index < 0 || index >= (int)_dofindices.size() ) {
                     RAVELOG_WARN("bad index on settorque command");
                     return false;
@@ -679,8 +721,9 @@ public:
             while(!is.eof()) {
                 int index=-1;
                 is >> index;
-                if( !is )
+                if( !is ) {
                     break;
+                }
                 if( index < 0 || index >= (int)_dofindices.size() ) {
                     RAVELOG_WARN("bad index on settorque command");
                     return false;
@@ -781,8 +824,9 @@ private:
 
         // check if the first trajectory is done
         ReadLock lockc(_mutexControllers);
-        if( _listControllers.size() == 0 )
+        if( _listControllers.size() == 0 ) {
             return;
+        }
         boost::mutex::scoped_lock lock(_mutexTrajectories);
 
         bool bPopTrajectory = true;
@@ -790,8 +834,9 @@ private:
         if( _bSyncControllers ) {
             // check if done
             FOREACH(ittraj, _listControllers) {
-                if( !(*ittraj)->_session )
+                if( !(*ittraj)->_session ) {
                     continue;
+                }
 
                 if( (*ittraj)->_listTrajectories.size() == 0 ) {
                     bPopTrajectory = false;
@@ -816,8 +861,9 @@ private:
             if( bPopTrajectory ) {
                 size_t numtraj=0;
                 FOREACH(ittraj, _listControllers) {
-                    if( !(*ittraj)->_session )
+                    if( !(*ittraj)->_session ) {
                         continue;
+                    }
                     (*ittraj)->_listTrajectories.pop_front();
                     numtraj = (*ittraj)->_listTrajectories.size();
                 }
@@ -827,8 +873,9 @@ private:
         else {
             // delete commands as they finish
             FOREACH(ittraj, _listControllers) {
-                if( !(*ittraj)->_session )
+                if( !(*ittraj)->_session ) {
                     continue;
+                }
 
                 if( (*ittraj)->_listTrajectories.size() > 0 ) {
                     req.commandid = (*ittraj)->_listTrajectories.front();
@@ -839,8 +886,9 @@ private:
 
                     (*ittraj)->_fCommandTime = res.commandtime;
 
-                    if( res.commanddone )
+                    if( res.commanddone ) {
                         (*ittraj)->_listTrajectories.pop_front();
+                    }
                 }
             }
         }
@@ -848,10 +896,12 @@ private:
         bool bIsDone = true;
         int controllerindex = 0;
         FOREACH(ittraj, _listControllers) {
-            if( _iController != controllerindex++ && _iController >= 0 )
+            if( _iController != controllerindex++ && _iController >= 0 ) {
                 continue;
-            if( !(*ittraj)->_session )
+            }
+            if( !(*ittraj)->_session ) {
                 continue;
+            }
 
             if( (*ittraj)->_listTrajectories.size() != 0) {
                 bIsDone = false;
@@ -907,7 +957,6 @@ private:
     int _iController; ///< if < 0, send incoming commands to all controllers, otherwise send only to specified controller
 
     bool _bIsDone, _bSendTiming;
-    bool _bSendTimestamps; ///< if true, will send timestamps along with traj
     bool _bDestroyThread; ///< if true, destroy the thread
     bool _bSyncControllers; ///< controllers will be started and stopped at the same time
 

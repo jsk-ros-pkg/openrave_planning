@@ -13,6 +13,7 @@
 //
 // \author Rosen Diankov
 #include <openrave-core.h> // declare first
+#include <openrave/planningutils.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -37,15 +38,15 @@
 #include <boost/format.hpp>
 
 #include <sensor_msgs/JointState.h>
-#include <openrave_robot_control/controller_session.h>
-#include <openrave_robot_control/Query.h>
-#include <openrave_robot_control/Wait.h>
-#include <openrave_robot_control/Cancel.h>
-#include <openrave_robot_control/Brake.h>
-#include <openrave_robot_control/StartTrajectory.h>
-#include <openrave_robot_control/StartVelocity.h>
-#include <openrave_robot_control/StartTorque.h>
-#include <openrave_robot_control/StartCustomString.h>
+#include <openrave_msgs/controller_session.h>
+#include <openrave_msgs/Query.h>
+#include <openrave_msgs/Wait.h>
+#include <openrave_msgs/Cancel.h>
+#include <openrave_msgs/Brake.h>
+#include <openrave_msgs/StartTrajectory.h>
+#include <openrave_msgs/StartVelocity.h>
+#include <openrave_msgs/StartTorque.h>
+#include <openrave_msgs/StartCustomString.h>
 
 #include <tf/transform_broadcaster.h>
 
@@ -104,15 +105,15 @@ class OpenRAVEController : public boost::enable_shared_from_this<OpenRAVEControl
 {
 protected:
     enum StateType {
-        State_Idle = openrave_robot_control::Query::Response::State_Idle,
-        State_Moving = openrave_robot_control::Query::Response::State_Moving,
-        State_Ready = openrave_robot_control::Query::Response::State_Ready,
-        State_Stalled = openrave_robot_control::Query::Response::State_Stalled
+        State_Idle = openrave_msgs::Query::Response::State_Idle,
+        State_Moving = openrave_msgs::Query::Response::State_Moving,
+        State_Ready = openrave_msgs::Query::Response::State_Ready,
+        State_Stalled = openrave_msgs::Query::Response::State_Stalled
     };
     enum AccessType {
-        Access_Read = openrave_robot_control::controller_session::Request::Access_Read,
-        Access_Control = openrave_robot_control::controller_session::Request::Access_Control,
-        Access_ForceControl = openrave_robot_control::controller_session::Request::Access_ForceControl
+        Access_Read = openrave_msgs::controller_session::Request::Access_Read,
+        Access_Control = openrave_msgs::controller_session::Request::Access_Control,
+        Access_ForceControl = openrave_msgs::controller_session::Request::Access_ForceControl
     };
     enum CommandType
     {
@@ -282,7 +283,7 @@ public:
             _ros->shutdown();
     }
 
-    virtual bool session_callback(openrave_robot_control::controller_session::Request& req, openrave_robot_control::controller_session::Response& res)
+    virtual bool session_callback(openrave_msgs::controller_session::Request& req, openrave_msgs::controller_session::Response& res)
     {
         if( req.sessionid != 0 ) {
             boost::mutex::scoped_lock lock(_mutexSession);
@@ -332,7 +333,7 @@ public:
         return true;
     }
 
-    virtual bool Query(openrave_robot_control::Query::Request& req, openrave_robot_control::Query::Response& res)
+    virtual bool Query(openrave_msgs::Query::Request& req, openrave_msgs::Query::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, false);
         if( !psession )
@@ -378,7 +379,7 @@ public:
         return true;
     }
 
-    virtual bool Wait(openrave_robot_control::Wait::Request& req, openrave_robot_control::Wait::Response& res)
+    virtual bool Wait(openrave_msgs::Wait::Request& req, openrave_msgs::Wait::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, false);
         if( !psession )
@@ -403,7 +404,7 @@ public:
         return true;
     }
 
-    virtual bool Cancel(openrave_robot_control::Cancel::Request& req, openrave_robot_control::Cancel::Response& res)
+    virtual bool Cancel(openrave_msgs::Cancel::Request& req, openrave_msgs::Cancel::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, true);
         if( !psession )
@@ -428,7 +429,7 @@ public:
     }
 
     /// anyone should be able to brake/pause the robot
-    virtual bool Brake(openrave_robot_control::Brake::Request& req, openrave_robot_control::Brake::Response& res)
+    virtual bool Brake(openrave_msgs::Brake::Request& req, openrave_msgs::Brake::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, false);
         if( !psession )
@@ -438,7 +439,7 @@ public:
         return false;
     }
 
-    virtual bool StartTrajectory(openrave_robot_control::StartTrajectory::Request& req, openrave_robot_control::StartTrajectory::Response& res)
+    virtual bool StartTrajectory(openrave_msgs::StartTrajectory::Request& req, openrave_msgs::StartTrajectory::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, true);
         if( !psession ) {
@@ -451,36 +452,57 @@ public:
             return false;
         }
 
-        TrajectoryBasePtr ptraj = RaveCreateTrajectory(_penv,GetDOF());
+        TrajectoryBasePtr ptraj = RaveCreateTrajectory(_penv,"");
 
-        vector<dReal> vpoints(GetDOF());
-        FOREACH(it, req.traj.points) {
-            if( it->positions.size() != vpoints.size() ) {
-                ROS_ERROR("received invalid point");
+        vector<int> vindices; vindices.reserve(req.traj.traj.joint_names.size());
+        FOREACHC(itname,req.traj.traj.joint_names) {
+            vindices.push_back(_probot->GetJoint(*itname)->GetDOFIndex());
+        }
+        ConfigurationSpecification spec = _probot->GetConfigurationSpecificationIndices(vindices);
+        spec.AddVelocityGroups(true);
+        int timeoffset = spec.GetGroupFromName("deltatime").offset;
+        int veloffset = spec.GetGroupFromName("joint_velocities").offset;
+
+        bool bhavevelocities=true;
+        vector<dReal> vpoints(spec.GetDOF()*req.traj.traj.points.size());
+        vector<dReal>::iterator itdst = vpoints.begin();
+        dReal prevtime = 0;
+        FOREACH(it, req.traj.traj.points) {
+            if( (int)it->positions.size() != _probot->GetActiveDOF() ) {
+                ROS_ERROR_STREAM(str(boost::format("received invalid point dof %d != %d ")%it->positions.size()%_probot->GetActiveDOF()));
                 return false;
             }
-            std::copy(it->positions.begin(),it->positions.end(),vpoints.begin());
-            Trajectory::TPOINT tp(vpoints,it->time);
-            if( it->torques.size() == vpoints.size() ) {
-                tp.qtorque.resize(it->torques.size());
-                std::copy(it->torques.begin(),it->torques.end(),tp.qtorque.begin());
+            std::copy(it->positions.begin(),it->positions.end(),itdst);
+            if( it->velocities.size() == it->positions.size() ) {
+                std::copy(it->velocities.begin(),it->velocities.end(),itdst+veloffset);
             }
-            ptraj->AddPoint(tp);
+            else {
+                bhavevelocities = false;
+            }
+            dReal newtime = it->time_from_start.toSec();
+            *(itdst+timeoffset) = newtime-prevtime;
+            prevtime = newtime;
+            itdst += spec.GetDOF();
         }
 
-        {
+        if( bhavevelocities && req.hastiming ) {
+            string interpolation = req.traj.interpolation.size() > 0 ? req.traj.interpolation : string("quadratic");
+            spec.GetGroupFromName("joint_values").interpolation = interpolation;
+            spec.GetGroupFromName("joint_velocities").interpolation = ConfigurationSpecification::GetInterpolationDerivative(interpolation);
+        }
+
+        ptraj->Init(spec);
+        ptraj->Insert(0,vpoints);
+
+        if( !bhavevelocities || !req.hastiming ) {
             EnvironmentMutex::scoped_lock lockenv(_penv->GetMutex());
-            if( !ptraj->CalcTrajTiming(_probot, (int)req.interpolation, !req.hastiming, true, _fMaxVelMult) ) {
-                ROS_ERROR("failed to compute trajectory timing");
-                return false;
-            }
-            ROS_DEBUG_STREAM(str(boost::format("trajectory %fs, timing=%d, maxvel=%f")%ptraj->GetTotalDuration()%((int)req.hastiming)%_fMaxVelMult));
+            _probot->SetActiveDOFs(vindices);
+            string plannername = "lineartrajectoryretimer";
+            planningutils::RetimeActiveDOFTrajectory(ptraj,_probot,req.hastiming,_fMaxVelMult,plannername);
+            ROS_INFO_STREAM(str(boost::format("retimed trajectory duration=%fs, num=%d, timing=%d, maxvel=%f")%ptraj->GetDuration()%ptraj->GetNumWaypoints()%((int)req.hastiming)%_fMaxVelMult));
         }
-
-        if( req.requesttiming ) {
-            res.timestamps.reserve(ptraj->GetPoints().size());
-            FOREACH(itp, ptraj->GetPoints())
-            res.timestamps.push_back(itp->time);
+        else {
+            ROS_INFO_STREAM(str(boost::format("received trajectory duration=%fs, num=%d")%ptraj->GetDuration()%ptraj->GetNumWaypoints()));
         }
 
         {
@@ -500,7 +522,7 @@ public:
         return true;
     }
 
-    virtual bool StartVelocity(openrave_robot_control::StartVelocity::Request& req, openrave_robot_control::StartVelocity::Response& res)
+    virtual bool StartVelocity(openrave_msgs::StartVelocity::Request& req, openrave_msgs::StartVelocity::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, true);
         if( !psession ) {
@@ -531,7 +553,7 @@ public:
         return true;
     }
 
-    virtual bool StartTorque(openrave_robot_control::StartTorque::Request& req, openrave_robot_control::StartTorque::Response& res)
+    virtual bool StartTorque(openrave_msgs::StartTorque::Request& req, openrave_msgs::StartTorque::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, true);
         if( !psession ) {
@@ -562,7 +584,7 @@ public:
         return true;
     }
 
-    virtual bool StartCustomString(openrave_robot_control::StartCustomString::Request& req, openrave_robot_control::StartCustomString::Response& res)
+    virtual bool StartCustomString(openrave_msgs::StartCustomString::Request& req, openrave_msgs::StartCustomString::Response& res)
     {
         boost::shared_ptr<SessionState> psession = _getState(req, true);
         if( !psession ) {
@@ -633,9 +655,9 @@ protected:
     {
         BOOST_ASSERT(!_probot && !_penv);
         _vlinknames.resize(0); _vPublishableLinks.resize(0);
-        if( robotfile.size() == 0 )
+        if( robotfile.size() == 0 ) {
             return false;
-
+        }
         try {
             // create the main environment
             _InitEnvironment();
@@ -694,11 +716,13 @@ protected:
                 setusedlinks.insert(pjoint->GetFirstAttached()->GetIndex());
                 setusedlinks.insert(pjoint->GetSecondAttached()->GetIndex());
 
-                if( _probot->DoesAffect(*it, pjoint->GetFirstAttached()->GetIndex()) )
+                if( _probot->DoesAffect(*it, pjoint->GetFirstAttached()->GetIndex()) ) {
                     // first link is child link
                     _vPublishableLinks.push_back(make_pair(pjoint->GetSecondAttached()->GetIndex(), pjoint->GetFirstAttached()->GetIndex()));
-                else
+                }
+                else {
                     _vPublishableLinks.push_back(make_pair(pjoint->GetFirstAttached()->GetIndex(),pjoint->GetSecondAttached()->GetIndex()));
+                }
             }
 
             // check the passive joints!
@@ -708,10 +732,12 @@ protected:
                         setusedlinks.insert((*itpassive)->GetFirstAttached()->GetIndex());
                         setusedlinks.insert((*itpassive)->GetSecondAttached()->GetIndex());
                         bool bFirstLinkIsChild = (*itpassive)->GetFirstAttached()->GetIndex() > (*itpassive)->GetSecondAttached()->GetIndex();
-                        if( (*itpassive)->GetFirstAttached() == _probot->GetLinks().at(0) )
+                        if( (*itpassive)->GetFirstAttached() == _probot->GetLinks().at(0) ) {
                             bFirstLinkIsChild = false;
-                        else if( (*itpassive)->GetSecondAttached() == _probot->GetLinks().at(0) )
+                        }
+                        else if( (*itpassive)->GetSecondAttached() == _probot->GetLinks().at(0) ) {
                             bFirstLinkIsChild = true;
+                        }
                         else {
                             FOREACHC(it,_probot->GetDependencyOrderedJoints()) {
                                 if( (*it)->GetFirstAttached() == (*itpassive)->GetFirstAttached() || (*it)->GetSecondAttached() == (*itpassive)->GetFirstAttached() ) {
@@ -731,16 +757,20 @@ protected:
                             _vPublishableLinks.push_back(make_pair((*itpassive)->GetFirstAttached()->GetIndex(),(*itpassive)->GetSecondAttached()->GetIndex()));
                     }
                 }
-                if( (*itpassive)->GetMimicJointIndex() >= 0 ) {
+                if( (*itpassive)->IsMimic() ) {
+                    vector<int> vmimicdofs;
+                    (*itpassive)->GetMimicDOFIndices(vmimicdofs);
                     FOREACH(it,vrobotjoints) {
-                        if( (*itpassive)->GetMimicJointIndex() == *it ) {
+                        if( find(vmimicdofs.begin(),vmimicdofs.end(),*it) != vmimicdofs.end() ) {
                             setusedlinks.insert((*itpassive)->GetFirstAttached()->GetIndex());
                             setusedlinks.insert((*itpassive)->GetSecondAttached()->GetIndex());
-                            if( _probot->DoesAffect(*it, (*itpassive)->GetFirstAttached()->GetIndex()) )
+                            if( _probot->DoesAffect(*it, (*itpassive)->GetFirstAttached()->GetIndex()) ) {
                                 // first link is child link
                                 _vPublishableLinks.push_back(make_pair((*itpassive)->GetSecondAttached()->GetIndex(), (*itpassive)->GetFirstAttached()->GetIndex()));
-                            else
+                            }
+                            else {
                                 _vPublishableLinks.push_back(make_pair((*itpassive)->GetFirstAttached()->GetIndex(),(*itpassive)->GetSecondAttached()->GetIndex()));
+                            }
                             break;
                         }
                     }
@@ -799,17 +829,19 @@ protected:
                 // only send sensor data if name is valid
                 if( (*itmanip)->GetName().size() > 0 ) {
                     ROS_INFO_STREAM(str(boost::format("publishing manipulator transform %s")%(*itmanip)->GetName()));
-                    _vStaticTransforms.push_back(boost::make_tuple(_getBtTransform((*itmanip)->GetGraspTransform()),_vlinknames[(*itmanip)->GetEndEffector()->GetIndex()],(*itmanip)->GetName()));
+                    _vStaticTransforms.push_back(boost::make_tuple(_getBtTransform((*itmanip)->GetLocalToolTransform()),_vlinknames[(*itmanip)->GetEndEffector()->GetIndex()],(*itmanip)->GetName()));
                 }
             }
         }
         catch(controller_exception& err) {
             ROS_ERROR("failed to open OpenRAVE robot file %s: %s", robotfile.c_str(),err.what());
-            if( !!_probot && !!_penv )
+            if( !!_probot && !!_penv ) {
                 _penv->Remove(_probot);
+            }
             _probot.reset();
-            if( !!_penv )
+            if( !!_penv ) {
                 _penv->Destroy();
+            }
             _penv.reset();
             return false;
         }
@@ -853,6 +885,29 @@ protected:
         _listCommands.clear();
         _conditionCommand.notify_all();
         _setIdle();
+    }
+
+    // assumes boost::mutex::scoped_lock lock(_mutexControl);
+    virtual void _GetCurrentJointValues(vector<dReal>& vcurrentangles)
+    {
+        _probot->GetActiveDOFValues(vcurrentangles);
+        vcurrentangles.resize(_mstate.position.size());
+        if (_mstate.position.size()==_mstate.name.size()) {
+            for(size_t i = 0; i < _mstate.position.size(); ++i) {
+                int dofindex = _probot->GetJoint(_mstate.name[i])->GetDOFIndex();
+                vector<int>::const_iterator itactvindex = find(_probot->GetActiveDOFIndices().begin(),_probot->GetActiveDOFIndices().end(),dofindex);
+                if( itactvindex != _probot->GetActiveDOFIndices().end() ) {
+                    vcurrentangles.at(*itactvindex) = _mstate.position[i];
+                }
+                else {
+                    ROS_WARN_STREAM(str(boost::format("failed to find %s joint name as part of active indices")%_mstate.name[i]));
+                }
+            }
+        }
+        else {
+            BOOST_ASSERT(_probot->GetActiveDOF()==(int)_mstate.position.size());
+            std::copy(_mstate.position.begin(),_mstate.position.end(),vcurrentangles.begin());
+        }
     }
 
     virtual void _setIdle()
@@ -945,11 +1000,5 @@ protected:
     sensor_msgs::JointState _mstate;
     //@}
 };
-
-BOOST_STATIC_ASSERT((int)Trajectory::NONE==openrave_robot_control::StartTrajectory::Request::Interp_None);
-BOOST_STATIC_ASSERT((int)Trajectory::LINEAR==openrave_robot_control::StartTrajectory::Request::Interp_Linear);
-BOOST_STATIC_ASSERT((int)Trajectory::LINEAR_BLEND==openrave_robot_control::StartTrajectory::Request::Interp_LinearBlend);
-BOOST_STATIC_ASSERT((int)Trajectory::CUBIC==openrave_robot_control::StartTrajectory::Request::Interp_Cubic);
-BOOST_STATIC_ASSERT((int)Trajectory::QUINTIC==openrave_robot_control::StartTrajectory::Request::Interp_Quintic);
 
 } // end namespace openrave_robot_control

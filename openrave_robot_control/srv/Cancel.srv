@@ -1,6 +1,0 @@
-## cancels a command(s)
-
-# if 0, cancels all trajectories, otherwise cancels the trajectory with the specified id
-# if no such trajectory exists return fail
-uint32 commandid 
----

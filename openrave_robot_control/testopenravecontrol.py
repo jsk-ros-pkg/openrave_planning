@@ -16,11 +16,13 @@ with env:
     manip = robot.GetManipulators()[0]
     jointnames = ' '.join(robot.GetJoints()[j].GetName() for j in manip.GetArmJoints())
     robot.SetController(RaveCreateController(env,'ROSOpenRAVE trajectoryservice /controller_session '+jointnames),range(robot.GetDOF()),0)
-    lower,upper = robot.GetJointLimits()
+    lower,upper = robot.GetDOFLimits()
 
 # sending velocity command?
 #robot.GetController().SendCommand("setvelocity 4 .01")
 
+basemanip = interfaces.BaseManipulation(robot)
+i = 0
 while True:
     with robot: # save the robot state and get random joint values that are collision free
         while True:
@@ -29,8 +31,14 @@ while True:
             if not robot.CheckSelfCollision() and not env.CheckCollision(robot):
                 break
     print 'setting: ',values
-    robot.GetController().SetDesired(values)
+    if i%2:
+        print 'planner ',values
+        basemanip.MoveActiveJoints(values,outputtrajobj=True)
+    else:
+        print 'SetDesired ',values
+        robot.GetController().SetDesired(values)
     robot.WaitForController(0)
     time.sleep(1.0)
+    i += 1
 
 RaveDestroy()

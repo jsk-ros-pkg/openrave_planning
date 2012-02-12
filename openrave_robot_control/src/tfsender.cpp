@@ -27,7 +27,7 @@
 #include <tf/transform_broadcaster.h>
 #include <sensor_msgs/JointState.h>
 
-#define FOREACH(it, v) for(typeof((v).begin()) it = (v).begin(); it != (v).end(); (it)++)
+#define FOREACH(it, v) for(typeof((v).begin())it = (v).begin(); it != (v).end(); (it)++)
 
 using namespace std;
 using namespace OpenRAVE;
@@ -54,9 +54,9 @@ public:
         RAVELOG_INFOA(str(boost::format("found openrave robot %s, numjoints=%d\n")%_probot->GetName()%_probot->GetDOF()));
 
         FOREACH(itlink, _probot->GetLinks())
-            _vlinknames.push_back((*itlink)->GetName());
+        _vlinknames.push_back((*itlink)->GetName());
         FOREACH(itjoint, _probot->GetJoints())
-            _vjointnames.push_back((*itjoint)->GetName());
+        _vjointnames.push_back((*itjoint)->GetName());
         _probot->GetDOFValues(_vjointvalues);
 
         set<int> setusedlinks;
@@ -75,7 +75,7 @@ public:
                     }
                 }
             }
-            
+
             if( bDummy ) {
                 bool bHasFirst = setusedlinks.find(pjoint->GetFirstAttached()->GetIndex()) != setusedlinks.end();
                 bool bHasSecond = setusedlinks.find(pjoint->GetSecondAttached()->GetIndex()) != setusedlinks.end();
@@ -85,7 +85,7 @@ public:
                         _vStaticTransforms.push_back(boost::make_tuple(getBtTransform(pjoint->GetSecondAttached()->GetTransform().inverse() * pjoint->GetFirstAttached()->GetTransform()), _vlinknames[pjoint->GetSecondAttached()->GetIndex()], _vlinknames[pjoint->GetFirstAttached()->GetIndex()]));
                     else
                         _vStaticTransforms.push_back(boost::make_tuple(getBtTransform(pjoint->GetFirstAttached()->GetTransform().inverse() * pjoint->GetSecondAttached()->GetTransform()), _vlinknames[pjoint->GetFirstAttached()->GetIndex()], _vlinknames[pjoint->GetSecondAttached()->GetIndex()]));
-                    
+
                     setusedlinks.insert(pjoint->GetFirstAttached()->GetIndex());
                     setusedlinks.insert(pjoint->GetSecondAttached()->GetIndex());
                     i = 0;
@@ -110,7 +110,7 @@ public:
             // only send sensor data if name is valid
             if( (*itmanip)->GetName().size() > 0 ) {
                 RAVELOG_INFO(str(boost::format("publishing manipulator transform %s\n")%(*itmanip)->GetName()));
-                _vStaticTransforms.push_back(boost::make_tuple(getBtTransform((*itmanip)->GetGraspTransform()),_vlinknames[(*itmanip)->GetEndEffector()->GetIndex()], (*itmanip)->GetName()));
+                _vStaticTransforms.push_back(boost::make_tuple(getBtTransform((*itmanip)->GetLocalToolTransform()),_vlinknames[(*itmanip)->GetEndEffector()->GetIndex()], (*itmanip)->GetName()));
             }
         }
 
@@ -160,11 +160,11 @@ public:
                 RAVELOG_WARN("joint %s not in openrave robot\n",pmstate->name.at(i).c_str());
                 continue;
             }
-            
+
             _vjointvalues[itname-_vjointnames.begin()] = pmstate->position.at(i);
             listjoints.push_back(itname-_vjointnames.begin());
         }
-    
+
         if( _vjointvalues.size() > 0 )
             _probot->SetJointValues(_vjointvalues);
 
@@ -179,7 +179,7 @@ public:
             else if( !!pparent ) {
                 // both links valid
                 if( _probot->DoesAffect(*it, pjoint->GetSecondAttached()->GetIndex()) )
-                    swap(pchild,pparent); // second link is child link
+                    swap(pchild,pparent);                                             // second link is child link
             }
 
             Transform tchild, tparent;
@@ -191,17 +191,21 @@ public:
         }
 
         // publish passive joints
+        std::vector<int> vmimicdofs;
         FOREACH(itpassive, _probot->GetPassiveJoints()) {
             FOREACH(it,listjoints) {
-                if( (*itpassive)->GetMimicJointIndex() == *it ) {
+                (*itpassive)->GetMimicDOFIndices(vmimicdofs,0);
+                if( find(vmimicdofs.begin(),vmimicdofs.end(),*it) != vmimicdofs.end() ) {
                     KinBody::LinkPtr pchild = (*itpassive)->GetFirstAttached();
                     KinBody::LinkPtr pparent = (*itpassive)->GetSecondAttached();
-                    if( !pchild )
+                    if( !pchild ) {
                         swap(pchild,pparent);
+                    }
                     else if( !!pparent ) {
                         // both links valid
-                        if( _probot->DoesAffect(*it, (*itpassive)->GetSecondAttached()->GetIndex()) )
-                            swap(pchild,pparent); // second link is child link
+                        if( _probot->DoesAffect(*it, (*itpassive)->GetSecondAttached()->GetIndex()) ) {
+                            swap(pchild,pparent);  // second link is child link
+                        }
                     }
 
                     Transform tchild, tparent;
@@ -217,7 +221,7 @@ public:
 
         // publish static frames
         FOREACH(itstatic,_vStaticTransforms)
-            _tfbroadcaster->sendTransform(tf::StampedTransform(boost::get<0>(*itstatic), pmstate->header.stamp, boost::get<1>(*itstatic), boost::get<2>(*itstatic)));
+        _tfbroadcaster->sendTransform(tf::StampedTransform(boost::get<0>(*itstatic), pmstate->header.stamp, boost::get<1>(*itstatic), boost::get<2>(*itstatic)));
     }
 
     btTransform getBtTransform(const Transform& t)
@@ -262,10 +266,10 @@ int main(int argc, char ** argv)
     if( !ros::master::check() ) {
         return 1;
     }
-    RaveInitialize(true);    
+    RaveInitialize(true);
     boost::shared_ptr<RobotFramePublisher> ppublisher(new RobotFramePublisher(robotname));
     ros::spin();
-    
+
     ppublisher.reset();
     return 0;
 }

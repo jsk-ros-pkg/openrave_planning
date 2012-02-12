@@ -10,5 +10,4 @@
   <depend package="sensor_msgs"/>
   <depend package="geometry_msgs"/>
   <depend package="trajectory_msgs"/>
-  <depend package="actionlib_msgs"/>
 </package>

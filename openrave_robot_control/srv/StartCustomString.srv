@@ -1,6 +1,0 @@
-# inputs and outputs are regular strings
-string input
----
-uint32 commandid # unique command id to be used for later referencing
-time stamp # expected time when robot will start trajectory
-string output

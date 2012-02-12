@@ -1,2 +1,0 @@
-uint8 brake # if 1 applies brakes (stops the arm), if 0 releases brakes (arm commands resume)
----

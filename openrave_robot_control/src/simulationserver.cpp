@@ -137,14 +137,16 @@ private:
 
     virtual void _startTrajectoryCommand(TrajectoryBasePtr ptraj)
     {
-        vector<dReal> vcurrentangles(GetDOF());
+        vector<dReal> vcurrentangles;
         {
             boost::mutex::scoped_lock lock(_mutexControl);
-            std::copy(_mstate.position.begin(),_mstate.position.end(),vcurrentangles.begin());
+            _GetCurrentJointValues(vcurrentangles);
         }
 
+
         bool bDifferent = false;
-        vector<dReal> vstartangles = ptraj->GetPoints().front().q;
+        vector<dReal> vstartangles;
+        ptraj->Sample(vstartangles,0,_probot->GetActiveConfigurationSpecification());
         for(int i = 0; i < GetDOF(); ++i) {
             if( RaveFabs(vcurrentangles[i]-vstartangles[i]) > 0.01f ) {
                 bDifferent = true;
@@ -160,7 +162,7 @@ private:
 //            ptesttraj->AddPoint(Trajectory::TPOINT(vcurrentangles, 0));
 //            ptesttraj->AddPoint(Trajectory::TPOINT(vstartangles, 0));
 //            ptesttraj->CalcTrajTiming(_probot, ptraj->GetInterpMethod(), true, true, _fMaxVelMult);
-//            dReal fTimeStampOffset = ptesttraj->GetTotalDuration();
+//            dReal fTimeStampOffset = ptesttraj->GetDuration();
 //
 //            //ROS_DEBUG("adding current angles to beginning of trajectory, offset=%f", fTimeStampOffset);
 //
@@ -180,22 +182,22 @@ private:
     virtual CommandStatus _runTrajectoryCommand(TrajectoryBasePtr ptraj, float fCommandTime)
     {
         boost::mutex::scoped_lock lock(_mutexControl);
-        vector<dReal> vcurrentangles(GetDOF());
-        std::copy(_mstate.position.begin(),_mstate.position.end(),vcurrentangles.begin());
+        vector<dReal> vcurrentangles;
+        _GetCurrentJointValues(vcurrentangles);
 
-        Trajectory::TPOINT pt;
-        ptraj->SampleTrajectory(fCommandTime, pt);
-        _probot->SetActiveDOFValues(pt.q);
-        //ROS_DEBUG("command time: %f/%f: %d",fCommandTime,ptraj->GetTotalDuration(),(int)ptraj->GetPoints().size());
+        vector<dReal> vdata;
+        ptraj->Sample(vdata, fCommandTime, _probot->GetActiveConfigurationSpecification());
+        _probot->SetActiveDOFValues(vdata);
+        //ROS_DEBUG("command time: %f/%f: %d",fCommandTime,ptraj->GetDuration(),(int)ptraj->GetPoints().size());
         bool bDifferent = false;
         for(int i = 0; i < GetDOF(); ++i) {
-            if( RaveFabs(vcurrentangles[i]-pt.q[i]) > 0.01f ) {
+            if( RaveFabs(vcurrentangles[i]-vdata[i]) > 0.01f ) {
                 bDifferent = true;
                 break;
             }
         }
 
-        return (fCommandTime >= ptraj->GetTotalDuration()&&!bDifferent) ? Status_Finished : Status_Running;
+        return (fCommandTime >= ptraj->GetDuration()&&!bDifferent) ? Status_Finished : Status_Running;
     }
 
     virtual void _finishTrajectoryCommand(TrajectoryBasePtr ptraj)
@@ -307,26 +309,30 @@ int main(int argc, char ** argv)
             viewername = argv[i+1];
             i += 2;
         }
-        else
+        else {
             break;
+        }
     }
 
     ros::init(argc,argv,"simulationserver", ros::init_options::NoSigintHandler);
-    if( !ros::master::check() )
+    if( !ros::master::check() ) {
         return 1;
+    }
 
     RaveInitialize(true);
     s_pcontroller.reset(new SimulationController(robotname, manipname, vjointnames, fMaxVelMult));
     s_pcontroller->init();
 
     boost::shared_ptr<boost::thread> thviewer;
-    if( viewername.size() > 0 )
+    if( viewername.size() > 0 ) {
         thviewer.reset(new boost::thread(boost::bind(SetViewer,s_pcontroller->GetEnv(),viewername)));
+    }
     ros::spin();
 
     s_pcontroller.reset();
-    if( !!thviewer )
+    if( !!thviewer ) {
         thviewer->join();
+    }
     return 0;
 }
 
