@@ -295,7 +295,7 @@ public:
 
                 RaveVector<float> vcolor = _vColor*0.5f;
                 vcolor.w = 0.7f;
-                _graphgeometry = GetEnv()->drawtrimesh(viconpoints[0], sizeof(viconpoints[0]), &viconindices[0], N, vcolor);
+                _graphgeometry = GetEnv()->drawtrimesh(&viconpoints[0][0], sizeof(viconpoints[0]), &viconindices[0], N, vcolor);
             }
             if( !!_graphgeometry ) {
                 _graphgeometry->SetTransform(t);
@@ -361,7 +361,7 @@ public:
             listhandles.push_back(GetEnv()->plot3(&vpoints[0].x, N, sizeof(vpoints[0]), 5.0f, _vColor));
             
             _vColor.w = 0.2f;
-            listhandles.push_back(GetEnv()->drawtrimesh(vpoints[0], sizeof(vpoints[0]), &vindices[0], N-1, _vColor));
+            listhandles.push_back(GetEnv()->drawtrimesh(&vpoints[0][0], sizeof(vpoints[0]), &vindices[0], N-1, _vColor));
             
             _listGraphicsHandles.swap(listhandles);
         }
