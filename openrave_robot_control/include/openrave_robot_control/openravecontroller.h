@@ -498,7 +498,7 @@ public:
             EnvironmentMutex::scoped_lock lockenv(_penv->GetMutex());
             _probot->SetActiveDOFs(vindices);
             string plannername = "lineartrajectoryretimer";
-            planningutils::RetimeActiveDOFTrajectory(ptraj,_probot,req.hastiming,_fMaxVelMult,plannername);
+            planningutils::RetimeActiveDOFTrajectory(ptraj,_probot,req.hastiming,_fMaxVelMult,1.0,plannername);
             ROS_INFO_STREAM(str(boost::format("retimed trajectory duration=%fs, num=%d, timing=%d, maxvel=%f")%ptraj->GetDuration()%ptraj->GetNumWaypoints()%((int)req.hastiming)%_fMaxVelMult));
         }
         else {
@@ -663,7 +663,7 @@ protected:
             _InitEnvironment();
             EnvironmentMutex::scoped_lock lock(_penv->GetMutex());
             _probot = _penv->ReadRobotXMLFile(robotfile);
-            _penv->AddRobot(_probot);
+            _penv->Add(_probot);
 
             ROS_INFO_STREAM(str(boost::format("found openrave robot %s, numjoints=%d")%_probot->GetName()%_probot->GetDOF()));
 

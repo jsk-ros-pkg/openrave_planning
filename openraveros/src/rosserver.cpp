@@ -541,7 +541,7 @@ public:
         }
         pbody->SetName(req.name);
 
-        GetEnv()->AddKinBody(pbody);
+        GetEnv()->Add(pbody);
         res.bodyid = pbody->GetEnvironmentId();
         return true;
     }
@@ -614,7 +614,7 @@ public:
         probot->SetName(req.name);
 
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
-        GetEnv()->AddRobot(probot);;
+        GetEnv()->Add(probot);;
         res.bodyid = probot->GetEnvironmentId();
         return true;
     }
