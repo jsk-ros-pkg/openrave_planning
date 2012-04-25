@@ -9,7 +9,7 @@ In order to use, please add the following line in your bashrc:<br/>
   <license>Lesser GPL and Apache License, Version 2.0</license>
   <review status="3rdparty" notes=""/>
   <export>
-    <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave-config --libs` `${prefix}/bin/openrave-config --libs-core`" cflags="`${prefix}/bin/openrave-config --cflags`"/>
+    <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave0.7-config --libs` `${prefix}/bin/openrave0.7-config --libs-core`" cflags="`${prefix}/bin/openrave0.7-config --cflags`"/>
     <python path="${prefix}/src"/>
   </export>
   <depend package="opende"/>
