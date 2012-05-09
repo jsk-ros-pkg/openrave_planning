@@ -13,11 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License. 
 """
-To execute use:
+To execute on 8 cores of the current localhost, first store roscore and then run:
 
 .. code-block:: bash
 
-  roscd openrave_database; rosrun parallel_util workmanagerlauncher.py --module=grasping_ros --launchservice=...
+  roscd openrave_database; rosrun parallel_util workmanagerlauncher.py --module=grasping_ros --launchservice='8*localhost'
+
+For more options run:
+
+.. code-block:: bash
+
+  rosrun parallel_util workmanagerlauncher.py --help
 
 """
 
