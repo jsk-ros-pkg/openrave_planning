@@ -1,4 +1,4 @@
-coin:
+libcoin60-dev:
   ubuntu:
     8.04: libcoin40-dev
     8.10: libcoin40-dev
@@ -12,7 +12,7 @@ coin:
   arch: coin
   macports: coin
   gentoo: coin
-soqt:
+libsoqt4-dev:
   ubuntu: libsoqt4-dev
   debian: libsoqt4-dev
   fedora: soqt-devel
@@ -22,11 +22,11 @@ qhull:
   arch: qhull
   macports: qhull
   gentoo: qhull
-qt4:
+libqt4-dev:
   ubuntu: libqt4-dev qt4-dev-tools
 autoconf:
   ubuntu: autoconf
-qt4gl:
+libqt4-opengl-dev:
   ubuntu: libqt4-opengl-dev
   debian: libqt4-opengl-dev
   gentoo: ">=x11-libs/qt-opengl-4"

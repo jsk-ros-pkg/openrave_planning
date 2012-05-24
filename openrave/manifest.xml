@@ -22,10 +22,10 @@ In order to use, please add the following line in your bashrc:<br/>
   <rosdep name="python-sympy"/>
   <rosdep name="assimp"/>
   <rosdep name="collada-dom"/>
-  <rosdep name="qt4"/>
-  <rosdep name="qt4gl"/>
-  <rosdep name="coin"/>
-  <rosdep name="soqt"/>
+  <rosdep name="libqt4-dev"/>
+  <rosdep name="libqt4-opengl-dev"/>
+  <rosdep name="libcoin60-dev"/>
+  <rosdep name="libsoqt4-dev"/>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>
