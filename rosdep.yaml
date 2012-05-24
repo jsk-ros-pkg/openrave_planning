@@ -33,7 +33,7 @@ libqt4-opengl-dev:
 python-sympy:
   ubuntu: python-sympy
   debian: python-sympy
-assimp:
+assimp-dev:
   ubuntu: |
    #!/bin/bash
    if [ ! -f /etc/apt/sources.list.d/openrave-release*.list ] ; then
