@@ -19,6 +19,5 @@
   <depend package="trajectory_msgs"/>
   <depend package="kinematics_msgs"/>
   <depend package="actionlib"/>
-  <depend package="move_base_msgs"/>
   <depend package="std_msgs"/>
 </package>

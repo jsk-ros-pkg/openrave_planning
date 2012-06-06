@@ -33,10 +33,10 @@
 #include <boost/filesystem/operations.hpp>
 
 #include <ros/ros.h>
-#include <move_base_msgs/MoveBaseAction.h>
+//#include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 
-typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+//typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 class ROSBindings : public ProblemInstance
 {
@@ -47,8 +47,8 @@ public:
                         "Set a robot's navigation from a published tf frame");
         RegisterCommand("SetLocalizationFromDetection",boost::bind(&ROSBindings::SetLocalizationFromDetection,this,_1,_2),
                         "Set a robot's navigation from a published object");
-        RegisterCommand("MoveBase",boost::bind(&ROSBindings::MoveBase,this,_1,_2),
-                        "Uses ROS's navigation stack to move the base");
+//        RegisterCommand("MoveBase",boost::bind(&ROSBindings::MoveBase,this,_1,_2),
+//                        "Uses ROS's navigation stack to move the base");
 //        RegisterCommand("MoveBase",boost::bind(&ROSBindings::ShowPointCloud,this,_1,_2),
 //                        "Uses ROS's navigation stack to move the base");
     }
@@ -282,7 +282,7 @@ protected:
         return true;
     }
 
-    bool MoveBase(ostream& sout, istream& sinput)
+    /*    bool MoveBase(ostream& sout, istream& sinput)
     {
         string cmd;
         string action="move_base";
@@ -350,7 +350,7 @@ protected:
         actionlib::SimpleClientGoalState state = ac.getState();
         RAVELOG_INFO(str(boost::format("goal status %s: %s\n")%state.toString()%state.getText()));
         return state == actionlib::SimpleClientGoalState::SUCCEEDED;
-    }
+        }*/
 
     boost::shared_ptr<tf::TransformListener> _tflistener;
     boost::shared_ptr<ros::NodeHandle> _ros;
