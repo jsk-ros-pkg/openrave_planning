@@ -31,8 +31,8 @@ libqt4-opengl-dev:
   debian: libqt4-opengl-dev
   gentoo: ">=x11-libs/qt-opengl-4"
 python-sympy:
-  ubuntu: python-sympy
-  debian: python-sympy
+  ubuntu: python-sympy python-mpmath
+  debian: python-sympy python-mpmath
 assimp-dev:
   ubuntu: |
    #!/bin/bash
