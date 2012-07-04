@@ -20,7 +20,8 @@ In order to use, please add the following line in your bashrc:<br/>
   <url>http://openrave.org</url>
   <rosdep name="libxml2"/>
   <rosdep name="python-sympy"/>
-  <rosdep name="assimp-dev"/>
+<!-- assimp-dev conflict with v3 and v2 -->
+<!--  <rosdep name="assimp-dev"/> -->
   <rosdep name="collada-dom"/>
   <rosdep name="libqt4-dev"/>
   <rosdep name="libqt4-opengl-dev"/>
