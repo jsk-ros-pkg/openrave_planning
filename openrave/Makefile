@@ -3,7 +3,7 @@ all: installed
 INSTALL_DIR=`rospack find openrave`
 SVN_DIR = openrave_svn
 # Should really specify a revision
-SVN_REVISION = -r 3478
+SVN_REVISION = -r 3482
 SVN_URL = https://openrave.svn.sourceforge.net/svnroot/openrave/trunk
 #SVN_PATCH = fini_patch.patch
 include $(shell rospack find mk)/svn_checkout.mk
@@ -43,6 +43,8 @@ CFlags: ${BULLET_CFLAGS}" > bullet.pc
 	cd $(INSTALL_DIR) && cp `./bin/openrave-config --share-dir`/openrave.bash .
 	cd $(INSTALL_DIR) && ln -s `./bin/openrave-config --python-dir` src
 	cd $(INSTALL_DIR) && bash convertlinks.bash `./bin/openrave-config --prefix`/bin
+	# armplanning_openrave.py script is crashing when qtosgrave is loaded, so find out problem first
+	cd $(INSTALL_DIR) && rm `./bin/openrave-config --share-dir`/plugins/libqtosgrave.*
 	touch installed
 
 clean:
