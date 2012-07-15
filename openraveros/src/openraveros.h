@@ -108,6 +108,7 @@
 #include <openraveros/robot_sensorgetdata.h>
 #include <openraveros/robot_sensorsend.h>
 #include <openraveros/robot_setactivedofs.h>
+#include <openraveros/robot_setactivemanipulator.h>
 #include <openraveros/robot_setactivevalues.h>
 #include <openraveros/robot_starttrajectory.h>
 

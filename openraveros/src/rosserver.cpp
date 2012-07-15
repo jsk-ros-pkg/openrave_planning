@@ -145,6 +145,7 @@ public:
         _mapservices["robot_sensorgetdata"] = _ros->advertiseService(ns+string("robot_sensorgetdata"),&ROSServer::robot_sensorgetdata_srv,this);
         _mapservices["robot_sensorsend"] = _ros->advertiseService(ns+string("robot_sensorsend"),&ROSServer::robot_sensorsend_srv,this);
         _mapservices["robot_setactivedofs"] = _ros->advertiseService(ns+string("robot_setactivedofs"),&ROSServer::robot_setactivedofs_srv,this);
+        _mapservices["robot_setactivemanipulator"] = _ros->advertiseService(ns+string("robot_setactivemanipulator"),&ROSServer::robot_setactivemanipulator_srv,this);
         _mapservices["robot_setactivevalues"] = _ros->advertiseService(ns+string("robot_setactivevalues"),&ROSServer::robot_setactivevalues_srv,this);
         _mapservices["robot_starttrajectory"] = _ros->advertiseService(ns+string("robot_starttrajectory"),&ROSServer::robot_starttrajectory_srv,this);
         return 0;
@@ -1232,6 +1233,14 @@ public:
         RobotBasePtr probot = _FromROSRobot(req.robotid);
         EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
         _FromROSActiveDOFs(probot, req.active);
+        return true;
+    }
+
+    bool robot_setactivemanipulator_srv(openraveros::robot_setactivemanipulator::Request& req, openraveros::robot_setactivemanipulator::Response& res)
+    {
+        RobotBasePtr probot = _FromROSRobot(req.robotid);
+        EnvironmentMutex::scoped_lock lock(GetEnv()->GetMutex());
+        probot->SetActiveManipulator(req.manip);
         return true;
     }
 

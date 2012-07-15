@@ -119,6 +119,7 @@ public:
         _mapservices["robot_sensorgetdata"] = _ros->advertiseService("robot_sensorgetdata",&SessionServer::robot_sensorgetdata_srv,shared_from_this());
         _mapservices["robot_sensorsend"] = _ros->advertiseService("robot_sensorsend",&SessionServer::robot_sensorsend_srv,shared_from_this());
         _mapservices["robot_setactivedofs"] = _ros->advertiseService("robot_setactivedofs",&SessionServer::robot_setactivedofs_srv,shared_from_this());
+        _mapservices["robot_setactivemanipulator"] = _ros->advertiseService("robot_setactivemanipulator",&SessionServer::robot_setactivemanipulator_srv,shared_from_this());
         _mapservices["robot_setactivevalues"] = _ros->advertiseService("robot_setactivevalues",&SessionServer::robot_setactivevalues_srv,shared_from_this());
         _mapservices["robot_starttrajectory"] = _ros->advertiseService("robot_starttrajectory",&SessionServer::robot_starttrajectory_srv,shared_from_this());
 
@@ -354,6 +355,7 @@ protected:
     REFLECT_SERVICE(robot_sensorgetdata)
     REFLECT_SERVICE(robot_sensorsend)
     REFLECT_SERVICE(robot_setactivedofs)
+    REFLECT_SERVICE(robot_setactivemanipulator)
     REFLECT_SERVICE(robot_setactivevalues)
     REFLECT_SERVICE(robot_starttrajectory)
 };
