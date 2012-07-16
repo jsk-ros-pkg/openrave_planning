@@ -57,9 +57,9 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     env = OpenRAVEGlobalArguments.parseAndCreate(options,defaultviewer=False)
     RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('orrosplanning'),'lib','liborrosplanning.so'))
-    RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('openraveros'),'lib','openraveros'))
+    #RaveLoadPlugin(os.path.join(roslib.packages.get_pkg_dir('openraveros'),'lib','openraveros'))
     namespace = 'openrave'
-    env.AddModule(RaveCreateModule(env,'rosserver'),namespace)
+    #env.AddModule(RaveCreateModule(env,'rosserver'),namespace)
     rospy.loginfo('initializing, please wait for ready signal...')
     handles = [] # for viewer
     def UpdateRobotJoints(msg):
@@ -120,6 +120,8 @@ if __name__ == "__main__":
             listener = tf.TransformListener()
         values = robot.GetDOFValues()
         envlock = threading.Lock()
+
+        postprocessing = ['shortcut_linear','<_nmaxiterations>20</_nmaxiterations><_postprocessing planner=\"parabolicsmoother\"><_nmaxiterations>40</_nmaxiterations></_postprocessing>']
         def MoveToHandPositionFn(req):
             global options
             rospy.loginfo("MoveToHandPosition")
@@ -187,16 +189,9 @@ if __name__ == "__main__":
                                 ikmodel.autogenerate()
 
                         Tgoalee = dot(Thandgoal,dot(linalg.inv(Thandlink),manip.GetTransform()))
-
-                        # debug for viewer
-                        #global handles,debugpoints
-                        #debugpoints = Tgoalee[0:3,3]
-                        #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
-                        #time.sleep(1)
-                        postprocessing = ['shortcut_linear','<_nmaxiterations>20</_nmaxiterations><_postprocessing planner=\"parabolicsmoother\"><_nmaxiterations>40</_nmaxiterations></_postprocessing>']
                         try:
                             starttime = time.time()
-                            trajdata = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtraj=True,maxiter=750,jitter=options.jitter,postprocessing=postprocessing)
+                            traj = basemanip.MoveToHandPosition(matrices=[Tgoalee],maxtries=3,seedik=4,execute=False,outputtrajobj=True,maxiter=750,jitter=options.jitter,postprocessing=postprocessing)
                             rospy.loginfo('total planning time: %fs'%(time.time()-starttime))
                         except:
                             rospy.logerr('failed to solve for T=%s, error messages are:'%repr(Tgoalee))
@@ -206,8 +201,6 @@ if __name__ == "__main__":
                             return None
                         # parse trajectory data into the ROS structure
                         res = orrosplanning.srv.MoveToHandPositionResponse()
-                        traj = RaveCreateTrajectory(env,'')
-                        traj.deserialize(trajdata)
                         spec = traj.GetConfigurationSpecification()
                         res.traj.joint_names = [str(j.GetName()) for j in robot.GetJoints(manip.GetArmIndices())]
                         starttime = 0.0
@@ -222,15 +215,68 @@ if __name__ == "__main__":
 
             finally:
                 collisionmap.SendCommand("collisionstream 1")
-                #global handles,debugpoints
-                #handles.append(env.plot3(points=debugpoints,colors=array((0,1,0)),pointsize=10))
+
+        def MoveManipulatorFn(req):
+            global options
+            rospy.loginfo("MoveManipulator")
+            try:
+                with envlock:
+                    if options.wait_for_collisionmap is not None:
+                        starttime=time.time()
+                        handgoalstamp = int64(req.hand_goal.header.stamp.to_nsec())
+                        while True:
+                            timepassed = time.time()-starttime
+                            collisionstamp = collisionmap.SendCommand("gettimestamp")
+                            if collisionstamp is not None:
+                                if int64(collisionstamp)-handgoalstamp >= 0:
+                                     break
+                            if options.wait_for_collisionmap > 0 and timepassed > options.wait_for_collisionmap:
+                                if options.simulation is not None:
+                                    break;
+                                raise ValueError('failed to acquire new collision map, collision timestamp is %s, service timestamp is %s'%(collisionstamp,handgoalstamp))
+                            time.sleep(0.1) # wait
+
+                    collisionmap.SendCommand("collisionstream 0")
+
+                    with env:
+                        basemanip = interfaces.BaseManipulation(robot,plannername=None if len(req.planner)==0 else req.planner,maxvelmult=options.maxvelmult)
+                        rospy.loginfo("MoveManipulator2")
+                        manip = robot.SetActiveManipulator(req.manip_name)
+                        if manip is None:
+                            rospy.logerr('failed to find manipulator %s'%req.manip_name)
+                            return None
+
+                        try:
+                            starttime = time.time()
+                            traj = basemanip.MoveManipulator(goal=req.manip_goal,execute=False,outputtrajobj=True,maxiter=750,jitter=options.jitter)
+                            rospy.loginfo('total planning time: %fs'%(time.time()-starttime))
+                        except:
+                            rospy.logerr('failed to solve for goal=%s, error messages are:'%repr(req.manip_goal))
+                            return None
+                        # parse trajectory data into the ROS structure
+                        res = orrosplanning.srv.MoveManipulatorResponse()
+                        spec = traj.GetConfigurationSpecification()
+                        res.traj.joint_names = [str(j.GetName()) for j in robot.GetJoints(manip.GetArmIndices())]
+                        starttime = 0.0
+                        for i in range(traj.GetNumWaypoints()):
+                            pt=trajectory_msgs.msg.JointTrajectoryPoint()
+                            data = traj.GetWaypoint(i)
+                            pt.positions = spec.ExtractJointValues(data,robot,manip.GetArmIndices(),0)
+                            starttime += spec.ExtractDeltaTime(data)
+                            pt.time_from_start = rospy.Duration(starttime)
+                            res.traj.points.append(pt)
+                        return res
+
+            finally:
+                collisionmap.SendCommand("collisionstream 1")
 
         if options.request_for_joint_states == 'service':
             js = rospy.Service('SetJointState', orrosplanning.srv.SetJointState, UpdateRobotJointsFn)
 
-        s = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
+        s1 = rospy.Service('MoveToHandPosition', orrosplanning.srv.MoveToHandPosition, MoveToHandPositionFn)
+        s2 = rospy.Service('MoveManipulator', orrosplanning.srv.MoveManipulator, MoveManipulatorFn)
         RaveSetDebugLevel(DebugLevel.Debug)
-        rospy.loginfo('openrave %s service ready'%s.resolved_name)
+        rospy.loginfo('openrave %s,%s service ready'%(s1.resolved_name,s2.resolved_name))
 
         if options.ipython:
             from IPython.Shell import IPShellEmbed

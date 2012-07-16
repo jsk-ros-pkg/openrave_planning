@@ -55,7 +55,7 @@ extern "C"
 using namespace OpenRAVE;
 using namespace std;
 
-#define FOREACH(it, v) for(typeof((v).begin()) it = (v).begin(); it != (v).end(); (it)++)
+#define FOREACH(it, v) for(typeof((v).begin())it = (v).begin(); it != (v).end(); (it)++)
 
 class RobotLinksFilter
 {
@@ -68,21 +68,23 @@ class RobotLinksFilter
     };
     struct LASERPOINT
     {
-        LASERPOINT() {}
-        LASERPOINT(const Vector& ptnew, dReal timenew) : pt(ptnew), time(timenew),inside(0) {}
+        LASERPOINT() {
+        }
+        LASERPOINT(const Vector& ptnew, dReal timenew) : pt(ptnew), time(timenew),inside(0) {
+        }
         Vector pt;
         dReal time; // 0-1 value specifying (stamp-stampstart)/(stampend-stampstart) where stamp is time of point,
                     // startstart and startend are start and end times of the entire scan
         int inside; // inside robot frame
     };
 
-    tf::TransformListener                                 _tf;
-    ros::NodeHandle                                       _nh, _root_handle;
+    tf::TransformListener _tf;
+    ros::NodeHandle _nh, _root_handle;
     boost::shared_ptr< tf::MessageFilter<sensor_msgs::PointCloud> > _mn;
     boost::shared_ptr< message_filters::Subscriber<sensor_msgs::PointCloud> > _sub;
     std::string _sensor_frame;
-    ros::Publisher                                        _pointCloudPublisher;
-    ros::Subscriber                                       _no_filter_sub;
+    ros::Publisher _pointCloudPublisher;
+    ros::Subscriber _no_filter_sub;
 
     vector<LINK> _vLinkHulls;
     boost::shared_ptr<ros::NodeHandle> _ros;
@@ -101,7 +103,7 @@ public:
         //_nh.param<double>("self_see_default_scale", default_scale, 1.0);
 
         if( InitRobotLinksFromOpenRAVE(robotname) ) {
-    
+
             _sub.reset(new message_filters::Subscriber<sensor_msgs::PointCloud>(_root_handle, "cloud_in", 1));
             _mn.reset(new tf::MessageFilter<sensor_msgs::PointCloud>(*_sub, _tf, "", 2));
 
@@ -110,7 +112,7 @@ public:
 
             vector<string> frames;
             FOREACH(itlink,_vLinkHulls)
-                frames.push_back(itlink->tfframe);
+            frames.push_back(itlink->tfframe);
             _mn->setTargetFrames(frames);
             _mn->registerCallback(boost::bind(&RobotLinksFilter::PointCloudCallback, this, _1));
         }
@@ -135,7 +137,7 @@ public:
             return false;
 
         RAVELOG_INFO("opening OpenRAVE robot file %s\n", robotname.c_str());
-        
+
         // create the main environment
         EnvironmentBasePtr penv = RaveCreateEnvironment();
         if( !penv ) {
@@ -154,8 +156,8 @@ public:
             RAVELOG_ERROR("RobotLinksFilter no robots in file %s\n", robotname.c_str());
             return false;
         }
-        
-        RobotBasePtr probot = vrobots.front();    
+
+        RobotBasePtr probot = vrobots.front();
         RAVELOG_INFOA(str(boost::format("generating convex hulls for robot %s, num links: %d")%probot->GetName()%probot->GetLinks().size()));
 
         ros::Time starthull = ros::Time::now();
@@ -206,7 +208,7 @@ private:
 
         int totalpoints = 0;
         FOREACH(itpoint, _vlaserpoints)
-            totalpoints += itpoint->inside==0;
+        totalpoints += itpoint->inside==0;
 
         _pointcloudout.header = _pointcloudin->header;
         _pointcloudout.points.resize(totalpoints);
@@ -251,7 +253,7 @@ private:
         float fdeltatime = 0;
         for(int i = 0; i < (int)pointcloudin.channels[istampchan].values.size(); ++i)
             fdeltatime = pointcloudin.channels[istampchan].values[i];
-            
+
         if( fdeltatime == 0 ) {
             PruneWithSimpleTiming(pointcloudin, vlaserpoints);
             return;
@@ -296,7 +298,7 @@ private:
                 bool bInside = true;
                 FOREACH(itplane, ithull->vconvexhull) {
                     Vector v = tinv * laserpoint.pt; v.w = 1;
-                    if( dot4(*itplane,v) > 0 ) {
+                    if( v.dot(*itplane) > 0 ) {
                         bInside = false;
                         break;
                     }
@@ -316,7 +318,7 @@ private:
     {
         tf::StampedTransform bttransform;
         vlaserpoints.resize(0);
-        
+
         // compute new hulls
         try {
             geometry_msgs::PoseStamped poseout, posestart,poseend;
@@ -334,15 +336,15 @@ private:
             RAVELOG_WARN("failed to get tf frame: %s\n", ex.what());
             return;
         }
-        
+
         vlaserpoints.resize(pointcloudin.points.size());
 
         int index = 0;
         FOREACH(itp, pointcloudin.points)
-            vlaserpoints[index++] = LASERPOINT(Vector(itp->x,itp->y,itp->z,1),0);
+        vlaserpoints[index++] = LASERPOINT(Vector(itp->x,itp->y,itp->z,1),0);
 
         FOREACH(ithull, _vLinkHulls) {
-            TransformMatrix tinvstart = ithull->tstart;//.inverse();
+            TransformMatrix tinvstart = ithull->tstart; //.inverse();
             ithull->vnewconvexhull.resize(ithull->vconvexhull.size());
             vector<Vector>::iterator itnewplane = ithull->vnewconvexhull.begin();
             FOREACH(itplane, ithull->vconvexhull) {
@@ -353,7 +355,7 @@ private:
                 ++itnewplane;
             }
         }
-                    
+
         // points are independent from each and loop can be parallelized
         #pragma omp parallel for schedule(dynamic,64)
         for(int i = 0; i < (int)vlaserpoints.size(); ++i) {
@@ -362,7 +364,7 @@ private:
 
                 bool bInside = true;
                 FOREACH(itplane, ithull->vnewconvexhull) {
-                    if( dot4(*itplane,laserpoint.pt) > 0 ) {
+                    if( laserpoint.pt.dot(*itplane) > 0 ) {
                         bInside = false;
                         break;
                     }
@@ -383,25 +385,25 @@ private:
 
         vconvexplanes.resize(0);
 
-        int dim = 3;  	              // dimension of points
+        int dim = 3;                  // dimension of points
         vector<coordT> qpoints(3*verts.size());
         for(size_t i = 0; i < verts.size(); ++i) {
             qpoints[3*i+0] = verts[i].x;
             qpoints[3*i+1] = verts[i].y;
             qpoints[3*i+2] = verts[i].z;
         }
-        
+
         bool bSuccess = false;
-        boolT ismalloc = 0;           // True if qhull should free points in qh_freeqhull() or reallocation  
-        char flags[]= "qhull Tv"; // option flags for qhull, see qh_opt.htm 
-        FILE *outfile = NULL;    // stdout, output from qh_produce_output(), use NULL to skip qh_produce_output()  
-        FILE *errfile = tmpfile();    // stderr, error messages from qhull code  
-        
+        boolT ismalloc = 0;           // True if qhull should free points in qh_freeqhull() or reallocation
+        char flags[]= "qhull Tv"; // option flags for qhull, see qh_opt.htm
+        FILE *outfile = NULL;    // stdout, output from qh_produce_output(), use NULL to skip qh_produce_output()
+        FILE *errfile = tmpfile();    // stderr, error messages from qhull code
+
         int exitcode= qh_new_qhull (dim, qpoints.size()/3, &qpoints[0], ismalloc, flags, outfile, errfile);
         if (!exitcode) { // no error
             vconvexplanes.reserve(100);
 
-            facetT *facet;	          // set by FORALLfacets 
+            facetT *facet;            // set by FORALLfacets
             FORALLfacets { // 'qh facet_list' contains the convex hull
                 vconvexplanes.push_back(Vector(facet->normal[0], facet->normal[1], facet->normal[2], facet->offset-_convexpadding));
             }
@@ -410,11 +412,11 @@ private:
         }
 
         qh_freeqhull(!qh_ALL);
-        int curlong, totlong;	  // memory remaining after qh_memfreeshort 
+        int curlong, totlong;     // memory remaining after qh_memfreeshort
         qh_memfreeshort (&curlong, &totlong);
         if (curlong || totlong)
             RAVELOG_ERROR("qhull internal warning (main): did not free %d bytes of long memory (%d pieces)\n", totlong, curlong);
-     
+
         fclose(errfile);
         return bSuccess;
     }
@@ -462,6 +464,6 @@ int main(int argc, char ** argv)
     boost::shared_ptr<RobotLinksFilter> plinksfilter(new RobotLinksFilter(robotname));
     ros::spin();
     plinksfilter.reset();
-    
+
     return 0;
 }
