@@ -460,10 +460,12 @@ public:
         }
         ConfigurationSpecification spec = _probot->GetConfigurationSpecificationIndices(vindices);
         spec.AddDerivativeGroups(1,true);
+        spec.AddDerivativeGroups(2,true);
         int timeoffset = spec.GetGroupFromName("deltatime").offset;
         int veloffset = spec.GetGroupFromName("joint_velocities").offset;
+        int acceloffset = spec.GetGroupFromName("joint_accelerations").offset;
 
-        bool bhavevelocities=true;
+        bool bhavevelocities=true, bhaveaccel=true;
         vector<dReal> vpoints(spec.GetDOF()*req.traj.traj.points.size());
         vector<dReal>::iterator itdst = vpoints.begin();
         dReal prevtime = 0;
@@ -475,6 +477,12 @@ public:
             else {
                 bhavevelocities = false;
             }
+            if( it->accelerations.size() == it->positions.size() ) {
+                std::copy(it->accelerations.begin(),it->accelerations.end(),itdst+acceloffset);
+            }
+            else {
+                bhaveaccel = false;
+            }
             dReal newtime = it->time_from_start.toSec();
             *(itdst+timeoffset) = newtime-prevtime;
             prevtime = newtime;
@@ -485,6 +493,9 @@ public:
             string interpolation = req.traj.interpolation.size() > 0 ? req.traj.interpolation : string("quadratic");
             spec.GetGroupFromName("joint_values").interpolation = interpolation;
             spec.GetGroupFromName("joint_velocities").interpolation = ConfigurationSpecification::GetInterpolationDerivative(interpolation);
+            if( bhaveaccel ) {
+                spec.GetGroupFromName("joint_accelerations").interpolation = ConfigurationSpecification::GetInterpolationDerivative(spec.GetGroupFromName("joint_velocities").interpolation);
+            }
         }
 
         ptraj->Init(spec);
