@@ -459,7 +459,7 @@ public:
             vindices.push_back(_probot->GetJoint(*itname)->GetDOFIndex());
         }
         ConfigurationSpecification spec = _probot->GetConfigurationSpecificationIndices(vindices);
-        spec.AddVelocityGroups(true);
+        spec.AddDerivativeGroups(1,true);
         int timeoffset = spec.GetGroupFromName("deltatime").offset;
         int veloffset = spec.GetGroupFromName("joint_velocities").offset;
 
@@ -468,10 +468,6 @@ public:
         vector<dReal>::iterator itdst = vpoints.begin();
         dReal prevtime = 0;
         FOREACH(it, req.traj.traj.points) {
-            if( (int)it->positions.size() != _probot->GetActiveDOF() ) {
-                ROS_ERROR_STREAM(str(boost::format("received invalid point dof %d != %d ")%it->positions.size()%_probot->GetActiveDOF()));
-                return false;
-            }
             std::copy(it->positions.begin(),it->positions.end(),itdst);
             if( it->velocities.size() == it->positions.size() ) {
                 std::copy(it->velocities.begin(),it->velocities.end(),itdst+veloffset);
@@ -496,9 +492,8 @@ public:
 
         if( !bhavevelocities || !req.hastiming ) {
             EnvironmentMutex::scoped_lock lockenv(_penv->GetMutex());
-            _probot->SetActiveDOFs(vindices);
             string plannername = "lineartrajectoryretimer";
-            planningutils::RetimeActiveDOFTrajectory(ptraj,_probot,req.hastiming,_fMaxVelMult,1.0,plannername);
+            planningutils::RetimeTrajectory(ptraj,req.hastiming,_fMaxVelMult,1.0,plannername);
             ROS_INFO_STREAM(str(boost::format("retimed trajectory duration=%fs, num=%d, timing=%d, maxvel=%f")%ptraj->GetDuration()%ptraj->GetNumWaypoints()%((int)req.hastiming)%_fMaxVelMult));
         }
         else {
@@ -693,7 +688,7 @@ protected:
             }
 
             // look for these joints:
-            vector<int> vrobotjoints;
+            vector<int> vrobotjoints, vdofs;
             FOREACH(itname, _vActiveJointNames) {
                 int index = _probot->GetJointIndex(*itname);
                 if( index < -1 ) {
@@ -701,10 +696,14 @@ protected:
                     throw controller_exception("failed to find robot joint");
                 }
                 vrobotjoints.push_back(index);
+                vdofs.push_back(_probot->GetJoints().at(index)->GetDOFIndex());
             }
 
-            FOREACH(itlink, _probot->GetLinks())
-            _vlinknames.push_back((*itlink)->GetName());
+            _specactive = _probot->GetConfigurationSpecificationIndices(vdofs);
+
+            FOREACH(itlink, _probot->GetLinks()) {
+                _vlinknames.push_back((*itlink)->GetName());
+            }
 
             BOOST_ASSERT((int)vrobotjoints.size()==GetDOF());
             _probot->SetActiveDOFs(vrobotjoints);
@@ -978,6 +977,7 @@ protected:
     EnvironmentBasePtr _penv;
     RobotBasePtr _probot;
     vector<string> _vActiveJointNames, _vlinknames;
+    ConfigurationSpecification _specactive; ///< configuration specification for _vActiveJointNames
     vector<pair<int, int> > _vPublishableLinks; ///< relative transforms of links to publish with tf, first link is child, second is parent
     vector<boost::tuple<btTransform,string,string> > _vStaticTransforms; ///< relative transforms of links to publish with tf, first link is child, second is parent
     //@}

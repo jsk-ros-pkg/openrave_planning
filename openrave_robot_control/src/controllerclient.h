@@ -494,7 +494,7 @@ public:
 
             RAVELOG_INFO("traj points: %d\n", ptraj->GetNumWaypoints());
             if( req.hastiming ) {
-                spec.AddVelocityGroups(false);
+                spec.AddDerivativeGroups(1,false);
                 int veloffset = spec.GetGroupFromName("joint_velocities").offset;
                 // resample every 0.01s
                 dReal ftime = 0, sampletime = 0.01f;
