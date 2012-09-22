@@ -23,7 +23,9 @@ qhull:
   macports: qhull
   gentoo: qhull
 libqt4-dev:
-  ubuntu: libqt4-dev qt4-dev-tools
+  ubuntu: libqt4-dev
+qt4-dev-tools:
+  ubuntu: qt4-dev-tools
 autoconf:
   ubuntu: autoconf
 libqt4-opengl-dev:

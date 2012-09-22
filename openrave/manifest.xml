@@ -23,6 +23,7 @@ In order to use, please add the following line in your bashrc:<br/>
 <!-- assimp-dev conflict with v3 and v2 -->
 <!--  <rosdep name="assimp-dev"/> -->
   <rosdep name="collada-dom"/>
+  <rosdep name="qt4-dev-tools"/>
   <rosdep name="libqt4-dev"/>
   <rosdep name="libqt4-opengl-dev"/>
   <rosdep name="libcoin60-dev"/>
