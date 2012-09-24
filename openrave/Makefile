@@ -2,7 +2,7 @@ all: installed
 
 INSTALL_DIR=`rospack find openrave`
 GIT_DIR=openrave_git
-GIT_URL=git@github.com:rdiankov/openrave.git
+GIT_URL=https://github.com/rdiankov/openrave.git
 GIT_REVISION=tags/latest_stable
 include $(shell rospack find mk)/git_checkout.mk
 
