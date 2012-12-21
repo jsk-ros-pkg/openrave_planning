@@ -9,6 +9,13 @@ orrosplanning ROS Launch Files
 
 **License:** BSD
 
+testarmik5d.launch
+------------------
+
+.. code-block:: bash
+
+  roslaunch orrosplanning testarmik5d.launch
+
 collada_rviz_display.launch
 ---------------------------
 
@@ -41,11 +48,4 @@ Contents
     <node name="collada_joint_publisher" pkg="orrosplanning" type="collada_joint_publisher.py" />
     <node args="-d $(find orrosplanning)/urdf.vcg" name="rviz" output="screen" pkg="rviz" type="rviz" />
     </launch>
-
-testarmik5d.launch
-------------------
-
-.. code-block:: bash
-
-  roslaunch orrosplanning testarmik5d.launch
 
