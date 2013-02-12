@@ -14,5 +14,5 @@
   <depend stack="ros"/> <!-- std_msgs, roscpp --> 
   <depend stack="common_msgs"/> <!-- sensor_msgs -->
   <depend stack="robot_model"/> <!-- colladadom, collada_urdf -->
-  <depend package="robot_calibration"/> <!-- calibration stuff -->
+  <depend stack="calibration"/> <!-- calibration stuff -->
 </stack>
