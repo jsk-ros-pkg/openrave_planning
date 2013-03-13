@@ -50,7 +50,7 @@ clean:
 	rm -f installed
 
 wipe: clean
-	rm -rf $(BUILDDIR) include lib share bin src openrave_svn
+	rm -rf $(BUILDDIR) include lib share bin src openrave_git
 
 leave_only_products:
 	rm -rf $(GIT_DIR) openrave_svn
