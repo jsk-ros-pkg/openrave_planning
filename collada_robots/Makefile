@@ -8,7 +8,7 @@ INSTALL_DIR=`rospack find collada_robots`
 
 .PHONY: openrave
 
-installed: $(GIT_DIR) patched
+installed: $(GIT_DIR)
 	cd $(INSTALL_DIR) && mkdir -p build && cd build && cmake .. && make
 	touch installed
 
