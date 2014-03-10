@@ -17,8 +17,8 @@ BULLET_LIB_DIR=$(shell rospack find bullet)/lib
 BULLET_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags bullet)
 BULLET_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags bullet)
 
-ODE_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags opende)
-ODE_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags opende)
+# ODE_CFLAGS=$(shell rospack export --lang=cpp --attrib=cflags opende)
+# ODE_LFLAGS=$(shell rospack export --lang=cpp --attrib=lflags opende)
 
 BUILDDIR2=$(shell if [ $(DEBUG) ]; then echo builddebug; else echo build; fi)
 CMAKE_BUILD_TYPE2=$(shell if [ $(DEBUG) ]; then echo Debug; else echo RelWithDebInfo; fi)
@@ -35,7 +35,8 @@ Description: Bullet as built by ROS\n\
 Version: 2.74\n\
 Libs: ${BULLET_LFLAGS}\n\
 CFlags: ${BULLET_CFLAGS}" > bullet.pc
-	cd $(INSTALL_DIR) && rm -rf share/openrave include/rave include/openrave-core.h share/openrave0.3/openravepy && rm -f $(BUILDDIR)/CMakeCache.txt && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_USE_MULTITHREAD=ON -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" ../$(GIT_DIR) && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS)
+#	cd $(INSTALL_DIR) && rm -rf share/openrave include/rave include/openrave-core.h share/openrave0.3/openravepy && rm -f $(BUILDDIR)/CMakeCache.txt && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_USE_MULTITHREAD=ON -D_odeconfig_cflags:STRING="$(ODE_CFLAGS)" -D_odeconfig_lflags:STRING="$(ODE_LFLAGS)" ../$(GIT_DIR) && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS)
+	cd $(INSTALL_DIR) && rm -rf share/openrave include/rave include/openrave-core.h share/openrave0.3/openravepy && rm -f $(BUILDDIR)/CMakeCache.txt && export PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(INSTALL_DIR)" && mkdir -p $(BUILDDIR) && cd $(BUILDDIR) && BOOST_INCLUDEDIR=$(BOOST_INCLUDE_DIRS) BOOST_LIBRARYDIR=$(BOOST_LIBRARY_DIRS) cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DODE_USE_MULTITHREAD=ON  ../$(GIT_DIR) && export PARALLEL_JOBS=ROS_PARALLEL_JOBS && make $(ROS_PARALLEL_JOBS)
 	rm -rf bin src lib
 	cd $(INSTALL_DIR)/$(BUILDDIR) && make install
 	cd $(INSTALL_DIR) && cp `./bin/openrave-config --share-dir`/openrave.bash .

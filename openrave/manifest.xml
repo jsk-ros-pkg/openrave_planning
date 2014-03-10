@@ -12,7 +12,7 @@ In order to use, please add the following line in your bashrc:<br/>
     <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave0.9-config --libs` `${prefix}/bin/openrave0.9-config --libs-core`" cflags="`${prefix}/bin/openrave0.9-config --cflags`"/>
     <python path="${prefix}/src"/>
   </export>
-  <depend package="opende"/>
+  <!-- <depend package="opende"/> -->
   <depend package="bullet"/>
   <depend package="std_msgs"/>
   <depend package="collada_robots"/>
