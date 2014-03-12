@@ -32,6 +32,7 @@
 #include <ros/node_handle.h>
 #include <ros/master.h>
 #include <sensor_msgs/PointCloud.h>
+#include <tf2/LinearMath/btTransform.h>
 #include <tf/transform_listener.h>
 #include <tf/message_filter.h>
 #include <message_filters/subscriber.h>
