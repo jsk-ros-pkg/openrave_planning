@@ -20,8 +20,8 @@ In order to use, please add the following line in your bashrc:<br/>
   <url>http://openrave.org</url>
   <rosdep name="libxml2"/>
   <rosdep name="python-sympy"/>
-<!-- assimp-dev conflict with v3 and v2 -->
-<!--  <rosdep name="assimp-dev"/> -->
+  <!-- assimp-dev conflict with v3 and v2 -->
+  <!--  <rosdep name="assimp-dev"/> -->
   <rosdep name="bullet" />
   <rosdep name="collada-dom"/>
   <rosdep name="qt4-dev-tools"/>
@@ -29,6 +29,8 @@ In order to use, please add the following line in your bashrc:<br/>
   <rosdep name="libqt4-opengl-dev"/>
   <rosdep name="libcoin60-dev"/>
   <rosdep name="libsoqt4-dev"/>
+  <rosdep name="python-scipy"/>
+  <rosdep name="mayavi"/>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>
   <platform os="ubuntu" version="10.04"/>
