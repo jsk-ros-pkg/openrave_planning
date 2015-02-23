@@ -1,0 +1,46 @@
+<package>
+  <name>openrave_sensors</name>
+  <version>0.0.1</version>
+  <description>Contains openrave plugins that connect send and recieve ROS messages allowing OpenRAVE to communicate with the ROS world better.</description>
+  <maintainer email="rosen.diankov@gmail.com">Rosen Diankov</maintainer>
+
+  <license>Apache License</license>
+  <license>Version 2.0</license>
+
+  <url type="website"></url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author email="rosen.diankov@gmail.com">Rosen Diankov</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>openrave</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>openrave</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>nav_msgs</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>roscpp</test_depend> -->
+  <!-- <test_depend>openrave</test_depend> -->
+  <!-- <test_depend>std_msgs</test_depend> -->
+  <!-- <test_depend>geometry_msgs</test_depend> -->
+  <!-- <test_depend>sensor_msgs</test_depend> -->
+  <!-- <test_depend>nav_msgs</test_depend> -->
+
+<export>
+    <openrave pluginpath="${prefix}/lib"/>
+</export>
+
+</package>

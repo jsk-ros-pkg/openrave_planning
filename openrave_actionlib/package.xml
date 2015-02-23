@@ -1,0 +1,46 @@
+<package>
+  <name>openrave_actionlib</name>
+  <version>0.0.1</version>
+  <description>Bindings between openrave's controller interface and ROS's action lib interface for controlling robots.</description>
+  <maintainer email="rosen.diankov@gmail.com">Rosen Diankov</maintainer>
+
+  <license>Apache License</license>
+  <license>Version 2.0</license>
+
+  <url type="website">http://ros.org/wiki/openrave_actionlib</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author email="rosen.diankov@gmail.com">Rosen Diankov</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>actionlib</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>pr2_controllers_msgs</build_depend>
+  <build_depend>openrave</build_depend>
+  <build_depend>rosparam</build_depend>
+  <build_depend>rospy</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>actionlib</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>openrave</run_depend>
+  <run_depend>rosparam</run_depend>
+  <run_depend>rospy</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>actionlib</test_depend> -->
+  <!-- <test_depend>sensor_msgs</test_depend> -->
+  <!-- <test_depend>pr2_controllers_msgs</test_depend> -->
+  <!-- <test_depend>openrave</test_depend> -->
+  <!-- <test_depend>rosparam</test_depend> -->
+  <!-- <test_depend>rospy</test_depend> -->
+
+<export>
+    <openrave datapath="${prefix}" pluginpath="${prefix}/lib"/>
+</export>
+
+</package>
