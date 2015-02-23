@@ -1,0 +1,30 @@
+<package>
+  <name>roscpp_sessions</name>
+  <version>0.0.1</version>
+  <description>Sessions offer execution synchronization between a persistent set of services. Each session maintains a state on the server side which is independent of the connection. This allows multiple clients to have the option of maintaining an independent workspace on the server side, or potentially to share the same workspace.</description>
+  <maintainer email="rdiankov@cs.cmu.edu">Rosen Diankov</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://pr.willowgarage.com/wiki/roscpp_sessions</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author email="rdiankov@cs.cmu.edu">Rosen Diankov</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>roscpp</test_depend> -->
+
+<export>
+    <cpp lflags="`rosboost-cfg --lflags thread`" cflags="-I${prefix}/include -I${prefix}/srv/cpp `rosboost-cfg --cflags`"/>
+</export>
+
+</package>

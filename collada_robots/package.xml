@@ -1,0 +1,32 @@
+<package>
+  <name>collada_robots</name>
+  <version>0.0.1</version>
+  <description>COLLADA 1.5 Robot Models Repository
+
+    This repository is associated with the Open Robotics Automation Virtual Environment (OpenRAVE). The open and view them, install OpenRAVE and execute:
+    
+    openrave XXX.zae
+    
+    The robots are augmented with information as described by the "OpenRAVE" profile here:
+    http://openrave.programmingvision.com/index.php/Started:COLLADA
+    
+    *.zae files are zip archives which contain the raw collada 1.5 xml (dae).</description>
+  <maintainer email="rosen.diankov@gmail.com">package maintainance: Rosen Diankov</maintainer>
+
+  <license>Unknown</license>
+
+  <url type="website">http://www.openrave.org/en/main/robots.html</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>package maintainance: Rosen Diankov</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+
+  <!-- Dependencies needed after this package is compiled. -->
+
+  <!-- Dependencies needed only for running tests. -->
+
+</package>

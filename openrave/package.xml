@@ -1,0 +1,35 @@
+<package>
+  <name>openrave</name>
+  <version>0.0.1</version>
+  <description>In order to use, please add the following line in your bashrc:</description>
+  <maintainer email="rosen.diankov@gmail.com">Rosen Diankov</maintainer>
+
+  <license>Lesser GPL and Apache License</license>
+  <license>Version 2.0</license>
+
+  <url type="website">http://openrave.org</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author email="rosen.diankov@gmail.com">Rosen Diankov</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>std_msgs</build_depend>
+  <build_depend>collada_robots</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>std_msgs</run_depend>
+  <run_depend>collada_robots</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>std_msgs</test_depend> -->
+  <!-- <test_depend>collada_robots</test_depend> -->
+
+<export>
+    <cpp lflags="-Wl,-rpath,${prefix}/lib `${prefix}/bin/openrave0.9-config --libs` `${prefix}/bin/openrave0.9-config --libs-core`" cflags="`${prefix}/bin/openrave0.9-config --cflags`"/>
+    <python path="${prefix}/src"/>
+</export>
+
+</package>
