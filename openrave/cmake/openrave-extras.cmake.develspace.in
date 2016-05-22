@@ -1,0 +1,1 @@
+set(openrave_INCLUDE_DIRS include/openrave-0.9/)

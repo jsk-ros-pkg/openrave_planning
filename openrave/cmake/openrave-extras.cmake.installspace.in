@@ -1,0 +1,1 @@
+set(openrave_INCLUDE_DIRS ${openrave_DIR}/../../../@CATKIN_PACKAGE_SHARE_DESTINATION@/include/openrave-0.9/)
