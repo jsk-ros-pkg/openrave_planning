@@ -1,17 +1,18 @@
-cmake_minimum_required (VERSION 2.6.0) # using import/export targets
+cmake_minimum_required(VERSION 2.8.3)
 project(collada_robots)
-set( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 
-set(ROBOTS_DIR data/robots)
-file(GLOB robots "${CMAKE_CURRENT_SOURCE_DIR}/${ROBOTS_DIR}/*.zae")
-set(robots_new)
-foreach(robot ${robots})
-  get_filename_component(robot_base ${robot} NAME_WE)
-  set(robot_new "${robot_base}.dae")
-  add_custom_command(OUTPUT ${robot_new}
-    COMMAND unzip -o -d "${CMAKE_CURRENT_SOURCE_DIR}/${ROBOTS_DIR}" ${robot}
-    DEPENDS ${robot})
-  set(robots_new ${robots_new} ${robot_new})
-endforeach()
+find_package(catkin REQUIRED)
 
-add_custom_target(collada_robots ALL DEPENDS ${robots_new})
+add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/data/robots/README.rst
+  COMMAND git clone git://github.com/rdiankov/collada_robots.git data/robots
+  COMMAND find data/robots/ -iname '*.zae'  -print | xargs -n1 unzip -o -d data/robots/
+  DEPENDS CMakeLists.txt
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+add_custom_target(download_collada_robots ALL
+  DEPENDS ${PROJECT_SOURCE_DIR}/data/robots/README.rst)
+
+catkin_package()
+
+install(DIRECTORY data
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  USE_SOURCE_PERMISSIONS)

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package>
+  <name>openrave_planning</name>
+  <version>0.0.0</version>
+  <description>
+    This stack offers OpenRAVE-related bindings.
+    Maintained by the JSK lab at University of Tokyo.
+  </description>
+
+  <maintainer email="k-okada@jsk.t.u-tokyo.ac.jp">Kei Okada</maintainer>
+  <author>Rosen Diankov (rosen.diankov@gmail.com)</author>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>collada_robots</run_depend>
+  <run_depend>openrave</run_depend>
+  <!-- <run_depend>openrave_actionlib</run_depend> -->
+  <!-- <run_depend>openrave_calibration</run_depend> -->
+  <!-- <run_depend>openrave_database</run_depend> -->
+  <!-- <run_depend>openrave_msgs</run_depend> -->
+  <!-- <run_depend>openrave_robot_control</run_depend> -->
+  <!-- <run_depend>openrave_robot_filter</run_depend> -->
+  <!-- <run_depend>openrave_sensors</run_depend> -->
+  <!-- <run_depend>openraveros</run_depend> -->
+  <!-- <run_depend>openraveros_tutorials</run_depend> -->
+  <!-- <run_depend>orrosplanning</run_depend> -->
+  <!-- <run_depend>roscpp_sessions</run_depend> -->
+  <!-- <run_depend>session_tutorials</run_depend> -->
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <metapackage/>
+  </export>
+</package>
