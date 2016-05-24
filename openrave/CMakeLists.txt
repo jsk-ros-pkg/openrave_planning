@@ -20,6 +20,7 @@ catkin_package(
   CFG_EXTRAS openrave-extras.cmake
   )
 
+catkin_add_env_hooks(99.openrave SHELLS sh DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
 
 install(DIRECTORY share bin lib include
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
