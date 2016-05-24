@@ -1,14 +1,19 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-set(ROS_BUILD_TYPE RelWithDebInfo)
-rosbuild_init()
-add_definitions(-Wall)
+# Catkin User Guide: http://www.ros.org/doc/groovy/api/catkin/html/user_guide/user_guide.html
+# Catkin CMake Standard: http://www.ros.org/doc/groovy/api/catkin/html/user_guide/standards.html
+cmake_minimum_required(VERSION 2.8.3)
+project(orrosplanning)
+find_package(catkin REQUIRED COMPONENTS roscpp openrave openraveros sensor_msgs trajectory_msgs arm_navigation_msgs message_generation)
 
-rosbuild_add_boost_directories()
-rosbuild_gensrv()
+add_service_files(FILES
+  IK.srv MoveManipulator.srv 	MoveToHandPosition.srv 	SetGraspParameters.srv SetJointState.srv
+)
 
-rosbuild_add_library(orrosplanning src/orrosplanningmain.cpp src/rospassivecontroller.cpp)
-rosbuild_link_boost(orrosplanning thread)
+generate_messages(DEPENDENCIES sensor_msgs trajectory_msgs arm_navigation_msgs)
 
-rosbuild_find_ros_package("jsk_tools")
-execute_process(COMMAND cmake -E chdir ${PROJECT_SOURCE_DIR} python ${jsk_tools_PACKAGE_PATH}/bin/launchdoc-generator.py ${PROJECT_NAME} --output_dir=. --nomakefile RESULT_VARIABLE _make_failed)
+catkin_package()
+
+add_library(orrosplanning src/orrosplanningmain.cpp src/rospassivecontroller.cpp)
+find_package(Boost REQUIRED COMPONENTS thread)
+include_directories(${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+target_link_libraries(orrosplanning ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+

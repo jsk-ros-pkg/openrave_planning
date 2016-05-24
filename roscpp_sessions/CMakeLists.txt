@@ -1,7 +1,14 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-rosbuild_init()
+cmake_minimum_required(VERSION 2.8.3)
+project(roscpp_sessions)
+find_package(catkin REQUIRED COMPONENTS roscpp message_generation)
 
-rosbuild_gensrv()
+add_service_files(FILES
+  add_variables.srv get_variable.srv 	set_variable.srv 	simple_session.srv
+)
 
-add_subdirectory(test EXCLUDE_FROM_ALL)
+generate_messages()
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+  )
+
