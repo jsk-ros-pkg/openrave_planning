@@ -1,0 +1,8 @@
+rosrun openrave openrave-config --prefix >> /dev/null 2>&1
+if [ "$?" -eq "0" ] ; then
+    export PATH=$PATH:$(rosrun openrave openrave-config --exec-prefix)/bin
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(rosrun openrave openrave-config --python-dir)/openravepy/_openravepy_
+    export PYTHONPATH=$PYTHONPATH:$(rosrun openrave openrave-config --python-dir)
+fi
+
+
