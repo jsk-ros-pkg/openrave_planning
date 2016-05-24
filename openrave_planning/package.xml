@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>openrave_planning</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>
     This stack offers OpenRAVE-related bindings.
     Maintained by the JSK lab at University of Tokyo.
