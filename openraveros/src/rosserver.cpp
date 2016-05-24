@@ -1161,7 +1161,7 @@ public:
                 return false;
             }
 
-            boost::shared_ptr<SensorBase::CameraGeomData> pgeom = boost::static_pointer_cast<SensorBase::CameraGeomData>(psensor->GetSensorGeometry());
+            boost::shared_ptr<const SensorBase::CameraGeomData> pgeom = boost::static_pointer_cast<const SensorBase::CameraGeomData>(psensor->GetSensorGeometry());
             if( (int)pcameradata->vimagedata.size() != pgeom->width*pgeom->height*3 ) {
                 RAVELOG_WARNA("image data wrong size %d != %d\n", pcameradata->vimagedata.size(), pgeom->width*pgeom->height*3);
                 return false;
