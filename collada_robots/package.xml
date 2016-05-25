@@ -22,5 +22,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>git</build_depend>
+  <build_depend>unzip</build_depend>
 
 </package>
