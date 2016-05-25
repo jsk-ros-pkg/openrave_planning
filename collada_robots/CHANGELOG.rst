@@ -2,8 +2,8 @@
 Changelog for package collada_robots
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.2 (2016-05-25)
+------------------
 * add unzip to build_depend
 * Contributors: Kei Okada
 
