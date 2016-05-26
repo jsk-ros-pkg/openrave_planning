@@ -1,6 +1,6 @@
 <package>
   <name>collada_robots</name>
-  <version>0.0.2</version>
+  <version>0.0.3</version>
   <description>COLLADA 1.5 Robot Models Repository
 
     This repository is associated with the Open Robotics Automation Virtual Environment (OpenRAVE). The open and view them, install OpenRAVE and execute:
