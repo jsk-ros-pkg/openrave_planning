@@ -3,27 +3,38 @@ project(openrave)
 
 find_package(catkin REQUIRED)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/openrave
-  COMMAND git clone https://github.com/rdiankov/openrave.git
-  COMMAND cd openrave && git reset --hard cdc681631c1ab0dab57d4201475ae02659fa4412 # latest_sable of May 7 2016
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-add_custom_target(download_openrave
-  DEPENDS ${CMAKE_BINARY_DIR}/openrave)
-add_custom_target(compile_openrave ALL
-  COMMAND mkdir -p build_openrave
-  COMMAND cd build_openrave && cmake ${CMAKE_BINARY_DIR}/openrave -DOPT_FCL_COLLISION=OFF -DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}
-  COMMAND make -C ${CMAKE_BINARY_DIR}/build_openrave
-  COMMAND make -C ${CMAKE_BINARY_DIR}/build_openrave install
-  DEPENDS download_openrave)
+set(OPENRAVE_SOURCE_DIR ${CMAKE_BINARY_DIR}/source_openrave)
+set(OPENRAVE_BINARY_DIR ${CMAKE_BINARY_DIR}/build_openrave)
 
-catkin_package(
-  CFG_EXTRAS openrave-extras.cmake
-  )
+#set(OPENRAVE_COMPILE_OPT "-DOPT_VIDEORECORDING=OFF -DOPT_PLUGINS=OFF -DOPT_ACCURATEMATH=OFF -DOPT_PYTHON=OFF -DOPT_OCTAVE=OFF -DOPT_MATLAB=OFF -DOPT_STATIC=OFF -DOPT_COLLADA=OFF -DOPT_BULLET=OFF -DOPT_ODE_COLLISION=OFF -DOPT_QTCOIN_VIEWER=OFF -DOPT_QTOSG_VIEWER=OFF -DOPT_EXTRA_ROBOTS=OFF -DOPT_CBINDINGS=OFF                   -DOPT_FCL_COLLISION=OFF")
+set(OPENRAVE_COMPILE_OPT "-DOPT_FCL_COLLISION=OFF")
 
+catkin_package(CFG_EXTRAS openrave-extras.cmake)
 catkin_add_env_hooks(99.openrave SHELLS sh DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
 
-install(DIRECTORY share bin lib include
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  USE_SOURCE_PERMISSIONS)
+list(GET CATKIN_WORKSPACES 0 CATKIN_WORKSPACES_0)
+if("${CATKIN_WORKSPACES_0}" STREQUAL "${CMAKE_INSTALL_PREFIX}") # since CMAKE_INSTAL_PREFIX is always point to /install so install layout returns true
+  message(STATUS "compiled with install layout")
+  set(OPENRAVE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+else()
+  message(STATUS "compiled with devel layout")
+  set(OPENRAVE_INSTALL_PREFIX ${CATKIN_DEVEL_PREFIX})
+  add_custom_target(compile_openrave_devel ALL DEPENDS compile_openrave)
+endif()
 
+add_custom_command(OUTPUT ${OPENRAVE_SOURCE_DIR}
+  COMMAND git clone https://github.com/rdiankov/openrave.git ${OPENRAVE_SOURCE_DIR}
+  COMMAND cd ${OPENRAVE_SOURCE_DIR} && git reset --hard cdc681631c1ab0dab57d4201475ae02659fa4412 # latest_sable of May 7 2016
+  )
+add_custom_target(download_openrave
+  DEPENDS ${OPENRAVE_SOURCE_DIR}
+  )
+add_custom_target(compile_openrave ## need to compile everythin for installed target
+  COMMAND mkdir -p ${OPENRAVE_BINARY_DIR}
+  COMMAND cd ${OPENRAVE_BINARY_DIR} && cmake ${OPENRAVE_SOURCE_DIR} ${OPENRAVE_COMPILE_OPT} -DCMAKE_INSTALL_PREFIX=${OPENRAVE_INSTALL_PREFIX}
+  COMMAND make -C ${OPENRAVE_BINARY_DIR}
+  COMMAND make -C ${OPENRAVE_BINARY_DIR} install
+  DEPENDS download_openrave
+  )
 
+install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target compile_openrave)")
