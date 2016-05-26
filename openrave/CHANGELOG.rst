@@ -2,6 +2,11 @@
 Changelog for package openrave
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* CMakeLists.txt : fix compiile scheme for install/devel
+* Contributors: Kei Okada
+
 0.0.2 (2016-05-25)
 ------------------
 
