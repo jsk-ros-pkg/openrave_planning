@@ -2,6 +2,9 @@
 Changelog for package openrave_planning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.3 (2016-05-27)
 ------------------
 

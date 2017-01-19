@@ -2,6 +2,11 @@
 Changelog for package openrave
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* use dist-packages as python install dir instad of site-packages
+* Contributors: Kei Okada
+
 0.0.3 (2016-05-27)
 ------------------
 * CMakeLists.txt : fix compiile scheme for install/devel
