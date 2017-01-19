@@ -2,8 +2,8 @@
 Changelog for package openrave
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2017-01-19)
+------------------
 * use dist-packages as python install dir instad of site-packages
 * Contributors: Kei Okada
 
