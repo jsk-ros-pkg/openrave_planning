@@ -1,6 +1,5 @@
-rosrun openrave openrave-config --prefix >> /dev/null 2>&1
+openrave-config --prefix >> /dev/null 2>&1
 if [ "$?" -eq "0" ] ; then
-    export PYTHONPATH=$PYTHONPATH:$(rosrun openrave openrave-config --python-dir)
+    export PYTHONPATH=$(openrave-config --python-dir):$PYTHONPATH
 fi
-
 
