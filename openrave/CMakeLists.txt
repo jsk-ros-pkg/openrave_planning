@@ -24,7 +24,7 @@ endif()
 
 add_custom_command(OUTPUT ${OPENRAVE_SOURCE_DIR}
   COMMAND git clone https://github.com/rdiankov/openrave.git ${OPENRAVE_SOURCE_DIR}
-  COMMAND cd ${OPENRAVE_SOURCE_DIR} && git reset --hard cdc681631c1ab0dab57d4201475ae02659fa4412 # latest_sable of May 7 2016
+  COMMAND cd ${OPENRAVE_SOURCE_DIR} && git reset --hard 18521d4ee6311464522a4e98cf0eed883a2d15d3 # production release of Jan 19 2017
   COMMAND cd ${OPENRAVE_SOURCE_DIR} && patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/python-path.patch # use dist-packages isntead of site-packages
   )
 add_custom_target(download_openrave
