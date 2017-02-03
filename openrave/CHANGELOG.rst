@@ -2,8 +2,8 @@
 Changelog for package openrave
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.5 (2017-02-03)
+------------------
 * re-enable opende in package.xml
 * 99.openarve.sh.in: openrave-config is now global executive
 * use production release of Jan/19/2017
