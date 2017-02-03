@@ -2,6 +2,9 @@
 Changelog for package arm_navigation_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.4 (2017-01-19)
 ------------------
 
