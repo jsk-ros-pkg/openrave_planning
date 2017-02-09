@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 38d4b8b..8aaa360 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -193,7 +194,7 @@ if( CMAKE_CXX_COMPILER MATCHES "clang[\\+]*" )
+ endif()
+ 
+ if( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
+-  add_definitions("-fno-strict-aliasing -Wall")
++  add_definitions("-fno-strict-aliasing -Wno-deprecated-declarations")
+ endif()
+ 
+ set(OPENRAVE_EXPORT_CXXFLAGS)
