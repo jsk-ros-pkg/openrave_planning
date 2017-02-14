@@ -1,5 +1,10 @@
+# check if we can use openrave-config
 openrave-config --prefix >> /dev/null 2>&1
 if [ "$?" -eq "0" ] ; then
-    export PYTHONPATH=$(openrave-config --python-dir):$PYTHONPATH
+    # if we can run import openravepy, we do not have to do anything
+    python -c 'import openravepy' >> /dev/null 2>&1
+    if [ "$?" -ne "0" ]; then
+        export PYTHONPATH=$(openrave-config --python-dir):$PYTHONPATH
+    fi
 fi
 
