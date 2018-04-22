@@ -2,6 +2,9 @@
 Changelog for package collada_robots
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.5 (2017-02-03)
 ------------------
 
