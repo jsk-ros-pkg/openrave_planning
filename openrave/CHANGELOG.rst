@@ -2,8 +2,8 @@
 Changelog for package openrave
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.6 (2018-04-22)
+------------------
 * Merge pull request `#20 <https://github.com/jsk-ros-pkg/openrave_planning/issues/20>`_ from k-okada/master
   update  openrave package as of 2017/02/19
 * remove collada_robots from build_depend

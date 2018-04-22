@@ -1,6 +1,6 @@
 <package>
   <name>openrave</name>
-  <version>0.0.5</version>
+  <version>0.0.6</version>
   <description>In order to use, please add the following line in your bashrc:</description>
   <maintainer email="k-okada@jsk.t.u-tokyo.ac.jp">Kei Okada</maintainer>
 
