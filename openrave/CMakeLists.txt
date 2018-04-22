@@ -24,7 +24,7 @@ endif()
 
 add_custom_command(OUTPUT ${OPENRAVE_SOURCE_DIR}
   COMMAND git clone https://github.com/rdiankov/openrave.git ${OPENRAVE_SOURCE_DIR}
-  COMMAND cd ${OPENRAVE_SOURCE_DIR} && git reset --hard 18521d4ee6311464522a4e98cf0eed883a2d15d3 # production release of Jan 19 2017
+  COMMAND cd ${OPENRAVE_SOURCE_DIR} && git reset --hard 7c5f5e27eec2b2ef10aa63fbc519a998c276f908 # production release of Feb 19 2018
   COMMAND cd ${OPENRAVE_SOURCE_DIR} && patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/python-path.patch # use dist-packages isntead of site-packages
   COMMAND cd ${OPENRAVE_SOURCE_DIR} && patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/no-warn.patch # disable -Wall
   )
