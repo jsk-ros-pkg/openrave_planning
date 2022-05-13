@@ -22,7 +22,11 @@ function travis_time_end {
     set -x
 }
 
-apt-get update -qq && apt-get install -y -q wget sudo lsb-release # for docker 
+apt-get update -qq && apt-get install -y -q curl gnupg sudo lsb-release # for docker
+
+# set non interactive tzdata https://stackoverflow.com/questions/8671308/non-interactive-method-for-dpkg-reconfigure-tzdata
+# set DEBIAN_FRONTEND=noninteractive
+echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
 
 # Install system dependencies, namely ROS.
 #before_install:
@@ -30,7 +34,7 @@ travis_time_start setup.before_install
 
 # Install ROS
 sudo sh -c "echo \"deb http://packages.ros.org/ros-shadow-fixed/ubuntu `lsb_release -cs` main\" > /etc/apt/sources.list.d/ros-latest.list"
-wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 sudo apt-get update -qq
 # Install ROS
 sudo apt-get install -y python-catkin-pkg python-catkin-tools python-rosdep python-wstool ros-$ROS_DISTRO-catkin
