@@ -1,10 +1,10 @@
-sudo: required
-dist: trusty
+sudo: true
+dist: bionic
+services:
+  - docker
 language: generic
 env:
-  - ROS_DISTRO=indigo   DOCKER_IMAGE=ubuntu:trusty
-  - ROS_DISTRO=jade     DOCKER_IMAGE=ubuntu:trusty
-  - ROS_DISTRO=kinetic  DOCKER_IMAGE=ubuntu:xenial
+  - ROS_DISTRO=melodic  DOCKER_IMAGE=ubuntu:bionic
 # matrix:
 #   allow_failures:
 #     - env: ROS_DISTRO=jade
