@@ -4,7 +4,7 @@ services:
   - docker
 language: generic
 env:
-  - ROS_DISTRO=melodic  DOCKER_IMAGE=ubuntu:bionic
+  - ROS_DISTRO=kinetic  DOCKER_IMAGE=ubuntu:xenial
 # matrix:
 #   allow_failures:
 #     - env: ROS_DISTRO=jade

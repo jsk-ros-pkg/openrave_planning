@@ -41,7 +41,13 @@ sudo apt-get install -y python-catkin-pkg python-catkin-tools python-rosdep pyth
 source /opt/ros/$ROS_DISTRO/setup.bash
 # Setup for rosdep
 sudo rosdep init
-rosdep update
+# use snapshot of rosdep list
+# https://github.com/ros/rosdistro/pull/31570#issuecomment-1000497517
+if [[ "$ROS_DISTRO" =~ "hydro"|"indigo"|"jade"|"kinetic"|"lunar" ]]; then
+    sudo rm /etc/ros/rosdep/sources.list.d/20-default.list
+    sudo curl -s https://gist.githubusercontent.com/cottsay/b27a46e53b8f7453bf9ff637d32ea283/raw/476b3714bb90cfbc6b8b9d068162fc6408fa7f76/30-xenial.list -o /etc/ros/rosdep/sources.list.d/30-xenial.list
+fi
+rosdep update --include-eol-distros
 
 travis_time_end
 
