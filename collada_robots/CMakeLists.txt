@@ -4,7 +4,7 @@ project(collada_robots)
 find_package(catkin REQUIRED)
 
 add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/data/robots/README.rst
-  COMMAND git clone git://github.com/rdiankov/collada_robots.git data/robots
+  COMMAND git clone https://github.com/rdiankov/collada_robots.git data/robots
   COMMAND find data/robots/ -iname '*.zae'  -print | xargs -n1 unzip -o -d data/robots/
   DEPENDS CMakeLists.txt
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
